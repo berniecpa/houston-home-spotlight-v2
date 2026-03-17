@@ -1,0 +1,217 @@
+# Progress Log
+Run: 27bd7639-cd69-41bf-b209-d1a4fbf5f5d9
+Task: Build Houston Home Spotlight — a mobile-first home showcase site for NB Elite Realty
+Started: 2025-03-17T09:08:00-05:00
+
+## Codebase Patterns
+- Project uses standard Next.js 14 App Router structure with src/ directory
+- TypeScript strict mode enabled with @/* path alias to ./src/*
+- Static export configured with output: 'export' and distDir: 'dist'
+- Testing uses Node.js built-in test runner: node --test
+- Images marked as unoptimized for static export compatibility
+- Cloudflare Pages deployment via wrangler.toml with bucket = "dist"
+- Types are defined in src/types/index.ts with JSDoc comments for documentation
+- Test files follow the pattern src/tests/*.test.ts
+- Field names in types should match external API expectations (e.g., Perfex CRM uses 'firstname', 'lastname', 'phonenumber')
+- Data files stored in src/data/listings/ as individual JSON files
+- Listing data utility functions in src/lib/data.ts with caching support
+- Placeholder images via picsum.photos with seeded URLs for consistency
+- Components use 'use client' directive for client-side interactivity
+- Next.js Link component imported from 'next/link' for navigation
+- Mobile-first responsive design with Tailwind classes (md: prefix for desktop)
+- Semantic HTML elements (header, nav, footer, main) for accessibility
+- ARIA labels and attributes for accessibility (aria-label, aria-expanded)
+
+---
+
+## 2025-03-17 13:18 CDT - US-006: Create layout with header and footer
+- Created src/components/Header.tsx with:
+  - Logo with NB branding and "Houston Home Spotlight" text
+  - Navigation links: Home, Listings, Contact
+  - Mobile hamburger menu with toggle state (useState)
+  - Smooth transitions and backdrop blur effect
+  - Accessibility: aria-label, aria-expanded on menu button
+  - Responsive: hides nav on mobile, shows hamburger menu
+  - 'use client' directive for interactivity
+  - Next.js Link component for client-side navigation
+- Created src/components/Footer.tsx with:
+  - Logo and brand description
+  - Quick Links section (Home, Listings, Contact)
+  - Contact information (Houston location, email, phone)
+  - Copyright with dynamic year
+  - Licensing info (Licensed Realtor in Harris and Fort Bend counties)
+  - Responsive grid layout (3 columns on desktop, stacked on mobile)
+- Updated src/app/layout.tsx with:
+  - Header and Footer imports from @/components/
+  - Flexbox layout with sticky header and footer at bottom
+  - Main content area with flex-grow to push footer down
+  - min-h-screen and flex flex-col on body
+- Created src/tests/layout.test.ts with 30 assertions covering:
+  - Header component structure and exports
+  - Navigation links (Home, Listings, Contact)
+  - Mobile hamburger menu functionality
+  - Logo branding presence
+  - Footer component structure
+  - Copyright and contact information
+  - Root layout integration
+  - Component file structure
+  - Navigation consistency between Header and Footer
+  - Accessibility features (ARIA labels, semantic HTML)
+- All 121 tests pass (30 new layout tests + 91 existing)
+- npm run build succeeds with no errors
+- Typecheck passes
+- Commit: d66aca4
+
+**Learnings:**
+- Client components need 'use client' directive at the top
+- Next.js Link component is preferred over <a> for internal navigation
+- Flexbox with flex-grow on main and flex flex-col on body creates sticky footer pattern
+- Mobile hamburger menu requires useState for toggle functionality
+- ARIA attributes (aria-expanded, aria-label) improve accessibility for mobile menus
+- Semantic HTML (header, nav, footer, main) helps with screen readers
+
+---
+
+## 2025-03-17 12:54 CDT - US-005: Build data loading utilities
+- Created src/lib/data.ts with data loading functions:
+  - getAllListings() - loads all listings with caching, returns Promise<Listing[]>
+  - getListingBySlug(slug) - fetch single listing by slug, returns Promise<Listing | null>
+  - getFeaturedListings() - get featured listings only, returns Promise<Listing[]>
+  - filterListings(filters) - filter by minPrice/maxPrice/minBeds, returns Promise<Listing[]>
+  - clearListingsCache() - clear cache for testing
+- Implemented in-memory caching with listingsCache variable
+- Added comprehensive error handling with try-catch blocks in all async functions
+- Used dynamic imports with Promise.all for parallel JSON file loading
+- Imported all 3 listing JSON files from @/data/listings/
+- Added JSDoc comments for all functions with parameter and return type documentation
+- Created src/tests/data.test.ts with 24 assertions covering:
+  - File structure verification (data.ts exists, imports types)
+  - Function exports verification (all 5 functions exported)
+  - Caching implementation (cache variable, cache check, cache clear)
+  - Error handling (try-catch blocks, return values on error)
+  - Data loading logic (JSON imports, dynamic imports, Promise.all)
+  - Filter logic (minPrice, maxPrice, minBeds, undefined checks)
+  - JSDoc documentation verification
+- All 92 tests pass (24 new data tests + 68 existing)
+- npm run build succeeds with no errors
+- Typecheck passes
+- Commit: 01f3fae
+
+**Learnings:**
+- Node.js test runner can't resolve @/* path aliases - use file content checks instead of imports
+- Dynamic imports work well for JSON data in Next.js static export
+- Promise.all enables parallel loading of multiple JSON files
+- Return null (not undefined) for single item lookups to match expected behavior
+- Cache invalidation via clearListingsCache() is essential for testing
+
+---
+
+## 2025-03-17 12:35 CDT - US-004: Create sample listing JSON data
+- Created src/data/listings/ directory with 3 JSON files:
+  - riverside-terrace-modern-craftsman.json (featured: true) - $785k, 4bd/3.5ba in Houston
+  - heights-bungalow-historic.json - $625k, 3bd/2ba in The Heights
+  - sugarland-estate-pool.json - $925k, 5bd/4ba in Sugar Land with videoUrl
+- Created src/lib/listings.ts data utility module with functions:
+  - loadListings() - loads all listings with caching
+  - getListingBySlug(slug) - fetch single listing
+  - getFeaturedListings() - get featured listings only
+  - filterListings(filters) - filter by price/beds
+  - clearListingsCache() - for testing
+- Created src/tests/listings.test.ts with 14 assertions covering:
+  - Directory structure verification
+  - JSON file validation (required fields, types, values)
+  - Houston-area location validation (TX state, 77xxx ZIPs)
+  - Image array validation (3-5 images per listing)
+  - Featured listing requirements (exactly 1 featured)
+  - Slug uniqueness across all listings
+  - Data loader module exports
+- Added dist/ to .gitignore (build output directory)
+- All 68 tests pass (14 new listing tests + 54 existing)
+- npm run build succeeds with no errors
+- Typecheck passes
+- Commit: ff456e2
+
+**Learnings:**
+- picsum.photos with seed parameter provides consistent placeholder images
+- JSON files in src/data can be imported directly in Next.js with proper tsconfig paths
+- Caching data in memory avoids repeated file system operations
+- Node.js test runner can't resolve @/* path aliases - check file content instead of importing
+- Type assertions needed when reading JSON as Record<string, unknown>
+
+---
+
+## 2025-03-17 12:07 CDT - US-003: Define TypeScript types and interfaces
+- Updated src/types/index.ts with complete type definitions:
+  - Listing interface: id, slug, address, city, state, zip, price, beds, baths, sqft, description, images[], videoUrl?, featured, createdAt
+  - LeadFormData interface: firstname, lastname, email, phonenumber, description, listingSlug? (matches Perfex CRM field names)
+  - FilterOptions interface: minPrice?, maxPrice?, minBeds?
+  - Bonus: Added LeadSubmissionResponse and ListingImage interfaces for future use
+- Added comprehensive JSDoc comments to all interfaces and fields
+- Created src/tests/types.test.ts with 15 assertions covering:
+  - Listing interface with all required fields and optional videoUrl
+  - LeadFormData with Perfex CRM compatible field names
+  - FilterOptions with complete, partial, and empty filters
+  - LeadSubmissionResponse for API responses
+  - ListingImage for image metadata
+- All 46 tests pass (including 15 new type tests)
+- npm run build succeeds with no errors
+- Typecheck passes
+- Commit: 0a8ce56
+
+**Learnings:**
+- JSDoc comments on TypeScript interfaces improve IDE autocomplete and documentation
+- Perfex CRM expects snake_case field names: firstname, lastname, phonenumber (no camelCase)
+- Using 'listingSlug' instead of 'listingId' in LeadFormData provides better traceability to the source page
+- Optional fields (marked with ?) should be tested both with and without values
+
+---
+
+## 2025-03-17 10:59 CDT - US-002: Configure Tailwind CSS with custom theme
+- Updated tailwind.config.ts with custom primary (blue-900) and accent (amber-500) color palettes
+- Added full color scale (50-950) for both primary and accent colors
+- Configured Inter font for body text and Merriweather serif font for headings via CSS variables
+- Added custom breakpoints for mobile-first design (xs: 375px)
+- Updated globals.css with @layer base, components, and utilities
+- Created custom component classes: .btn-primary, .btn-accent, .card
+- Created custom utility classes: .gradient-primary, .gradient-accent, .section-padding, .container-custom
+- Updated postcss.config.mjs to include autoprefixer plugin
+- Installed autoprefixer as dev dependency
+- Updated layout.tsx to use Google Fonts (Inter + Merriweather) instead of local fonts
+- Created tailwind-config.test.ts with 19 assertions covering:
+  - Configuration files existence
+  - Custom theme colors (primary and accent palettes)
+  - Font configuration (sans and serif)
+  - Responsive breakpoints
+  - Custom components and utilities
+  - PostCSS configuration
+  - Package dependencies
+- All 31 tests pass
+- npm run build succeeds with Tailwind CSS processing
+- Typecheck passes
+- Commit: 07735fd
+
+**Learnings:**
+- Tailwind CSS v3 config uses `content` array for file paths to scan
+- Next.js Google Fonts use CSS variables that can be referenced in tailwind.config.ts
+- Custom `@layer` directives in globals.css help organize styles
+- Full color palette (50-950) gives design flexibility while maintaining brand consistency
+- Mobile-first breakpoints should start at 375px for smallest phones
+
+---
+
+## 2025-03-17 09:10 CDT - US-001: Initialize Next.js 14 project with TypeScript
+- Updated next.config.mjs with output: 'export', distDir: 'dist', images.unoptimized: true
+- Updated package.json with test and typecheck scripts
+- Updated layout.tsx metadata for Houston Home Spotlight
+- Created folder structure: src/components, src/lib, src/data, src/types
+- Added type definitions in src/types/index.ts (Listing, LeadFormData interfaces)
+- Created project setup tests in src/tests/project-setup.test.ts with 12 assertions
+- Added wrangler.toml for Cloudflare Pages deployment
+- 
+**Learnings:**
+- Next.js 14 with App Router uses tsconfig.json with "moduleResolution": "bundler"
+- Static export requires images.unoptimized = true
+- Node.js built-in test runner works well for project verification tests
+- Tests are located in src/tests/ and run via `npm test` (node --test)
+
+---
