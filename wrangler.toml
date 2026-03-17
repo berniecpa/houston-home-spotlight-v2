@@ -1,0 +1,9 @@
+name = "houston-home-spotlight-v2"
+compatibility_date = "2024-03-17"
+
+[build]
+command = "npm run build"
+cwd = "."
+
+[site]
+bucket = "dist"
