@@ -43,6 +43,127 @@ Started: 2025-03-17T09:08:00-05:00
 - Listing detail pages use two-column layout with sticky sidebar for inquiry form
 - Property stats displayed in grid with icons (beds, baths, sqft)
 - Video tour section conditionally rendered when videoUrl exists
+- Cloudflare Pages deployment uses wrangler.toml with [build] and [[pages_build_output]] sections
+- @cloudflare/next-on-pages dependency required for Cloudflare Pages compatibility
+- .node-version file specifies Node version (18, 20, or 22) for Cloudflare build environment
+
+---
+
+## 2025-03-17 18:30 CDT - US-016: Configure Cloudflare Pages deployment
+- Verified Cloudflare Pages deployment configuration:
+  - wrangler.toml exists with proper Pages configuration:
+    - name = "houston-home-spotlight-v2"
+    - compatibility_date = "2024-03-17"
+    - compatibility_flags = ["nodejs_compat"]
+    - [build] section with command = "npm run build"
+    - [[pages_build_output]] with bucket = "dist"
+  - next.config.mjs has output: 'export' and distDir: 'dist'
+  - Images configured with unoptimized: true for static export
+  - .node-version file specifies Node 20.11.0 (compatible with Cloudflare)
+  - @cloudflare/next-on-pages installed in devDependencies
+  - package.json scripts for Cloudflare deployment:
+    - pages:build - runs @cloudflare/next-on-pages
+    - pages:deploy - builds and deploys to Cloudflare Pages
+    - pages:preview - builds and starts local preview
+- Created src/tests/cloudflare-deployment.test.ts with 24 assertions covering:
+  - wrangler.toml configuration (name, compatibility_date, compatibility_flags, build, bucket)
+  - next.config.mjs configuration (output: export, distDir: dist, unoptimized images)
+  - .node-version file (exists, specifies compatible Node version 18/20/22)
+  - package.json scripts (pages:build, pages:deploy, build, @cloudflare/next-on-pages)
+  - dist/ build output verification (index.html, _next/, listings, contact)
+  - TypeScript configuration compatibility
+- All 24 Cloudflare deployment tests pass
+- npm run build succeeds and outputs static files to dist/
+- Typecheck passes
+- Build output includes all required pages:
+  - index.html (home)
+  - listings.html (all listings)
+  - listings/[slug].html (3 listing detail pages)
+  - contact.html (contact page)
+  - 404.html (error page)
+  - _next/ static assets
+
+**Learnings:**
+- Cloudflare Pages requires wrangler.toml with [[pages_build_output]] bucket configuration
+- The nodejs_compat compatibility flag is needed for Node.js API compatibility
+- .node-version file specifies the Node version for Cloudflare's build environment
+- Static export (output: 'export') is required for Cloudflare Pages with Next.js
+- distDir: 'dist' ensures build output goes to the expected directory
+- @cloudflare/next-on-pages is the official adapter for Next.js on Cloudflare Pages
+
+---
+
+## 2025-03-17 18:10 CDT - US-010: Build All Listings page with filtering
+- Created src/app/listings/page.tsx with complete listings page:
+  - Client-side component with 'use client' directive for interactive filtering
+  - Hero section with gradient-primary background and breadcrumb navigation
+  - Dynamic results count showing filtered/total listings with active filter indicator
+  - FilterBar integration with filters, onFiltersChange, and resultCount props
+  - Responsive grid of ListingCard components (1-col mobile, 2-col tablet, 3-col desktop)
+  - Client-side filtering logic with filterListingsClientSide function
+  - Loading state with spinner animation
+  - Error state with retry button
+  - Empty state when filters return no results with "Clear All Filters" button
+  - State management: allListings, isLoading, error, filters
+  - Uses useMemo for filtered listings performance optimization
+  - Loads all 3 listing JSON files dynamically with Promise.all
+- Created src/tests/listings-page.test.ts with 35 assertions covering:
+  - File structure verification
+  - Component imports (ListingCard, FilterBar, types, React hooks)
+  - Filtering logic (minPrice, maxPrice, minBeds, useMemo optimization)
+  - State management (allListings, isLoading, filters, useEffect)
+  - FilterBar integration (props, handlers, result count)
+  - Listings grid (key props, responsive layout)
+  - Empty states (no matches, loading, error)
+  - Hero section (title, breadcrumb, results count)
+  - Mobile responsiveness (container-custom, responsive padding/text)
+  - Accessibility (semantic HTML, ARIA labels, aria-current)
+  - Data loading (dynamic imports, Promise.all)
+- All 35 new listings page tests pass
+- npm run build succeeds (dist/listings.html generated)
+- Typecheck passes
+- Commit: 32c10ba
+
+**Learnings:**
+- Client-side filtering requires 'use client' directive and proper React state management
+- useMemo prevents unnecessary re-filters on every render, improving performance
+- FilterBar component is reusable - accepts filters state and onFiltersChange callback
+- Dynamic imports work in client components for loading JSON data at runtime
+- Multiple empty states needed: loading, error, no data, and no filter matches
+- Promise.all enables parallel loading of multiple JSON files in useEffect
+
+---
+
+## 2025-03-17 18:00 CDT - US-015: Build Contact page with lead form
+- Created src/app/contact/page.tsx with complete contact page:
+  - Hero section with gradient-primary background
+  - Contact information sidebar with phone, email, office address
+  - Service areas information (Harris & Fort Bend Counties)
+  - License information display
+  - General inquiry form using InquiryForm component (no listingSlug)
+- Styled consistently with site patterns:
+  - gradient-primary hero section
+  - card class for form container
+  - container-custom and section-padding utilities
+  - Mobile-first responsive grid (1-col mobile, 2-col desktop)
+- Created src/tests/contact.test.ts with 22 assertions covering:
+  - File structure verification
+  - Contact information (phone, email, address)
+  - Form integration with InquiryForm
+  - Mobile responsiveness classes
+  - Accessibility (headings, ARIA labels, semantic HTML)
+  - SEO metadata
+  - Business information display
+- All 22 new contact tests pass
+- npm run build succeeds (dist/contact.html generated)
+- Typecheck passes
+- Commit: 0069548
+
+**Learnings:**
+- Reusing the InquiryForm component for general contact pages works well - just omit listingSlug prop
+- Contact page follows same layout structure as other pages: gradient hero + content sections
+- Two-column layout on desktop (contact info left, form right) provides good UX
+- Include business credentials (license info, service areas) for credibility
 
 ---
 
@@ -127,4 +248,3 @@ Started: 2025-03-17T09:08:00-05:00
     - email → email
     - phonenumber → phonenumber
     - description (with listingSlug prepended if provided)
-    -
