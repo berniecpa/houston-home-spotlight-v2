@@ -56,54 +56,84 @@ export async function POST(
     // If Perfex CRM credentials are configured, submit to CRM
     if (perfexUrl && perfexKey) {
       try {
-        const crmResponse = await fetch(`${perfexUrl}/api/leads`, {
+        // Build description with listing reference if available
+        let description = body.description || '';
+        if (body.listingSlug) {
+          description = `[Listing: ${body.listingSlug}] ${description}`;
+        }
+
+        // Map fields to Perfex CRM format
+        const crmPayload = {
+          firstname: body.firstname,
+          lastname: body.lastname,
+          email: body.email,
+          phonenumber: body.phonenumber,
+          description: description,
+          source: 'Houston Home Spotlight Website'
+        };
+
+        // Call Perfex CRM API v1 endpoint
+        const crmResponse = await fetch(`${perfexUrl}/api/v1/leads`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${perfexKey}`
+            'authtoken': perfexKey
           },
-          body: JSON.stringify({
-            firstname: body.firstname,
-            lastname: body.lastname,
-            email: body.email,
-            phonenumber: body.phonenumber,
-            description: body.description || '',
-            // Add source tracking
-            source: 'Houston Home Spotlight Website',
-            custom_fields: body.listingSlug 
-              ? [{ name: 'Listing Slug', value: body.listingSlug }]
-              : undefined
-          })
+          body: JSON.stringify(crmPayload)
         });
 
         if (!crmResponse.ok) {
-          console.error('Perfex CRM submission failed:', await crmResponse.text());
-          // Continue to return success to user even if CRM fails
-          // We don't want to lose the lead due to CRM issues
+          const errorText = await crmResponse.text();
+          console.error('Perfex CRM submission failed:', errorText);
+          return NextResponse.json(
+            {
+              success: false,
+              message: 'Failed to submit lead to CRM. Please try again later.'
+            },
+            { status: 500 }
+          );
         }
+
+        const crmData = await crmResponse.json();
+
+        // Return success response with CRM lead ID if available
+        return NextResponse.json(
+          {
+            success: true,
+            message: 'Thank you! Your inquiry has been submitted. We will contact you soon.',
+            leadId: crmData.id || crmData.lead_id || `lead_${Date.now()}`
+          },
+          { status: 200 }
+        );
+
       } catch (crmError) {
         console.error('Error submitting to Perfex CRM:', crmError);
-        // Continue - don't fail the user request due to CRM issues
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'An error occurred while submitting your inquiry. Please try again.'
+          },
+          { status: 500 }
+        );
       }
+    } else {
+      // CRM not configured - log and return success (for development/testing)
+      console.log('Perfex CRM not configured - lead logged only:', {
+        name: `${body.firstname} ${body.lastname}`,
+        email: body.email,
+        listingSlug: body.listingSlug || 'general inquiry',
+        timestamp: new Date().toISOString()
+      });
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: 'Thank you! Your inquiry has been submitted. We will contact you soon.',
+          leadId: `lead_${Date.now()}`
+        },
+        { status: 200 }
+      );
     }
-
-    // Log lead submission (for debugging/monitoring)
-    console.log('Lead submitted:', {
-      name: `${body.firstname} ${body.lastname}`,
-      email: body.email,
-      listingSlug: body.listingSlug || 'general inquiry',
-      timestamp: new Date().toISOString()
-    });
-
-    // Return success response
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Thank you! Your inquiry has been submitted. We will contact you soon.',
-        leadId: `lead_${Date.now()}`
-      },
-      { status: 200 }
-    );
 
   } catch (error) {
     console.error('Error processing lead submission:', error);
