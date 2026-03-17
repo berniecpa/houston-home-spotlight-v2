@@ -26,6 +26,59 @@ Started: 2025-03-17T09:08:00-05:00
 - Home pages fetch data at build time using async page components
 - Responsive grid for listings: grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8
 - CTAs use accent color (amber) for primary actions, outline style for secondary
+- Filter components use fieldset/legend for semantic HTML grouping
+- Input fields use inputMode="numeric" for mobile keyboards
+- Button groups use role="radiogroup" and aria-checked for accessible selection
+- Expandable sections on mobile use aria-expanded and aria-controls
+
+---
+
+## 2025-03-17 15:05 CDT - US-009: Build listings filter components
+- Created src/components/PriceFilter.tsx:
+  - Min and max price input fields with dollar sign prefix
+  - Formatted number display with comma separators
+  - inputMode="numeric" for mobile numeric keyboards
+  - Labels and aria-labels for accessibility
+  - fieldset/legend for semantic grouping
+  - Responsive layout (stack on mobile, side by side on desktop)
+  - onMinPriceChange and onMaxPriceChange callback props
+- Created src/components/BedsFilter.tsx:
+  - Selectable bed count buttons (Any, 1, 2, 3, 4, 5+)
+  - Toggle behavior (click same value to deselect)
+  - role="radiogroup" with aria-checked for accessibility
+  - Active state styling with primary color
+  - Keyboard navigable via Tab and Enter/Space
+  - onBedsChange callback prop
+- Created src/components/FilterBar.tsx:
+  - Combines PriceFilter and BedsFilter components
+  - Expandable on mobile devices (sm:hidden toggle button)
+  - Active filter count badge display
+  - Clear All Filters button (appears only when filters active)
+  - resultCount prop for "homes found" display
+  - aria-expanded and aria-controls for mobile toggle
+  - Grid layout on desktop (side by side)
+- Created src/tests/filter-components.test.ts with 43 assertions covering:
+  - File structure (all 3 components exist and export correctly)
+  - PriceFilter props, inputs, labels, accessibility, mobile layout
+  - BedsFilter props, buttons, "Any" option, ARIA radiogroup
+  - FilterBar composition, imports, clear functionality, active count badge
+  - Mobile responsiveness (sm:hidden, aria-expanded, aria-controls)
+  - Accessibility (semantic HTML, focus indicators, keyboard nav, aria-labels)
+  - Styling (Tailwind classes, primary colors, active states)
+- All 225 tests pass (43 new + 182 existing)
+- npm run build succeeds with no errors
+- Typecheck passes
+- Commit: 60cbccc
+
+**Learnings:**
+- inputMode="numeric" is essential for triggering mobile numeric keyboards
+- fieldset/legend with role="radiogroup" creates accessible filter groups
+- Tab-based button groups support keyboard navigation better than dropdowns
+- aria-expanded + aria-controls pattern works well for mobile expandable sections
+- Callback-based state management allows parent components to control filter state
+- Number inputs need careful handling to include commas for readability while storing raw numbers
+- useCallback is useful for memoized callback functions passed to multiple child components
+- Mobile-first expandable filters save screen space without sacrificing functionality
 
 ---
 
