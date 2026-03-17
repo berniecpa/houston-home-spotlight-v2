@@ -208,7 +208,7 @@ export function PhotoGallery({ images, alt = 'Property photo' }: PhotoGalleryPro
                 e.stopPropagation();
                 goToPrevious();
               }}
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden md:block backdrop-blur-sm"
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 min-w-[44px] min-h-[44px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden md:flex items-center justify-center backdrop-blur-sm"
               aria-label="Previous image"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,7 +220,7 @@ export function PhotoGallery({ images, alt = 'Property photo' }: PhotoGalleryPro
                 e.stopPropagation();
                 goToNext();
               }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden md:block backdrop-blur-sm"
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 min-w-[44px] min-h-[44px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden md:flex items-center justify-center backdrop-blur-sm"
               aria-label="Next image"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -278,7 +278,7 @@ export function PhotoGallery({ images, alt = 'Property photo' }: PhotoGalleryPro
           {/* Close Button */}
           <button
             onClick={closeLightbox}
-            className="absolute top-4 right-4 text-white p-2 hover:bg-white/10 rounded-full transition-colors z-10"
+            className="absolute top-4 right-4 text-white p-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/10 rounded-full transition-colors z-10"
             aria-label="Close full screen view"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -294,7 +294,7 @@ export function PhotoGallery({ images, alt = 'Property photo' }: PhotoGalleryPro
                   e.stopPropagation();
                   goToPrevious();
                 }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-white p-3 hover:bg-white/10 rounded-full transition-colors"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white p-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
                 aria-label="Previous image"
               >
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -306,7 +306,7 @@ export function PhotoGallery({ images, alt = 'Property photo' }: PhotoGalleryPro
                   e.stopPropagation();
                   goToNext();
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white p-3 hover:bg-white/10 rounded-full transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white p-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
                 aria-label="Next image"
               >
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">

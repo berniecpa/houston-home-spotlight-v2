@@ -70,7 +70,7 @@ export function BedsFilter({
           type="button"
           onClick={() => handleBedsClick(undefined)}
           className={`
-            px-4 py-2 text-sm font-medium rounded-md border transition-all duration-200
+            px-4 py-2.5 min-h-[44px] text-sm font-medium rounded-md border transition-all duration-200
             focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1
             ${selectedBeds === undefined
               ? "bg-primary-600 text-white border-primary-600"
@@ -91,7 +91,7 @@ export function BedsFilter({
             type="button"
             onClick={() => handleBedsClick(beds)}
             className={`
-              px-4 py-2 text-sm font-medium rounded-md border transition-all duration-200
+              px-4 py-2.5 min-h-[44px] text-sm font-medium rounded-md border transition-all duration-200
               focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1
               ${selectedBeds === beds
                 ? "bg-primary-600 text-white border-primary-600"

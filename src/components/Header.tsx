@@ -44,7 +44,7 @@ export default function Header() {
           {/* Mobile Menu Button */}
           <button
             type="button"
-            className="md:hidden p-2 rounded-lg text-gray-600 hover:text-primary-900 hover:bg-gray-100 transition-colors"
+            className="md:hidden p-2.5 min-w-[44px] min-h-[44px] rounded-lg text-gray-600 hover:text-primary-900 hover:bg-gray-100 transition-colors flex items-center justify-center"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={isMenuOpen}
@@ -87,7 +87,7 @@ export default function Header() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="block px-4 py-3 text-gray-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200"
+                    className="block px-4 py-3 min-h-[44px] flex items-center text-gray-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {link.label}

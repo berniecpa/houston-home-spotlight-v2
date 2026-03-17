@@ -37,12 +37,12 @@ export default function Footer() {
           {/* Quick Links */}
           <div>
             <h3 className="text-white font-semibold text-lg mb-4">Quick Links</h3>
-            <ul className="space-y-3">
+            <ul className="space-y-1">
               {footerLinks.navigation.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                    className="inline-flex items-center min-h-[44px] px-2 -ml-2 text-gray-400 hover:text-white transition-colors duration-200 rounded"
                   >
                     {link.label}
                   </Link>
@@ -88,12 +88,12 @@ export default function Footer() {
             <p className="text-sm text-gray-500 text-center md:text-left">
               {currentYear} NB Elite Realty. All rights reserved.
             </p>
-            <div className="flex items-center space-x-6">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-6">
               {footerLinks.legal.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+                  className="inline-flex items-center min-h-[44px] px-2 text-sm text-gray-500 hover:text-gray-300 transition-colors rounded"
                 >
                   {link.label}
                 </Link>
