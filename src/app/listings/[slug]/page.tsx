@@ -12,6 +12,8 @@ import { notFound } from 'next/navigation';
 import { PhotoGallery } from '@/components/PhotoGallery';
 import { InquiryForm } from '@/components/InquiryForm';
 import { getListingBySlug, getAllListings } from '@/lib/data';
+import { Listing } from '@/types';
+import { siteConfig } from '@/app/layout';
 
 /**
  * Generate static params for all listings at build time
@@ -40,9 +42,48 @@ export async function generateMetadata({
     };
   }
 
+  const title = `${listing.address} | Houston Home Spotlight`;
+  const description = `${listing.beds} bed, ${listing.baths} bath home in ${listing.city}, ${listing.state}. ${listing.description.slice(0, 150)}...`;
+  const listingUrl = `${siteConfig.url}/listings/${listing.slug}`;
+  const ogImage = listing.images[0] || siteConfig.ogImage;
+
   return {
-    title: `${listing.address} | Houston Home Spotlight`,
-    description: `${listing.beds} bed, ${listing.baths} bath home in ${listing.city}, ${listing.state}. ${listing.description.slice(0, 150)}...`,
+    title,
+    description,
+    keywords: [
+      `${listing.city} home for sale`,
+      `${listing.beds} bedroom home`,
+      'Houston real estate',
+      `${listing.city} property`,
+      `${listing.state} real estate`,
+    ],
+    alternates: {
+      canonical: listingUrl,
+    },
+    openGraph: {
+      type: 'article',
+      url: listingUrl,
+      title,
+      description,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 800,
+          alt: `${listing.address} - ${listing.city}, ${listing.state}`,
+        },
+      ],
+      locale: 'en_US',
+      siteName: siteConfig.name,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      site: siteConfig.twitterHandle,
+      creator: siteConfig.twitterHandle,
+      title,
+      description,
+      images: [ogImage],
+    },
   };
 }
 
@@ -69,6 +110,67 @@ function formatNumber(num: number): string {
 }
 
 /**
+ * Generate JSON-LD structured data for a real estate listing
+ * Follows Schema.org RealEstateListing specification
+ * @param listing - The property listing
+ * @returns JSON-LD structured data object
+ */
+function generateListingStructuredData(listing: Listing): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'RealEstateListing',
+    '@id': `${siteConfig.url}/listings/${listing.slug}`,
+    name: `${listing.address} - ${listing.city}, ${listing.state}`,
+    description: listing.description,
+    url: `${siteConfig.url}/listings/${listing.slug}`,
+    datePosted: listing.createdAt,
+    image: listing.images,
+    ...(listing.videoUrl && { video: listing.videoUrl }),
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: listing.address,
+      addressLocality: listing.city,
+      addressRegion: listing.state,
+      postalCode: listing.zip,
+      addressCountry: 'US',
+    },
+    numberOfRooms: listing.beds,
+    numberOfBathroomsTotal: listing.baths,
+    floorSize: {
+      '@type': 'QuantitativeValue',
+      value: listing.sqft,
+      unitCode: 'SQF',
+    },
+    price: listing.price,
+    priceCurrency: 'USD',
+    businessFunction: {
+      '@type': 'BusinessFunction',
+      name: 'Sell',
+    },
+    broker: {
+      '@type': 'RealEstateAgent',
+      name: siteConfig.author,
+      url: siteConfig.url,
+      telephone: '+1-713-555-1234',
+      email: 'bernard@nbeliterealty.com',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: '123 Main Street, Suite 200',
+        addressLocality: 'Houston',
+        addressRegion: 'TX',
+        postalCode: '77002',
+        addressCountry: 'US',
+      },
+    },
+    availableChannel: {
+      '@type': 'ServiceChannel',
+      serviceType: 'Real Estate Listing',
+      availableLanguage: ['English'],
+    },
+  };
+}
+
+/**
  * Listing Detail Page Component
  * 
  * @param {Object} props - Component props
@@ -88,8 +190,16 @@ export default async function ListingDetailPage({
     notFound();
   }
 
+  // Generate JSON-LD structured data
+  const structuredData = generateListingStructuredData(listing);
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       {/* Main Content */}
       <div className="container-custom py-6 sm:py-8 md:py-12">
         {/* Back Link */}

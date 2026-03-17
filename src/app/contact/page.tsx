@@ -15,10 +15,43 @@
 
 import type { Metadata } from 'next';
 import { InquiryForm } from '@/components/InquiryForm';
+import { siteConfig } from '../layout';
 
 export const metadata: Metadata = {
   title: 'Contact | Houston Home Spotlight',
   description: 'Get in touch with NB Elite Realty. Contact Bernard for all your Houston real estate needs.',
+  keywords: [
+    'contact Houston realtor',
+    'Houston real estate agent',
+    'NB Elite Realty contact',
+    'buy home Houston contact',
+    'sell home Houston',
+  ],
+  alternates: {
+    canonical: '/contact',
+  },
+  openGraph: {
+    type: 'website',
+    url: `${siteConfig.url}/contact`,
+    title: 'Contact | Houston Home Spotlight',
+    description: 'Get in touch with NB Elite Realty. Contact Bernard for all your Houston real estate needs.',
+    images: [
+      {
+        url: siteConfig.ogImage,
+        width: 1200,
+        height: 630,
+        alt: 'Contact Houston Home Spotlight',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: siteConfig.twitterHandle,
+    creator: siteConfig.twitterHandle,
+    title: 'Contact | Houston Home Spotlight',
+    description: 'Get in touch with NB Elite Realty.',
+    images: [siteConfig.ogImage],
+  },
 };
 
 /**
