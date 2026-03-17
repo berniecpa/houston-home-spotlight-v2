@@ -21,6 +21,49 @@ Started: 2025-03-17T09:08:00-05:00
 - Mobile-first responsive design with Tailwind classes (md: prefix for desktop)
 - Semantic HTML elements (header, nav, footer, main) for accessibility
 - ARIA labels and attributes for accessibility (aria-label, aria-expanded)
+- Hero sections use gradient backgrounds with container-custom for consistent width
+- SVG wave dividers create visual separation between sections
+- Home pages fetch data at build time using async page components
+- Responsive grid for listings: grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8
+- CTAs use accent color (amber) for primary actions, outline style for secondary
+
+---
+
+## 2025-03-17 14:07 CDT - US-008: Build Home page with hero and featured listings
+- Updated src/app/page.tsx with complete home page implementation:
+  - Hero section with gradient background (primary-900 to primary-700)
+  - Pattern overlay using SVG data URI for visual texture
+  - Headline: "Find Your Dream Home in Houston" with accent color highlight
+  - Subheadline describing Houston neighborhoods and Bernard's service
+  - Two CTA buttons: "Browse Listings" (accent) and "Contact Bernard" (outline)
+  - Wave SVG divider at bottom of hero for visual polish
+  - Featured Listings section pulling from JSON data via getFeaturedListings()
+  - Responsive grid (1 col mobile, 2 col tablet, 3 col desktop) for listings
+  - Empty state handling when no featured listings available
+  - "View All Listings" link to /listings page
+  - "Why Work With Bernard?" section with 4 feature cards:
+    - Local Expertise, Responsive Service, Trusted Advisor, Curated Selection
+  - Final CTA section with dark background for conversion
+- Created src/tests/home-page.test.ts with 27 assertions covering:
+  - File structure and component exports
+  - Required imports (Link, ListingCard, getFeaturedListings)
+  - Hero section elements (headline, subheadline, CTAs, gradient)
+  - Featured listings section (grid, ListingCard rendering, data fetching)
+  - Mobile responsiveness (container classes, responsive padding, text sizes)
+  - Additional sections (Why Work With Me, Final CTA)
+  - Accessibility (semantic HTML, aria-hidden on icons)
+- All 179 tests pass (27 new + 152 existing)
+- npm run build succeeds with no errors
+- Typecheck passes
+- Commit: 11a1bb2
+
+**Learnings:**
+- Next.js 14 App Router pages can be async functions to fetch data at build time
+- SVG patterns as data URIs work well for subtle background textures
+- CSS gradient backgrounds with wave SVG dividers create professional visual sections
+- Responsive grid layouts: grid-cols-1 md:grid-cols-2 lg:grid-cols-3
+- Hero sections work well with centered text and max-width constraints (max-w-3xl)
+- Featured listings from JSON load correctly via getFeaturedListings() at build time
 
 ---
 
