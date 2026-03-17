@@ -1,0 +1,23 @@
+{
+  "id": "3",
+  "slug": "sugarland-estate-pool",
+  "address": "1523 Riverstone Ranch Drive",
+  "city": "Sugar Land",
+  "state": "TX",
+  "zip": "77479",
+  "price": 925000,
+  "beds": 5,
+  "baths": 4,
+  "sqft": 4100,
+  "description": "Exceptional family estate in the sought-after Riverstone community! This spacious home offers 5 bedrooms plus a study, formal dining, and a massive game room upstairs. Gourmet kitchen features double ovens, gas cooktop, and walk-in pantry. Primary retreat downstairs with sitting area and luxurious bath. Resort-style backyard with saltwater pool, spa, and summer kitchen. Excellent Fort Bend ISD schools and resort-style community amenities including pools, tennis courts, and walking trails. Easy access to Highway 59 and a short commute to the Medical Center and Galleria.",
+  "images": [
+    "https://picsum.photos/seed/houston3-1/1200/800",
+    "https://picsum.photos/seed/houston3-2/1200/800",
+    "https://picsum.photos/seed/houston3-3/1200/800",
+    "https://picsum.photos/seed/houston3-4/1200/800",
+    "https://picsum.photos/seed/houston3-5/1200/800"
+  ],
+  "videoUrl": "https://www.youtube.com/watch?v=example-tour-3",
+  "featured": false,
+  "createdAt": "2025-03-05T09:15:00Z"
+}

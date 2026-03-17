@@ -1,0 +1,21 @@
+{
+  "id": "2",
+  "slug": "heights-bungalow-historic",
+  "address": "1421 Ashland Street",
+  "city": "Houston",
+  "state": "TX",
+  "zip": "77008",
+  "price": 625000,
+  "beds": 3,
+  "baths": 2,
+  "sqft": 1850,
+  "description": "Charming 1920s bungalow in the heart of the Heights! This meticulously maintained home retains its original character with hardwood floors, vintage light fixtures, and a cozy front porch. Updated kitchen with farmhouse sink and butcher block counters. Large lot with mature oak trees and a detached garage with potential for workshop or studio space. Blocks from Heights Boulevard's hike and bike trail, local boutiques, and award-winning restaurants. Zoned to top-rated Harvard Elementary.",
+  "images": [
+    "https://picsum.photos/seed/houston2-1/1200/800",
+    "https://picsum.photos/seed/houston2-2/1200/800",
+    "https://picsum.photos/seed/houston2-3/1200/800",
+    "https://picsum.photos/seed/houston2-4/1200/800"
+  ],
+  "featured": false,
+  "createdAt": "2025-02-28T14:30:00Z"
+}

@@ -1,0 +1,22 @@
+{
+  "id": "1",
+  "slug": "riverside-terrace-modern-craftsman",
+  "address": "2611 Wichita Street",
+  "city": "Houston",
+  "state": "TX",
+  "zip": "77004",
+  "price": 785000,
+  "beds": 4,
+  "baths": 3.5,
+  "sqft": 3200,
+  "description": "Stunning modern craftsman home in the historic Riverside Terrace neighborhood. This beautifully renovated property features an open-concept living space with vaulted ceilings, a chef's kitchen with quartz countertops and stainless steel appliances, and a spacious master suite with a spa-like bathroom. The backyard oasis includes a covered patio, perfect for entertaining. Walking distance to Hermann Park and the Medical Center. Move-in ready with recent updates including new HVAC, roof, and energy-efficient windows.",
+  "images": [
+    "https://picsum.photos/seed/houston1-1/1200/800",
+    "https://picsum.photos/seed/houston1-2/1200/800",
+    "https://picsum.photos/seed/houston1-3/1200/800",
+    "https://picsum.photos/seed/houston1-4/1200/800",
+    "https://picsum.photos/seed/houston1-5/1200/800"
+  ],
+  "featured": true,
+  "createdAt": "2025-02-15T10:00:00Z"
+}
