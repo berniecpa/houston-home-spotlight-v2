@@ -30,6 +30,189 @@ Started: 2025-03-17T09:08:00-05:00
 - Input fields use inputMode="numeric" for mobile keyboards
 - Button groups use role="radiogroup" and aria-checked for accessible selection
 - Expandable sections on mobile use aria-expanded and aria-controls
+- API routes are in src/app/api/* with route.ts files (Next.js App Router convention)
+- API routes use NextRequest/NextResponse from 'next/server'
+- Environment variables for external APIs use process.env.* pattern
+- API error responses return appropriate HTTP status codes (400 for validation, 500 for server errors)
+- API routes validate input before calling external services
+- External API calls use fetch with proper headers and JSON body
+
+---
+
+## 2025-03-17 16:52 CDT - US-013: Create Perfex CRM API integration
+- Updated src/app/api/leads/route.ts with complete Perfex CRM integration:
+  - POST handler for lead submission with full type annotations
+  - Request body parsing and LeadFormData type validation
+  - Required field validation: firstname, lastname, email, phonenumber
+  - Email format validation using regex
+  - Environment variable reading: PERFEX_RE_URL and PERFEX_RE_KEY
+  - Lead data mapping to Perfex CRM format:
+    - firstname → firstname
+    - lastname → lastname
+    - email → email
+    - phonenumber → phonenumber
+    - description (with listingSlug prepended if provided)
+    - source: 'Houston Home Spotlight Website'
+  - POST to Perfex CRM /api/v1/leads endpoint with authtoken header
+  - Proper error handling with try-catch blocks
+  - CRM response parsing and leadId extraction
+  - Success response: 200 status with { success: true, message, leadId }
+  - Error response: 500 status with { success: false, message }
+  - Graceful fallback when CRM credentials not configured (logs lead for dev/testing)
+  - Comprehensive JSDoc comments for documentation
+- Created src/tests/leads-api.test.ts with 49 assertions covering:
+  - File structure (route.ts exists, exports POST function)
+  - Imports (NextRequest, NextResponse, LeadFormData, LeadSubmissionResponse)
+  - Environment variables (PERFEX_RE_URL, PERFEX_RE_KEY reading)
+  - Request body parsing (JSON parsing, LeadFormData typing)
+  - Field mapping (firstname, lastname, email, phonenumber, description)
+  - Perfex CRM API call (/api/v1/leads endpoint, POST method, authtoken header)
+  - Input validation (required fields, email format, 400 status)
+  - Success response (200 status, success: true, message, leadId)
+  - Error response (500 status, success: false, error message, try-catch)
+  - Listing slug handling (extract from body, append to description)
+  - TypeScript types (return type annotation, JSDoc comments)
+  - CRM response handling (response status check, JSON parsing, error logging)
+- All 369 tests pass (49 new leads-api tests + 320 existing)
+- npm run build succeeds with no errors
+- Typecheck passes
+- Commit: 1753ed8
+
+**Learnings:**
+- Next.js API routes in App Router use route.ts files with exported HTTP method handlers
+- External API integration requires proper error handling at multiple levels (validation, fetch, parsing)
+- Environment variables should be read inside the handler, not at module level (for serverless compatibility)
+- Perfex CRM uses 'authtoken' header (not Authorization: Bearer) for API authentication
+- The /api/v1/leads endpoint is the correct Perfex CRM endpoint for creating leads
+- Listing context (listingSlug) should be included in the description field for CRM tracking
+- API routes should return consistent response shapes for both success and error cases
+- 400 status for client errors (validation), 500 for server/external service errors
+- When CRM is not configured, logging leads to console allows development/testing to continue
+
+---
+
+## 2025-03-17 16:40 CDT - US-012: Build InquiryForm component
+- Created src/components/InquiryForm.tsx with complete lead submission form:
+  - Form fields: firstname, lastname, email, phonenumber (required), description (optional)
+  - Hidden listingSlug field for tracking which property the inquiry is about
+  - Client-side validation with error state management
+  - Email validation using regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  - Phone validation for US formats with minimum 10 digits
+  - Loading state during submission with spinner animation
+  - Success message display (green alert with checkmark, dismissible)
+  - Error message display (red alert with warning icon, dismissible)
+  - Form reset after successful submission
+  - onSuccess callback prop for parent component notification
+  - Responsive layout: name fields in 2-column grid on desktop, stacked on mobile
+  - Accessibility features:
+    - Proper label associations with htmlFor
+    - aria-required for required fields
+    - aria-invalid based on validation errors
+    - aria-describedby linking to error messages
+    - role="alert" with aria-live for status messages
+  - Tailwind styling with primary color focus states
+  - Submit button with loading spinner and disabled state
+  - Error messages appear below each field with red border styling
+- Created src/app/api/leads/route.ts API endpoint:
+  - POST handler for lead submission
+  - Validates required fields: firstname, lastname, email, phonenumber
+  - Validates email format on server
+  - Forwards to Perfex CRM if PERFEX_RE_URL and PERFEX_RE_KEY env vars are set
+  - Gracefully handles CRM errors without failing the user request
+  - Returns LeadSubmissionResponse with success/error message
+  - Logs lead submissions for debugging/monitoring
+- Created src/tests/inquiry-form.test.ts with 42 assertions covering:
+  - File structure (component exists, exports function and default)
+  - Form fields (firstname, lastname, email, phonenumber, description, hidden listingSlug)
+  - Required fields validation (all except description marked required)
+  - Validation functions (isValidEmail, isValidPhone, validateForm)
+  - Loading state (SubmitStatus type, disabled inputs, spinner in button)
+  - Success message display (green alert, checkmark, dismiss button)
+  - Error message display (red alert, error icon, dismiss button)
+  - Form submission (handleSubmit, fetch to /api/leads, JSON body, form reset)
+  - Accessibility (labels, aria-invalid, aria-describedby, aria-label)
+  - Props interface (listingSlug, onSuccess callback)
+  - Styling (primary colors, responsive grid, focus styles)
+  - TypeScript types (LeadFormData, LeadSubmissionResponse imports)
+- All 326 tests pass (42 new InquiryForm tests + 284 existing)
+- npm run build succeeds with no errors
+- Typecheck passes
+- Commit: 159a8e6
+
+**Learnings:**
+- Form validation should happen both client-side (for UX) and server-side (for security)
+- Controlled inputs with React state require name attributes that match state keys
+- Clearing errors on input change provides immediate feedback to users
+- aria-live="assertive" for errors ensures screen readers announce them immediately
+- Server actions don't work in static export; use API routes instead
+- Graceful degradation: form works even if CRM API is unavailable
+- Hidden fields preserve context (listingSlug) without user-visible inputs
+- Error boundaries and try-catch blocks prevent crashes from API failures
+
+---
+
+## 2025-03-17 16:35 CDT - US-011: Build PhotoGallery component
+- Created src/components/PhotoGallery.tsx with comprehensive photo gallery functionality:
+  - Main large image display with 4:3 aspect ratio container
+  - Thumbnail strip below main image with horizontal scrolling
+  - Clicking thumbnail changes main image with active state highlighting (ring-2)
+  - Touch/swipe support on mobile with 50px minimum swipe distance
+  - Left swipe = next image, right swipe = previous image
+  - Image lazy loading with Next.js Image component (eager for first, lazy for others)
+  - Priority loading for first image with sizes attribute for responsive optimization
+  - Full-screen lightbox view on main image click
+  - Fixed position overlay (z-50) for lightbox with black/95 backdrop
+  - Navigation arrows in both gallery and lightbox (hidden on mobile gallery)
+  - Swipe hint badge on mobile devices
+  - Image counter overlay showing "X / Y" format
+  - Keyboard navigation: ArrowLeft, ArrowRight, Escape to close
+  - Prevents body scroll when lightbox is open
+- Client-side component with 'use client' directive
+- Uses useState for: currentIndex, isLightboxOpen, touchStart, touchEnd
+- Uses useCallback for: goToNext, goToPrevious, goToImage, openLightbox, closeLightbox, touch handlers
+- Comprehensive ARIA accessibility:
+  - aria-label on main image container with image number info
+  - role="button" on main image for keyboard interaction
+  - aria-label on navigation buttons (Previous/Next image)
+  - aria-current on active thumbnail
+  - role="dialog" and aria-modal="true" on lightbox
+  - onKeyDown handler for Enter/Space on main image
+- Edge case handling:
+  - Empty images array shows "No images available" fallback
+  - Conditional rendering: thumbnails only when >1 image
+  - Conditional rendering: navigation only when >1 image
+- Hover effects: scale on main image, opacity on thumbnails, expand icon on main image
+- Tailwind styling: responsive classes (md:hidden), backdrop-blur-sm for overlays
+- Created src/tests/photo-gallery.test.ts with 73 assertions covering:
+  - File structure and component exports
+  - TypeScript types (PhotoGalleryProps, JSX.Element return)
+  - Imports (React hooks, Next.js Image, 'use client')
+  - Main image display (aspect ratio, counter, priority/lazy loading)
+  - Thumbnail navigation (click handlers, active state, horizontal scroll)
+  - Touch/swipe support (handlers, min swipe distance, swipe hint)
+  - Lightbox (open state, click handlers, fixed overlay, z-index)
+  - Navigation functions (goToNext, goToPrevious, goToImage, cycling)
+  - Keyboard navigation (ArrowLeft, ArrowRight, Escape, event listener)
+  - Accessibility (ARIA labels, roles, keyboard support)
+  - Edge cases (empty images, fallback message, conditional rendering)
+  - Performance (useCallback, image sizes, body scroll prevention)
+  - Styling (Tailwind classes, responsive design, hover effects)
+- All 279 tests pass (73 new PhotoGallery tests + 206 existing)
+- npm run build succeeds with no errors
+- Typecheck passes
+- Commit: 161d960
+
+**Learnings:**
+- Swipe detection requires tracking touchStart, touchMove, and touchEnd coordinates
+- Minimum swipe distance (~50px) prevents accidental swipes
+- Touch handlers must be attached to container element, not individual images
+- useCallback is essential for event handlers passed to child components to prevent re-renders
+- Keyboard navigation via useEffect with addEventListener requires cleanup on unmount
+- Preventing body scroll: document.body.style.overflow = 'hidden'
+- Image priority prop should be conditional: priority={currentIndex === 0}
+- Lightbox needs high z-index (z-50) and fixed position to overlay all content
+- ARIA role="dialog" + aria-modal="true" communicates modal behavior to screen readers
+- Conditional rendering for single image (no nav, no thumbnails) improves UX
 
 ---
 
@@ -110,204 +293,4 @@ Started: 2025-03-17T09:08:00-05:00
 - Typecheck passes
 - Commit: 11a1bb2
 
-**Learnings:**
-- Next.js 14 App Router pages can be async functions to fetch data at build time
-- SVG patterns as data URIs work well for subtle background textures
-- CSS gradient backgrounds with wave SVG dividers create professional visual sections
-- Responsive grid layouts: grid-cols-1 md:grid-cols-2 lg:grid-cols-3
-- Hero sections work well with centered text and max-width constraints (max-w-3xl)
-- Featured listings from JSON load correctly via getFeaturedListings() at build time
-
----
-
-## 2025-03-17 13:18 CDT - US-006: Create layout with header and footer
-- Created src/components/Header.tsx with:
-  - Logo with NB branding and "Houston Home Spotlight" text
-  - Navigation links: Home, Listings, Contact
-  - Mobile hamburger menu with toggle state (useState)
-  - Smooth transitions and backdrop blur effect
-  - Accessibility: aria-label, aria-expanded on menu button
-  - Responsive: hides nav on mobile, shows hamburger menu
-  - 'use client' directive for interactivity
-  - Next.js Link component for client-side navigation
-- Created src/components/Footer.tsx with:
-  - Logo and brand description
-  - Quick Links section (Home, Listings, Contact)
-  - Contact information (Houston location, email, phone)
-  - Copyright with dynamic year
-  - Licensing info (Licensed Realtor in Harris and Fort Bend counties)
-  - Responsive grid layout (3 columns on desktop, stacked on mobile)
-- Updated src/app/layout.tsx with:
-  - Header and Footer imports from @/components/
-  - Flexbox layout with sticky header and footer at bottom
-  - Main content area with flex-grow to push footer down
-  - min-h-screen and flex flex-col on body
-- Created src/tests/layout.test.ts with 30 assertions covering:
-  - Header component structure and exports
-  - Navigation links (Home, Listings, Contact)
-  - Mobile hamburger menu functionality
-  - Logo branding presence
-  - Footer component structure
-  - Copyright and contact information
-  - Root layout integration
-  - Component file structure
-  - Navigation consistency between Header and Footer
-  - Accessibility features (ARIA labels, semantic HTML)
-- All 121 tests pass (30 new layout tests + 91 existing)
-- npm run build succeeds with no errors
-- Typecheck passes
-- Commit: d66aca4
-
-**Learnings:**
-- Client components need 'use client' directive at the top
-- Next.js Link component is preferred over <a> for internal navigation
-- Flexbox with flex-grow on main and flex flex-col on body creates sticky footer pattern
-- Mobile hamburger menu requires useState for toggle functionality
-- ARIA attributes (aria-expanded, aria-label) improve accessibility for mobile menus
-- Semantic HTML (header, nav, footer, main) helps with screen readers
-
----
-
-## 2025-03-17 12:54 CDT - US-005: Build data loading utilities
-- Created src/lib/data.ts with data loading functions:
-  - getAllListings() - loads all listings with caching, returns Promise<Listing[]>
-  - getListingBySlug(slug) - fetch single listing by slug, returns Promise<Listing | null>
-  - getFeaturedListings() - get featured listings only, returns Promise<Listing[]>
-  - filterListings(filters) - filter by minPrice/maxPrice/minBeds, returns Promise<Listing[]>
-  - clearListingsCache() - clear cache for testing
-- Implemented in-memory caching with listingsCache variable
-- Added comprehensive error handling with try-catch blocks in all async functions
-- Used dynamic imports with Promise.all for parallel JSON file loading
-- Imported all 3 listing JSON files from @/data/listings/
-- Added JSDoc comments for all functions with parameter and return type documentation
-- Created src/tests/data.test.ts with 24 assertions covering:
-  - File structure verification (data.ts exists, imports types)
-  - Function exports verification (all 5 functions exported)
-  - Caching implementation (cache variable, cache check, cache clear)
-  - Error handling (try-catch blocks, return values on error)
-  - Data loading logic (JSON imports, dynamic imports, Promise.all)
-  - Filter logic (minPrice, maxPrice, minBeds, undefined checks)
-  - JSDoc documentation verification
-- All 92 tests pass (24 new data tests + 68 existing)
-- npm run build succeeds with no errors
-- Typecheck passes
-- Commit: 01f3fae
-
-**Learnings:**
-- Node.js test runner can't resolve @/* path aliases - use file content checks instead of imports
-- Dynamic imports work well for JSON data in Next.js static export
-- Promise.all enables parallel loading of multiple JSON files
-- Return null (not undefined) for single item lookups to match expected behavior
-- Cache invalidation via clearListingsCache() is essential for testing
-
----
-
-## 2025-03-17 12:35 CDT - US-004: Create sample listing JSON data
-- Created src/data/listings/ directory with 3 JSON files:
-  - riverside-terrace-modern-craftsman.json (featured: true) - $785k, 4bd/3.5ba in Houston
-  - heights-bungalow-historic.json - $625k, 3bd/2ba in The Heights
-  - sugarland-estate-pool.json - $925k, 5bd/4ba in Sugar Land with videoUrl
-- Created src/lib/listings.ts data utility module with functions:
-  - loadListings() - loads all listings with caching
-  - getListingBySlug(slug) - fetch single listing
-  - getFeaturedListings() - get featured listings only
-  - filterListings(filters) - filter by price/beds
-  - clearListingsCache() - for testing
-- Created src/tests/listings.test.ts with 14 assertions covering:
-  - Directory structure verification
-  - JSON file validation (required fields, types, values)
-  - Houston-area location validation (TX state, 77xxx ZIPs)
-  - Image array validation (3-5 images per listing)
-  - Featured listing requirements (exactly 1 featured)
-  - Slug uniqueness across all listings
-  - Data loader module exports
-- Added dist/ to .gitignore (build output directory)
-- All 68 tests pass (14 new listing tests + 54 existing)
-- npm run build succeeds with no errors
-- Typecheck passes
-- Commit: ff456e2
-
-**Learnings:**
-- picsum.photos with seed parameter provides consistent placeholder images
-- JSON files in src/data can be imported directly in Next.js with proper tsconfig paths
-- Caching data in memory avoids repeated file system operations
-- Node.js test runner can't resolve @/* path aliases - check file content instead of importing
-- Type assertions needed when reading JSON as Record<string, unknown>
-
----
-
-## 2025-03-17 12:07 CDT - US-003: Define TypeScript types and interfaces
-- Updated src/types/index.ts with complete type definitions:
-  - Listing interface: id, slug, address, city, state, zip, price, beds, baths, sqft, description, images[], videoUrl?, featured, createdAt
-  - LeadFormData interface: firstname, lastname, email, phonenumber, description, listingSlug? (matches Perfex CRM field names)
-  - FilterOptions interface: minPrice?, maxPrice?, minBeds?
-  - Bonus: Added LeadSubmissionResponse and ListingImage interfaces for future use
-- Added comprehensive JSDoc comments to all interfaces and fields
-- Created src/tests/types.test.ts with 15 assertions covering:
-  - Listing interface with all required fields and optional videoUrl
-  - LeadFormData with Perfex CRM compatible field names
-  - FilterOptions with complete, partial, and empty filters
-  - LeadSubmissionResponse for API responses
-  - ListingImage for image metadata
-- All 46 tests pass (including 15 new type tests)
-- npm run build succeeds with no errors
-- Typecheck passes
-- Commit: 0a8ce56
-
-**Learnings:**
-- JSDoc comments on TypeScript interfaces improve IDE autocomplete and documentation
-- Perfex CRM expects snake_case field names: firstname, lastname, phonenumber (no camelCase)
-- Using 'listingSlug' instead of 'listingId' in LeadFormData provides better traceability to the source page
-- Optional fields (marked with ?) should be tested both with and without values
-
----
-
-## 2025-03-17 10:59 CDT - US-002: Configure Tailwind CSS with custom theme
-- Updated tailwind.config.ts with custom primary (blue-900) and accent (amber-500) color palettes
-- Added full color scale (50-950) for both primary and accent colors
-- Configured Inter font for body text and Merriweather serif font for headings via CSS variables
-- Added custom breakpoints for mobile-first design (xs: 375px)
-- Updated globals.css with @layer base, components, and utilities
-- Created custom component classes: .btn-primary, .btn-accent, .card
-- Created custom utility classes: .gradient-primary, .gradient-accent, .section-padding, .container-custom
-- Updated postcss.config.mjs to include autoprefixer plugin
-- Installed autoprefixer as dev dependency
-- Updated layout.tsx to use Google Fonts (Inter + Merriweather) instead of local fonts
-- Created tailwind-config.test.ts with 19 assertions covering:
-  - Configuration files existence
-  - Custom theme colors (primary and accent palettes)
-  - Font configuration (sans and serif)
-  - Responsive breakpoints
-  - Custom components and utilities
-  - PostCSS configuration
-  - Package dependencies
-- All 31 tests pass
-- npm run build succeeds with Tailwind CSS processing
-- Typecheck passes
-- Commit: 07735fd
-
-**Learnings:**
-- Tailwind CSS v3 config uses `content` array for file paths to scan
-- Next.js Google Fonts use CSS variables that can be referenced in tailwind.config.ts
-- Custom `@layer` directives in globals.css help organize styles
-- Full color palette (50-950) gives design flexibility while maintaining brand consistency
-- Mobile-first breakpoints should start at 375px for smallest phones
-
----
-
-## 2025-03-17 09:10 CDT - US-001: Initialize Next.js 14 project with TypeScript
-- Updated next.config.mjs with output: 'export', distDir: 'dist', images.unoptimized: true
-- Updated package.json with test and typecheck scripts
-- Updated layout.tsx metadata for Houston Home Spotlight
-- Created folder structure: src/components, src/lib, src/data, src/types
-- Added type definitions in src/types/index.ts (Listing, LeadFormData interfaces)
-- Created project setup tests in src/tests/project-setup.test.ts with 12 assertions
-- Added wrangler.toml for Cloudflare Pages deployment
-- 
-**Learnings:**
-- Next.js 14 with App Router uses tsconfig.json with "moduleResolution": "bundler"
-- Static export requires images.unoptimized = true
-- Node.js built-in test runner works well for project verification tests
-- Tests are located in src/tests/ and run via `npm test` (node --test)
-
----
+**
