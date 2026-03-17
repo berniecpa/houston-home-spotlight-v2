@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "test": "node --test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "pages:build": "npx @cloudflare/next-on-pages@1",
+    "pages:deploy": "npm run build && wrangler pages deploy dist",
+    "pages:preview": "npm run build && wrangler pages dev dist"
   },
   "dependencies": {
     "next": "14.2.35",
@@ -16,6 +19,7 @@
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.12",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
