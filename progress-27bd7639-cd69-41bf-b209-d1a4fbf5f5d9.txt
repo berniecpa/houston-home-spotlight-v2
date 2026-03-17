@@ -36,6 +36,81 @@ Started: 2025-03-17T09:08:00-05:00
 - API error responses return appropriate HTTP status codes (400 for validation, 500 for server errors)
 - API routes validate input before calling external services
 - External API calls use fetch with proper headers and JSON body
+- Dynamic routes use generateStaticParams for static export (required for output: 'export')
+- notFound() from 'next/navigation' handles 404s for invalid dynamic route slugs
+- generateMetadata receives params and returns Metadata object for SEO
+- Async page components receive params: { slug: string } for dynamic routes
+- Listing detail pages use two-column layout with sticky sidebar for inquiry form
+- Property stats displayed in grid with icons (beds, baths, sqft)
+- Video tour section conditionally rendered when videoUrl exists
+
+---
+
+## 2025-03-17 17:30 CDT - US-014: Build Listing Detail page
+- Created src/app/listings/[slug]/page.tsx with complete listing detail functionality:
+  - Dynamic route with generateStaticParams for static export compatibility
+  - generateMetadata for SEO with listing-specific title and description
+  - Async page component with { params: { slug } } prop
+  - Fetches listing via getListingBySlug(slug)
+  - 404 handling via notFound() for invalid slugs
+  - PhotoGallery at top with listing.images and address as alt
+  - Property header showing address, city, state, zip, and price
+  - Responsive stats display: price (desktop only), beds, baths, sqft
+  - Key stats grid with icons (bed, bath, sqft icons from ListingCard)
+  - "About This Home" section with full description
+  - "Property Details" section with key-value pairs (Address, City, State, ZIP, Beds, Baths, Sqft, Price per Sqft)
+  - Video Tour section (conditionally rendered if videoUrl exists)
+  - Sticky InquiryForm sidebar with listingSlug pre-populated
+  - Back link to /listings page
+  - Mobile-responsive layout: 1 column mobile, 3 columns desktop (lg:grid-cols-3)
+  - Responsive padding: py-6 sm:py-8 md:py-12
+  - Responsive text sizes: text-2xl sm:text-3xl
+  - Mobile header (lg:hidden) vs desktop header (hidden lg:block)
+  - Stats grid: grid-cols-2 sm:grid-cols-4
+  - Sticky sidebar: lg:sticky lg:top-6
+  - Card-style sections with bg-white, rounded-xl, shadow-sm
+  - Helper functions for formatting: formatPrice, formatNumber
+  - Price per sqft calculation: Math.round(price / sqft)
+- Created src/tests/listing-detail-page.test.ts with 53 assertions covering:
+  - File structure (page.tsx in src/app/listings/[slug]/)
+  - Exports (generateStaticParams, generateMetadata, default page component)
+  - Imports (Metadata, notFound, PhotoGallery, InquiryForm, data functions, types)
+  - generateStaticParams (returns slug objects array, calls getAllListings, maps listings)
+  - generateMetadata (accepts params, calls getListingBySlug, 404 title, address in title)
+  - Page component (accepts params, fetches listing, calls notFound for invalid)
+  - PhotoGallery integration (renders, passes images, passes address as alt)
+  - Property stats (price, beds, baths, sqft, address, helper functions)
+  - Description rendering (displays, About This Home section)
+  - InquiryForm integration (renders, passes listingSlug, has heading)
+  - Navigation (Back to Listings link)
+  - Property details section (heading, fields, price per sqft calculation)
+  - Video tour section (conditional rendering)
+  - Mobile responsive design (container, padding, grid, text sizes, hidden/show classes)
+  - Sticky sidebar (lg:sticky)
+  - Styling (Tailwind classes, white cards with shadows)
+- All 421 tests pass (53 new listing detail tests + 368 existing)
+- npm run build succeeds with no errors
+- Typecheck passes
+- Static export generates 3 listing detail pages:
+  - /listings/riverside-terrace-modern-craftsman
+  - /listings/heights-bungalow-historic
+  - /listings/sugarland-estate-pool
+- Commit: 25d18d4
+
+**Learnings:**
+- Dynamic routes in Next.js App Router use bracket syntax: [slug]
+- generateStaticParams is REQUIRED for static export with dynamic routes
+- generateStaticParams must return array of objects matching route parameters: { slug: string }[]
+- notFound() from 'next/navigation' triggers the 404 page for invalid slugs
+- Async page components can use generateMetadata separately (not in page component)
+- Sticky positioning on desktop requires: lg:sticky lg:top-6 with parent positioning context
+- Two-column layouts work well for detail pages: 2/3 for content, 1/3 for sticky sidebar
+- Mobile-first responsive design: hide desktop elements with lg:hidden, show with hidden lg:block
+- Property stats look better with icons (consistent with ListingCard)
+- Price per sqft is a useful metric for buyers
+- Helper functions for formatting (formatPrice, formatNumber) reusable across components
+- Video sections should be conditionally rendered to avoid empty placeholders
+- ListingDetailPage tests should verify file structure, exports, and integration with components
 
 ---
 
@@ -52,245 +127,4 @@ Started: 2025-03-17T09:08:00-05:00
     - email → email
     - phonenumber → phonenumber
     - description (with listingSlug prepended if provided)
-    - source: 'Houston Home Spotlight Website'
-  - POST to Perfex CRM /api/v1/leads endpoint with authtoken header
-  - Proper error handling with try-catch blocks
-  - CRM response parsing and leadId extraction
-  - Success response: 200 status with { success: true, message, leadId }
-  - Error response: 500 status with { success: false, message }
-  - Graceful fallback when CRM credentials not configured (logs lead for dev/testing)
-  - Comprehensive JSDoc comments for documentation
-- Created src/tests/leads-api.test.ts with 49 assertions covering:
-  - File structure (route.ts exists, exports POST function)
-  - Imports (NextRequest, NextResponse, LeadFormData, LeadSubmissionResponse)
-  - Environment variables (PERFEX_RE_URL, PERFEX_RE_KEY reading)
-  - Request body parsing (JSON parsing, LeadFormData typing)
-  - Field mapping (firstname, lastname, email, phonenumber, description)
-  - Perfex CRM API call (/api/v1/leads endpoint, POST method, authtoken header)
-  - Input validation (required fields, email format, 400 status)
-  - Success response (200 status, success: true, message, leadId)
-  - Error response (500 status, success: false, error message, try-catch)
-  - Listing slug handling (extract from body, append to description)
-  - TypeScript types (return type annotation, JSDoc comments)
-  - CRM response handling (response status check, JSON parsing, error logging)
-- All 369 tests pass (49 new leads-api tests + 320 existing)
-- npm run build succeeds with no errors
-- Typecheck passes
-- Commit: 1753ed8
-
-**Learnings:**
-- Next.js API routes in App Router use route.ts files with exported HTTP method handlers
-- External API integration requires proper error handling at multiple levels (validation, fetch, parsing)
-- Environment variables should be read inside the handler, not at module level (for serverless compatibility)
-- Perfex CRM uses 'authtoken' header (not Authorization: Bearer) for API authentication
-- The /api/v1/leads endpoint is the correct Perfex CRM endpoint for creating leads
-- Listing context (listingSlug) should be included in the description field for CRM tracking
-- API routes should return consistent response shapes for both success and error cases
-- 400 status for client errors (validation), 500 for server/external service errors
-- When CRM is not configured, logging leads to console allows development/testing to continue
-
----
-
-## 2025-03-17 16:40 CDT - US-012: Build InquiryForm component
-- Created src/components/InquiryForm.tsx with complete lead submission form:
-  - Form fields: firstname, lastname, email, phonenumber (required), description (optional)
-  - Hidden listingSlug field for tracking which property the inquiry is about
-  - Client-side validation with error state management
-  - Email validation using regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  - Phone validation for US formats with minimum 10 digits
-  - Loading state during submission with spinner animation
-  - Success message display (green alert with checkmark, dismissible)
-  - Error message display (red alert with warning icon, dismissible)
-  - Form reset after successful submission
-  - onSuccess callback prop for parent component notification
-  - Responsive layout: name fields in 2-column grid on desktop, stacked on mobile
-  - Accessibility features:
-    - Proper label associations with htmlFor
-    - aria-required for required fields
-    - aria-invalid based on validation errors
-    - aria-describedby linking to error messages
-    - role="alert" with aria-live for status messages
-  - Tailwind styling with primary color focus states
-  - Submit button with loading spinner and disabled state
-  - Error messages appear below each field with red border styling
-- Created src/app/api/leads/route.ts API endpoint:
-  - POST handler for lead submission
-  - Validates required fields: firstname, lastname, email, phonenumber
-  - Validates email format on server
-  - Forwards to Perfex CRM if PERFEX_RE_URL and PERFEX_RE_KEY env vars are set
-  - Gracefully handles CRM errors without failing the user request
-  - Returns LeadSubmissionResponse with success/error message
-  - Logs lead submissions for debugging/monitoring
-- Created src/tests/inquiry-form.test.ts with 42 assertions covering:
-  - File structure (component exists, exports function and default)
-  - Form fields (firstname, lastname, email, phonenumber, description, hidden listingSlug)
-  - Required fields validation (all except description marked required)
-  - Validation functions (isValidEmail, isValidPhone, validateForm)
-  - Loading state (SubmitStatus type, disabled inputs, spinner in button)
-  - Success message display (green alert, checkmark, dismiss button)
-  - Error message display (red alert, error icon, dismiss button)
-  - Form submission (handleSubmit, fetch to /api/leads, JSON body, form reset)
-  - Accessibility (labels, aria-invalid, aria-describedby, aria-label)
-  - Props interface (listingSlug, onSuccess callback)
-  - Styling (primary colors, responsive grid, focus styles)
-  - TypeScript types (LeadFormData, LeadSubmissionResponse imports)
-- All 326 tests pass (42 new InquiryForm tests + 284 existing)
-- npm run build succeeds with no errors
-- Typecheck passes
-- Commit: 159a8e6
-
-**Learnings:**
-- Form validation should happen both client-side (for UX) and server-side (for security)
-- Controlled inputs with React state require name attributes that match state keys
-- Clearing errors on input change provides immediate feedback to users
-- aria-live="assertive" for errors ensures screen readers announce them immediately
-- Server actions don't work in static export; use API routes instead
-- Graceful degradation: form works even if CRM API is unavailable
-- Hidden fields preserve context (listingSlug) without user-visible inputs
-- Error boundaries and try-catch blocks prevent crashes from API failures
-
----
-
-## 2025-03-17 16:35 CDT - US-011: Build PhotoGallery component
-- Created src/components/PhotoGallery.tsx with comprehensive photo gallery functionality:
-  - Main large image display with 4:3 aspect ratio container
-  - Thumbnail strip below main image with horizontal scrolling
-  - Clicking thumbnail changes main image with active state highlighting (ring-2)
-  - Touch/swipe support on mobile with 50px minimum swipe distance
-  - Left swipe = next image, right swipe = previous image
-  - Image lazy loading with Next.js Image component (eager for first, lazy for others)
-  - Priority loading for first image with sizes attribute for responsive optimization
-  - Full-screen lightbox view on main image click
-  - Fixed position overlay (z-50) for lightbox with black/95 backdrop
-  - Navigation arrows in both gallery and lightbox (hidden on mobile gallery)
-  - Swipe hint badge on mobile devices
-  - Image counter overlay showing "X / Y" format
-  - Keyboard navigation: ArrowLeft, ArrowRight, Escape to close
-  - Prevents body scroll when lightbox is open
-- Client-side component with 'use client' directive
-- Uses useState for: currentIndex, isLightboxOpen, touchStart, touchEnd
-- Uses useCallback for: goToNext, goToPrevious, goToImage, openLightbox, closeLightbox, touch handlers
-- Comprehensive ARIA accessibility:
-  - aria-label on main image container with image number info
-  - role="button" on main image for keyboard interaction
-  - aria-label on navigation buttons (Previous/Next image)
-  - aria-current on active thumbnail
-  - role="dialog" and aria-modal="true" on lightbox
-  - onKeyDown handler for Enter/Space on main image
-- Edge case handling:
-  - Empty images array shows "No images available" fallback
-  - Conditional rendering: thumbnails only when >1 image
-  - Conditional rendering: navigation only when >1 image
-- Hover effects: scale on main image, opacity on thumbnails, expand icon on main image
-- Tailwind styling: responsive classes (md:hidden), backdrop-blur-sm for overlays
-- Created src/tests/photo-gallery.test.ts with 73 assertions covering:
-  - File structure and component exports
-  - TypeScript types (PhotoGalleryProps, JSX.Element return)
-  - Imports (React hooks, Next.js Image, 'use client')
-  - Main image display (aspect ratio, counter, priority/lazy loading)
-  - Thumbnail navigation (click handlers, active state, horizontal scroll)
-  - Touch/swipe support (handlers, min swipe distance, swipe hint)
-  - Lightbox (open state, click handlers, fixed overlay, z-index)
-  - Navigation functions (goToNext, goToPrevious, goToImage, cycling)
-  - Keyboard navigation (ArrowLeft, ArrowRight, Escape, event listener)
-  - Accessibility (ARIA labels, roles, keyboard support)
-  - Edge cases (empty images, fallback message, conditional rendering)
-  - Performance (useCallback, image sizes, body scroll prevention)
-  - Styling (Tailwind classes, responsive design, hover effects)
-- All 279 tests pass (73 new PhotoGallery tests + 206 existing)
-- npm run build succeeds with no errors
-- Typecheck passes
-- Commit: 161d960
-
-**Learnings:**
-- Swipe detection requires tracking touchStart, touchMove, and touchEnd coordinates
-- Minimum swipe distance (~50px) prevents accidental swipes
-- Touch handlers must be attached to container element, not individual images
-- useCallback is essential for event handlers passed to child components to prevent re-renders
-- Keyboard navigation via useEffect with addEventListener requires cleanup on unmount
-- Preventing body scroll: document.body.style.overflow = 'hidden'
-- Image priority prop should be conditional: priority={currentIndex === 0}
-- Lightbox needs high z-index (z-50) and fixed position to overlay all content
-- ARIA role="dialog" + aria-modal="true" communicates modal behavior to screen readers
-- Conditional rendering for single image (no nav, no thumbnails) improves UX
-
----
-
-## 2025-03-17 15:05 CDT - US-009: Build listings filter components
-- Created src/components/PriceFilter.tsx:
-  - Min and max price input fields with dollar sign prefix
-  - Formatted number display with comma separators
-  - inputMode="numeric" for mobile numeric keyboards
-  - Labels and aria-labels for accessibility
-  - fieldset/legend for semantic grouping
-  - Responsive layout (stack on mobile, side by side on desktop)
-  - onMinPriceChange and onMaxPriceChange callback props
-- Created src/components/BedsFilter.tsx:
-  - Selectable bed count buttons (Any, 1, 2, 3, 4, 5+)
-  - Toggle behavior (click same value to deselect)
-  - role="radiogroup" with aria-checked for accessibility
-  - Active state styling with primary color
-  - Keyboard navigable via Tab and Enter/Space
-  - onBedsChange callback prop
-- Created src/components/FilterBar.tsx:
-  - Combines PriceFilter and BedsFilter components
-  - Expandable on mobile devices (sm:hidden toggle button)
-  - Active filter count badge display
-  - Clear All Filters button (appears only when filters active)
-  - resultCount prop for "homes found" display
-  - aria-expanded and aria-controls for mobile toggle
-  - Grid layout on desktop (side by side)
-- Created src/tests/filter-components.test.ts with 43 assertions covering:
-  - File structure (all 3 components exist and export correctly)
-  - PriceFilter props, inputs, labels, accessibility, mobile layout
-  - BedsFilter props, buttons, "Any" option, ARIA radiogroup
-  - FilterBar composition, imports, clear functionality, active count badge
-  - Mobile responsiveness (sm:hidden, aria-expanded, aria-controls)
-  - Accessibility (semantic HTML, focus indicators, keyboard nav, aria-labels)
-  - Styling (Tailwind classes, primary colors, active states)
-- All 225 tests pass (43 new + 182 existing)
-- npm run build succeeds with no errors
-- Typecheck passes
-- Commit: 60cbccc
-
-**Learnings:**
-- inputMode="numeric" is essential for triggering mobile numeric keyboards
-- fieldset/legend with role="radiogroup" creates accessible filter groups
-- Tab-based button groups support keyboard navigation better than dropdowns
-- aria-expanded + aria-controls pattern works well for mobile expandable sections
-- Callback-based state management allows parent components to control filter state
-- Number inputs need careful handling to include commas for readability while storing raw numbers
-- useCallback is useful for memoized callback functions passed to multiple child components
-- Mobile-first expandable filters save screen space without sacrificing functionality
-
----
-
-## 2025-03-17 14:07 CDT - US-008: Build Home page with hero and featured listings
-- Updated src/app/page.tsx with complete home page implementation:
-  - Hero section with gradient background (primary-900 to primary-700)
-  - Pattern overlay using SVG data URI for visual texture
-  - Headline: "Find Your Dream Home in Houston" with accent color highlight
-  - Subheadline describing Houston neighborhoods and Bernard's service
-  - Two CTA buttons: "Browse Listings" (accent) and "Contact Bernard" (outline)
-  - Wave SVG divider at bottom of hero for visual polish
-  - Featured Listings section pulling from JSON data via getFeaturedListings()
-  - Responsive grid (1 col mobile, 2 col tablet, 3 col desktop) for listings
-  - Empty state handling when no featured listings available
-  - "View All Listings" link to /listings page
-  - "Why Work With Bernard?" section with 4 feature cards:
-    - Local Expertise, Responsive Service, Trusted Advisor, Curated Selection
-  - Final CTA section with dark background for conversion
-- Created src/tests/home-page.test.ts with 27 assertions covering:
-  - File structure and component exports
-  - Required imports (Link, ListingCard, getFeaturedListings)
-  - Hero section elements (headline, subheadline, CTAs, gradient)
-  - Featured listings section (grid, ListingCard rendering, data fetching)
-  - Mobile responsiveness (container classes, responsive padding, text sizes)
-  - Additional sections (Why Work With Me, Final CTA)
-  - Accessibility (semantic HTML, aria-hidden on icons)
-- All 179 tests pass (27 new + 152 existing)
-- npm run build succeeds with no errors
-- Typecheck passes
-- Commit: 11a1bb2
-
-**
+    -
