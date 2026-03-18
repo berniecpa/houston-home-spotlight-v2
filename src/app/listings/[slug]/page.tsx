@@ -1,9 +1,9 @@
 /**
  * Listing Detail Page
- * 
+ *
  * Dynamic page for displaying individual property listings.
  * Features photo gallery, property details, description, and inquiry form.
- * 
+ *
  * @module app/listings/[slug]/page
  */
 
@@ -29,13 +29,12 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
 /**
  * Generate metadata for the listing detail page
  */
-export async function generateMetadata({ 
+export async function generateMetadata({
   params 
-}: { 
-  params: { slug: string } 
-}): Promise<Metadata> {
-  const listing = await getListingBySlug(params.slug);
-  
+}: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const listing = await getListingBySlug(slug);
+
   if (!listing) {
     return {
       title: 'Listing Not Found | Houston Home Spotlight',
@@ -172,18 +171,19 @@ function generateListingStructuredData(listing: Listing): Record<string, unknown
 
 /**
  * Listing Detail Page Component
- * 
+ *
  * @param {Object} props - Component props
  * @param {Object} props.params - URL parameters
  * @param {string} props.params.slug - The listing slug
  * @returns {JSX.Element} The listing detail page
  */
-export default async function ListingDetailPage({ 
-  params 
-}: { 
-  params: { slug: string } 
+export default async function ListingDetailPage({
+  params
+}: {
+  params: Promise<{ slug: string }>
 }): Promise<JSX.Element> {
-  const listing = await getListingBySlug(params.slug);
+  const { slug } = await params;
+  const listing = await getListingBySlug(slug);
 
   // Return 404 if listing not found
   if (!listing) {
