@@ -14,7 +14,7 @@
     "pages:preview": "npm run build && wrangler pages dev dist"
   },
   "dependencies": {
-    "next": "14.2.35",
+    "next": "^15.5.2",
     "react": "^18",
     "react-dom": "^18"
   },

@@ -122,6 +122,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script defer src="https://siteanalytics.b3rni3vault.com/script.js" data-website-id="dcbb81c7-861c-425a-bce2-8dd14ea5453b"></script>
+      </head>
       <body
         className={`${inter.variable} ${merriweather.variable} font-sans antialiased min-h-screen flex flex-col`}
       >
