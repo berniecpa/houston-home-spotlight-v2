@@ -32,7 +32,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. `wrangler d1 migrations apply` applies the schema and all four tables (agents, listings, subscriptions, leads) exist in both local and remote D1
   4. `wrangler dev` starts locally with D1 bindings resolved via `initOpenNextCloudflareForDev()` — no "D1 binding not found" errors
   5. GitHub Actions deploy workflow runs the OpenNext build and wrangler deploy steps, and the pipeline passes on push to main
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 01-01-PLAN.md — Install @opennextjs/cloudflare adapter; rewrite wrangler.toml; update package.json and next.config.mjs; fix /api/leads env vars; rewrite deployment tests
+- [ ] 01-02-PLAN.md — Create D1 migration SQL (6 tables); create /api/health route; generate CloudflareEnv types; provision D1 and apply schema locally
+- [ ] 01-03-PLAN.md — Rewrite GitHub Actions deploy workflow for Workers; verify CI pipeline passes end-to-end
 
 ### Phase 2: Auth + Agent Onboarding
 **Goal**: Agents can register, verify their email, log in with a persistent session, reset their password, and complete their profile — and Bernard's account has admin access
