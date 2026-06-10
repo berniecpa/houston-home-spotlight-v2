@@ -1,12 +1,25 @@
+# wrangler.toml — Cloudflare Workers configuration
+# Source: opennext.js.org/cloudflare/get-started + developers.cloudflare.com/d1/reference/migrations/
 name = "houston-home-spotlight-v2"
-compatibility_date = "2024-03-17"
-compatibility_flags = ["nodejs_compat"]
+main = ".open-next/worker.js"
+compatibility_date = "2024-12-30"
+compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
 
-# Cloudflare Pages configuration
-[build]
-command = "npm run build"
-cwd = "."
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
 
-# Pages deployment settings
-[[pages_build_output]]
-bucket = "dist"
+[[services]]
+binding = "WORKER_SELF_REFERENCE"
+service = "houston-home-spotlight-v2"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "houston-home-spotlight"
+database_id = "PLACEHOLDER_RUN_wrangler_d1_create_to_get_UUID"
+migrations_dir = "db/migrations"
+migrations_table = "d1_migrations"
+
+[vars]
+PERFEX_RE_URL = ""
+# PERFEX_RE_KEY must be set via: wrangler secret put PERFEX_RE_KEY

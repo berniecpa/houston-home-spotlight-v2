@@ -9,17 +9,21 @@
     "lint": "next lint",
     "test": "node --test",
     "typecheck": "tsc --noEmit",
-    "pages:build": "npx @cloudflare/next-on-pages@1",
-    "pages:deploy": "npm run build && wrangler pages deploy dist",
-    "pages:preview": "npm run build && wrangler pages dev dist"
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare build && wrangler deploy",
+    "cf:typegen": "wrangler types",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote"
   },
   "dependencies": {
-    "next": "^15.5.2",
+    "next": "^15.5.19",
     "react": "^18",
     "react-dom": "^18"
   },
   "devDependencies": {
-    "@cloudflare/next-on-pages": "^1.13.12",
+    "@cloudflare/workers-types": "^4.20260610.1",
+    "@opennextjs/cloudflare": "^1.19.11",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
@@ -28,6 +32,7 @@
     "eslint-config-next": "14.2.35",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.99.0"
   }
 }
