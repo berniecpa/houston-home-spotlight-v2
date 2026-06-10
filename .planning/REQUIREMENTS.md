@@ -99,7 +99,7 @@
 
 ## Traceability
 
-Updated during roadmap creation.
+Updated 2026-06-10 — roadmap created, all 37 v1 requirements mapped.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
@@ -148,4 +148,4 @@ Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-06-10*
-*Last updated: 2026-06-10 after initial definition*
+*Last updated: 2026-06-10 after roadmap creation*
