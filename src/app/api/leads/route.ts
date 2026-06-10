@@ -8,6 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { LeadFormData, LeadSubmissionResponse } from '@/types';
 
 /**
@@ -49,9 +50,10 @@ export async function POST(
       );
     }
 
-    // Get environment variables for Perfex CRM
-    const perfexUrl = process.env.PERFEX_RE_URL;
-    const perfexKey = process.env.PERFEX_RE_KEY;
+    // Get environment variables for Perfex CRM via Workers binding
+    const { env } = await getCloudflareContext({ async: true });
+    const perfexUrl = env.PERFEX_RE_URL as string | undefined;
+    const perfexKey = env.PERFEX_RE_KEY as string | undefined;
 
     // If Perfex CRM credentials are configured, submit to CRM
     if (perfexUrl && perfexKey) {

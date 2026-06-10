@@ -69,19 +69,19 @@ describe('Leads API Route - US-013', () => {
   });
 
   describe('Environment Variables', () => {
-    it('should read PERFEX_RE_URL from process.env', () => {
+    it('should read PERFEX_RE_URL from Workers env via getCloudflareContext', () => {
       const content = readFileSync(ROUTE_PATH, 'utf-8');
       assert.ok(
-        content.includes('process.env.PERFEX_RE_URL'),
-        'Should read PERFEX_RE_URL from environment'
+        content.includes('env.PERFEX_RE_URL'),
+        'Should read PERFEX_RE_URL from Workers env binding'
       );
     });
 
-    it('should read PERFEX_RE_KEY from process.env', () => {
+    it('should read PERFEX_RE_KEY from Workers env via getCloudflareContext', () => {
       const content = readFileSync(ROUTE_PATH, 'utf-8');
       assert.ok(
-        content.includes('process.env.PERFEX_RE_KEY'),
-        'Should read PERFEX_RE_KEY from environment'
+        content.includes('env.PERFEX_RE_KEY'),
+        'Should read PERFEX_RE_KEY from Workers env binding'
       );
     });
   });

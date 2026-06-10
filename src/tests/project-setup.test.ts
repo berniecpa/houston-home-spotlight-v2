@@ -7,13 +7,13 @@ describe('Project Setup', () => {
   const projectRoot = process.cwd();
 
   describe('Configuration Files', () => {
-    it('should have next.config.mjs with static export', () => {
+    it('should have next.config.mjs with Workers configuration', () => {
       const configPath = join(projectRoot, 'next.config.mjs');
       assert.ok(existsSync(configPath), 'next.config.mjs should exist');
-      
+
       const configContent = readFileSync(configPath, 'utf-8');
-      assert.ok(configContent.includes("output: 'export'"), 'next.config.mjs should have output: export');
-      assert.ok(configContent.includes("distDir: 'dist'"), 'next.config.mjs should have distDir: dist');
+      assert.ok(!configContent.includes("output: 'export'"), 'next.config.mjs should not have static export (Workers mode)');
+      assert.ok(configContent.includes('initOpenNextCloudflareForDev'), 'next.config.mjs should have Workers dev init');
     });
 
     it('should have tsconfig.json with correct configuration', () => {
@@ -77,11 +77,14 @@ describe('Project Setup', () => {
       assert.ok(packageJson.scripts.build, 'package.json should have build script');
     });
 
-    it('should have Next.js 14', () => {
+    it('should have Next.js 15', () => {
       const packagePath = join(projectRoot, 'package.json');
       const packageJson = JSON.parse(readFileSync(packagePath, 'utf-8'));
-      
-      assert.ok(packageJson.dependencies.next.startsWith('14.'), 'Next.js should be version 14.x');
+
+      assert.ok(
+        packageJson.dependencies.next.startsWith('^15.') || packageJson.dependencies.next.startsWith('15.'),
+        'Next.js should be version 15.x'
+      );
     });
   });
 

@@ -1,13 +1,16 @@
 /**
- * Cloudflare Pages Deployment Tests - US-016
- * 
+ * Cloudflare Workers Deployment Tests
+ *
  * Tests verify that:
- * 1. wrangler.toml exists with proper Pages configuration
- * 2. next.config.js has output: 'export' and distDir: 'dist'
- * 3. .node-version file specifies compatible Node version
- * 4. npm run build outputs static files to dist/
- * 5. Build scripts for Cloudflare deployment exist
- * 6. @cloudflare/next-on-pages dependency is installed
+ * 1. wrangler.toml has main = ".open-next/worker.js" and nodejs_compat
+ * 2. next.config.mjs does NOT contain output: 'export' or distDir: 'dist'
+ * 3. open-next.config.ts exists with defineCloudflareConfig
+ * 4. @opennextjs/cloudflare is in devDependencies
+ * 5. package.json has cf:build and cf:deploy scripts
+ * 6. db/migrations/0001_initial_schema.sql exists with required tables
+ * 7. /api/leads route uses Workers env vars via getCloudflareContext
+ *
+ * @module tests/cloudflare-deployment
  */
 
 import { describe, it } from 'node:test';
@@ -19,174 +22,155 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '../../');
 
-describe('Cloudflare Pages Deployment Configuration - US-016', () => {
-  
-  describe('wrangler.toml configuration', () => {
+describe('Cloudflare Workers Deployment Configuration', () => {
+
+  describe('wrangler.toml Workers configuration', () => {
     const wranglerPath = path.join(rootDir, 'wrangler.toml');
-    
+
     it('should exist', () => {
       assert.ok(fs.existsSync(wranglerPath), 'wrangler.toml should exist');
     });
-    
-    it('should have name property', () => {
+
+    it('should have main pointing to worker.js', () => {
       const content = fs.readFileSync(wranglerPath, 'utf-8');
-      assert.ok(content.includes('name = "houston-home-spotlight-v2"'), 'wrangler.toml should have correct name');
+      assert.ok(content.includes('main = ".open-next/worker.js"'), 'wrangler.toml should point to .open-next/worker.js');
     });
-    
-    it('should have compatibility_date', () => {
+
+    it('should have compatibility_date 2024-12-30', () => {
       const content = fs.readFileSync(wranglerPath, 'utf-8');
-      assert.ok(content.includes('compatibility_date'), 'wrangler.toml should have compatibility_date');
+      assert.ok(content.includes('compatibility_date = "2024-12-30"'), 'wrangler.toml should have compatibility_date 2024-12-30');
     });
-    
-    it('should have compatibility_flags with nodejs_compat', () => {
+
+    it('should have nodejs_compat flag', () => {
       const content = fs.readFileSync(wranglerPath, 'utf-8');
-      assert.ok(content.includes('compatibility_flags'), 'wrangler.toml should have compatibility_flags');
       assert.ok(content.includes('nodejs_compat'), 'wrangler.toml should include nodejs_compat flag');
     });
-    
-    it('should have build configuration', () => {
+
+    it('should have D1 database binding DB', () => {
       const content = fs.readFileSync(wranglerPath, 'utf-8');
-      assert.ok(content.includes('[build]'), 'wrangler.toml should have [build] section');
-      assert.ok(content.includes('command = "npm run build"'), 'wrangler.toml should have build command');
+      assert.ok(content.includes('binding = "DB"'), 'wrangler.toml should have D1 binding named DB');
     });
-    
-    it('should have Pages bucket configuration', () => {
+
+    it('should NOT have bucket = "dist" (Pages config)', () => {
       const content = fs.readFileSync(wranglerPath, 'utf-8');
-      assert.ok(content.includes('bucket = "dist"'), 'wrangler.toml should have dist bucket');
+      assert.ok(!content.includes('bucket = "dist"'), 'wrangler.toml should not have Pages bucket config');
+    });
+
+    it('should NOT have [build] section (Pages config)', () => {
+      const content = fs.readFileSync(wranglerPath, 'utf-8');
+      assert.ok(!content.includes('[build]'), 'wrangler.toml should not have [build] section');
     });
   });
-  
-  describe('next.config.mjs configuration', () => {
+
+  describe('next.config.mjs Workers configuration', () => {
     const configPath = path.join(rootDir, 'next.config.mjs');
-    
+
     it('should exist', () => {
       assert.ok(fs.existsSync(configPath), 'next.config.mjs should exist');
     });
-    
-    it('should have output: "export"', () => {
+
+    it("should NOT contain output: 'export'", () => {
       const content = fs.readFileSync(configPath, 'utf-8');
-      assert.ok(content.includes("output: 'export'"), 'next.config.mjs should have output: "export"');
+      assert.ok(!content.includes("output: 'export'"), "next.config.mjs should not have output: 'export'");
     });
-    
-    it('should have distDir: "dist"', () => {
+
+    it("should NOT contain distDir: 'dist'", () => {
       const content = fs.readFileSync(configPath, 'utf-8');
-      assert.ok(content.includes("distDir: 'dist'"), 'next.config.mjs should have distDir: "dist"');
+      assert.ok(!content.includes("distDir: 'dist'"), "next.config.mjs should not have distDir: 'dist'");
     });
-    
-    it('should have unoptimized images for static export', () => {
+
+    it('should contain initOpenNextCloudflareForDev', () => {
       const content = fs.readFileSync(configPath, 'utf-8');
-      assert.ok(content.includes('unoptimized: true'), 'next.config.mjs should have unoptimized images');
+      assert.ok(content.includes('initOpenNextCloudflareForDev'), 'next.config.mjs should call initOpenNextCloudflareForDev for local dev');
     });
   });
-  
-  describe('.node-version file', () => {
-    const nodeVersionPath = path.join(rootDir, '.node-version');
-    
+
+  describe('open-next.config.ts', () => {
+    const openNextConfigPath = path.join(rootDir, 'open-next.config.ts');
+
     it('should exist', () => {
-      assert.ok(fs.existsSync(nodeVersionPath), '.node-version should exist');
+      assert.ok(fs.existsSync(openNextConfigPath), 'open-next.config.ts should exist');
     });
-    
-    it('should specify a compatible Node version', () => {
-      const version = fs.readFileSync(nodeVersionPath, 'utf-8').trim();
-      assert.ok(version.length > 0, '.node-version should not be empty');
-      // Check for major version 18, 20, or 22 (LTS versions compatible with Cloudflare)
-      const majorVersion = parseInt(version.split('.')[0], 10);
-      assert.ok(
-        majorVersion === 18 || majorVersion === 20 || majorVersion === 22,
-        `.node-version should specify Node 18, 20, or 22 (found: ${version})`
-      );
+
+    it('should contain defineCloudflareConfig', () => {
+      const content = fs.readFileSync(openNextConfigPath, 'utf-8');
+      assert.ok(content.includes('defineCloudflareConfig'), 'open-next.config.ts should call defineCloudflareConfig');
     });
   });
-  
-  describe('package.json scripts', () => {
+
+  describe('package.json Workers scripts and dependencies', () => {
     const packagePath = path.join(rootDir, 'package.json');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let packageJson: { scripts?: Record<string, string>; devDependencies?: Record<string, string> } | null = null;
-    
-    it('should exist and be valid JSON', () => {
-      assert.ok(fs.existsSync(packagePath), 'package.json should exist');
-      const content = fs.readFileSync(packagePath, 'utf-8');
-      packageJson = JSON.parse(content) as { scripts?: Record<string, string>; devDependencies?: Record<string, string> };
-      assert.ok(packageJson?.scripts, 'package.json should have scripts section');
-    });
-    
-    it('should have pages:build script', () => {
-      assert.ok(packageJson!.scripts!['pages:build'], 'package.json should have pages:build script');
+    const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf-8')) as {
+      scripts?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+
+    it('should have @opennextjs/cloudflare in devDependencies', () => {
       assert.ok(
-        packageJson!.scripts!['pages:build'].includes('@cloudflare/next-on-pages'),
-        'pages:build should reference @cloudflare/next-on-pages'
+        packageJson.devDependencies && packageJson.devDependencies['@opennextjs/cloudflare'],
+        'package.json should have @opennextjs/cloudflare in devDependencies'
       );
     });
-    
-    it('should have pages:deploy script', () => {
-      assert.ok(packageJson!.scripts!['pages:deploy'], 'package.json should have pages:deploy script');
+
+    it('should NOT have @cloudflare/next-on-pages in devDependencies', () => {
       assert.ok(
-        packageJson!.scripts!['pages:deploy'].includes('wrangler pages deploy'),
-        'pages:deploy should use wrangler pages deploy'
+        !packageJson.devDependencies || !packageJson.devDependencies['@cloudflare/next-on-pages'],
+        'package.json should not have @cloudflare/next-on-pages (archived package)'
       );
     });
-    
-    it('should have build script that outputs to dist', () => {
-      assert.ok(packageJson!.scripts!.build, 'package.json should have build script');
-      assert.ok(
-        packageJson!.scripts!.build === 'next build',
-        'build script should run next build'
-      );
+
+    it('should have cf:build script', () => {
+      assert.ok(packageJson.scripts && packageJson.scripts['cf:build'], 'package.json should have cf:build script');
     });
-    
-    it('should have @cloudflare/next-on-pages in devDependencies', () => {
-      assert.ok(
-        packageJson!.devDependencies && packageJson!.devDependencies['@cloudflare/next-on-pages'],
-        'package.json should have @cloudflare/next-on-pages in devDependencies'
-      );
+
+    it('should have cf:deploy script', () => {
+      assert.ok(packageJson.scripts && packageJson.scripts['cf:deploy'], 'package.json should have cf:deploy script');
+    });
+
+    it('should have db:migrate:local script', () => {
+      assert.ok(packageJson.scripts && packageJson.scripts['db:migrate:local'], 'package.json should have db:migrate:local script');
+    });
+
+    it('should have db:migrate:remote script', () => {
+      assert.ok(packageJson.scripts && packageJson.scripts['db:migrate:remote'], 'package.json should have db:migrate:remote script');
     });
   });
-  
-  describe('dist/ build output', () => {
-    const distPath = path.join(rootDir, 'dist');
-    
-    it('should exist after build', () => {
-      assert.ok(fs.existsSync(distPath), 'dist/ directory should exist');
-      assert.ok(fs.statSync(distPath).isDirectory(), 'dist/ should be a directory');
-    });
-    
-    it('should contain index.html', () => {
-      const indexPath = path.join(distPath, 'index.html');
-      assert.ok(fs.existsSync(indexPath), 'dist/ should contain index.html');
-    });
-    
-    it('should contain static assets in _next/', () => {
-      const nextPath = path.join(distPath, '_next');
-      assert.ok(fs.existsSync(nextPath), 'dist/ should contain _next/ directory');
-      assert.ok(fs.statSync(nextPath).isDirectory(), '_next/ should be a directory');
-    });
-    
-    it('should contain listings pages', () => {
-      const listingsPath = path.join(distPath, 'listings.html');
-      const listingsDir = path.join(distPath, 'listings');
-      assert.ok(
-        fs.existsSync(listingsPath) || fs.existsSync(listingsDir),
-        'dist/ should contain listings page'
-      );
-    });
-    
-    it('should contain contact page', () => {
-      const contactPath = path.join(distPath, 'contact.html');
-      assert.ok(fs.existsSync(contactPath), 'dist/ should contain contact.html');
-    });
-  });
-  
-  describe('TypeScript configuration compatibility', () => {
-    const tsConfigPath = path.join(rootDir, 'tsconfig.json');
-    
+
+  describe('D1 migration file', () => {
+    const migrationPath = path.join(rootDir, 'db/migrations/0001_initial_schema.sql');
+
     it('should exist', () => {
-      assert.ok(fs.existsSync(tsConfigPath), 'tsconfig.json should exist');
+      assert.ok(fs.existsSync(migrationPath), 'db/migrations/0001_initial_schema.sql should exist');
     });
-    
-    it('should be valid JSON', () => {
-      const content = fs.readFileSync(tsConfigPath, 'utf-8');
-      const tsConfig = JSON.parse(content);
-      assert.ok(tsConfig.compilerOptions, 'tsconfig.json should have compilerOptions');
+
+    it('should contain CREATE TABLE IF NOT EXISTS agents', () => {
+      const content = fs.readFileSync(migrationPath, 'utf-8');
+      assert.ok(content.includes('CREATE TABLE IF NOT EXISTS agents'), 'migration should create agents table');
+    });
+
+    it('should contain CREATE TABLE IF NOT EXISTS listings', () => {
+      const content = fs.readFileSync(migrationPath, 'utf-8');
+      assert.ok(content.includes('CREATE TABLE IF NOT EXISTS listings'), 'migration should create listings table');
+    });
+
+    it('should contain CREATE TABLE IF NOT EXISTS leads', () => {
+      const content = fs.readFileSync(migrationPath, 'utf-8');
+      assert.ok(content.includes('CREATE TABLE IF NOT EXISTS leads'), 'migration should create leads table');
     });
   });
+
+  describe('/api/leads route Workers env vars', () => {
+    const leadsRoutePath = path.join(rootDir, 'src/app/api/leads/route.ts');
+
+    it('should NOT contain process.env.PERFEX_RE_URL', () => {
+      const content = fs.readFileSync(leadsRoutePath, 'utf-8');
+      assert.ok(!content.includes('process.env.PERFEX_RE_URL'), 'leads route should not use process.env for PERFEX_RE_URL');
+    });
+
+    it('should contain getCloudflareContext', () => {
+      const content = fs.readFileSync(leadsRoutePath, 'utf-8');
+      assert.ok(content.includes('getCloudflareContext'), 'leads route should use getCloudflareContext for env vars');
+    });
+  });
+
 });

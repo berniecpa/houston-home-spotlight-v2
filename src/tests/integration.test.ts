@@ -247,13 +247,13 @@ describe('Build Verification - US-019', () => {
     });
   });
 
-  describe('7. Cloudflare Pages Compatibility', () => {
+  describe('7. Cloudflare Workers Compatibility', () => {
     it('should have wrangler.toml configuration', () => {
       const wranglerPath = join(process.cwd(), 'wrangler.toml');
       assert.ok(existsSync(wranglerPath), 'wrangler.toml should exist');
-      
+
       const content = readFileSync(wranglerPath, 'utf-8');
-      assert.ok(content.includes('bucket'), 'wrangler.toml should have bucket configuration');
+      assert.ok(content.includes('main'), 'wrangler.toml should have Workers main configuration');
     });
 
     it('should have .node-version file', () => {
