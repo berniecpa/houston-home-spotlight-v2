@@ -7,8 +7,8 @@
 
 ### Infrastructure
 
-- [ ] **INFRA-01**: Platform deploys to Cloudflare Workers via `@opennextjs/cloudflare` (replaces archived `@cloudflare/next-on-pages`)
-- [ ] **INFRA-02**: `output: 'export'` is removed; dynamic API routes and middleware work at runtime
+- [x] **INFRA-01**: Platform deploys to Cloudflare Workers via `@opennextjs/cloudflare` (replaces archived `@cloudflare/next-on-pages`)
+- [x] **INFRA-02**: `output: 'export'` is removed; dynamic API routes and middleware work at runtime
 - [ ] **INFRA-03**: Cloudflare D1 schema is applied (agents, listings, subscriptions, leads tables)
 - [ ] **INFRA-04**: Wrangler local dev workflow runs D1 locally via `initOpenNextCloudflareForDev()`
 - [ ] **INFRA-05**: GitHub Actions deploy pipeline updated to use OpenNext build + wrangler deploy
@@ -103,8 +103,8 @@ Updated 2026-06-10 — roadmap created, all 37 v1 requirements mapped.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | Phase 1 | Pending |
-| INFRA-02 | Phase 1 | Pending |
+| INFRA-01 | Phase 1 | Complete |
+| INFRA-02 | Phase 1 | Complete |
 | INFRA-03 | Phase 1 | Pending |
 | INFRA-04 | Phase 1 | Pending |
 | INFRA-05 | Phase 1 | Pending |
@@ -142,6 +142,7 @@ Updated 2026-06-10 — roadmap created, all 37 v1 requirements mapped.
 | VIDEO-05 | Phase 6 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 37 total
 - Mapped to phases: 37
 - Unmapped: 0 ✓

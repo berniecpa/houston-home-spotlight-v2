@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Roadmap and STATE.md created; REQUIREMENTS.md traceability updated; ready for /gsd-plan-phase 1
-last_updated: "2026-06-10T22:00:52.844Z"
-last_activity: 2026-06-10 — Roadmap created; all 37 v1 requirements mapped across 6 phases
+last_updated: "2026-06-10T23:44:00.269Z"
+last_activity: 2026-06-10 -- Phase 1 execution started
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 3
+  completed_plans: 1
   percent: 0
 ---
 
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-10)
 
 ## Current Position
 
-Phase: 1 of 6 (Infrastructure Migration)
-Plan: 0 of TBD in current phase
+Phase: 1 (Infrastructure Migration) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-06-10 — Roadmap created; all 37 v1 requirements mapped across 6 phases
+Last activity: 2026-06-10 -- Phase 1 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01 P01 | 10 | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -65,6 +66,8 @@ Recent decisions affecting current work:
 - Init: Stripe `constructEventAsync` + `createSubtleCryptoProvider` — sync `constructEvent` fails on Workers
 - Init: Kie.ai as v1 AI video provider (aggregates Kling/Veo/Seedance); BytePlus direct is v2 cost optimization
 - Init: Grace period enforced via SQL WHERE clause on every listing query — no cron job required
+- [Phase ?]: Upgraded next to 15.5.19 to satisfy @opennextjs/cloudflare peer dependency
+- [Phase ?]: D1 migration file created in Plan 01 (not Plan 02) because cloudflare-deployment.test.ts Block 5 asserts its existence
 
 ### Pending Todos
 
@@ -85,6 +88,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-10
+Last session: 2026-06-10T23:44:00.264Z
 Stopped at: Roadmap and STATE.md created; REQUIREMENTS.md traceability updated; ready for /gsd-plan-phase 1
 Resume file: None
