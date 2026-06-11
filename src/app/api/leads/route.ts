@@ -96,7 +96,7 @@ export async function POST(
           );
         }
 
-        const crmData = await crmResponse.json();
+        const crmData = await crmResponse.json() as { id?: string; lead_id?: string };
 
         // Return success response with CRM lead ID if available
         return NextResponse.json(

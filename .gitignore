@@ -40,6 +40,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# cloudflare workers local dev
+.dev.vars
+.open-next/
+worker-configuration.d.ts
+
 # git worktrees
 .worktrees
 
