@@ -57,13 +57,23 @@ Plans:
   4. Bernard can access `/admin` routes; an unregistered or standard-agent account receives a 403 when attempting the same
   5. An agent who has not filled in name, phone, brokerage, and license number is blocked from creating listings and redirected to their profile form
 
-**Plans**: 4 plans
-Plans:
+**Plans**: 4 plansPlans:
+**Wave 1**
 
 - [ ] 02-01-PLAN.md — Spike: install next-firebase-auth-edge + firebase, wire middleware + shared authEdgeConfig + client init + /api/auth/session, validate HttpOnly cookie round-trip in wrangler dev (AUTH-02)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 02-02-PLAN.md — Auth UI vertical slice: register + email verification, login with persistent session, password reset; standalone auth cards + Firebase error mapping (AUTH-01, AUTH-02, AUTH-03)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 02-03-PLAN.md — Dashboard shell + AUTH-05 profile-completion gate: sidebar, profile form + PATCH /api/agent/profile, welcome card, placeholder pages (AUTH-05)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
 - [ ] 02-04-PLAN.md — Admin claim script (Node-only firebase-admin) + guarded /admin shell with red theme; non-admin gets 403 (AUTH-04)
+
 **UI hint**: yes
 
 ### Phase 3: Subscription Billing
