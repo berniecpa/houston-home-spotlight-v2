@@ -14,7 +14,7 @@ Starting from a fully-static Next.js export, this roadmap transitions Houston Ho
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Infrastructure Migration** - Migrate from static export to Cloudflare Workers with D1 schema applied (completed 2026-06-13)
-- [ ] **Phase 2: Auth + Agent Onboarding** - Agents can register, log in, and complete their profiles
+- [x] **Phase 2: Auth + Agent Onboarding** - Agents can register, log in, and complete their profiles (completed 2026-06-13)
 - [ ] **Phase 3: Subscription Billing** - Agents can subscribe via Stripe and manage their billing
 - [ ] **Phase 4: Listings, Migration, and Leads** - Full listing CRUD, public page migration from JSON to D1, and buyer lead routing
 - [ ] **Phase 5: Admin Panel + Agent Profiles** - Bernard admin tools and public agent profile pages
@@ -64,15 +64,15 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 02-02-PLAN.md — Auth UI vertical slice: register + email verification, login with persistent session, password reset; standalone auth cards + Firebase error mapping (AUTH-01, AUTH-02, AUTH-03)
+- [x] 02-02-PLAN.md — Auth UI vertical slice: register + email verification, login with persistent session, password reset; standalone auth cards + Firebase error mapping (AUTH-01, AUTH-02, AUTH-03)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 02-03-PLAN.md — Dashboard shell + AUTH-05 profile-completion gate: sidebar, profile form + PATCH /api/agent/profile, welcome card, placeholder pages (AUTH-05)
+- [x] 02-03-PLAN.md — Dashboard shell + AUTH-05 profile-completion gate: sidebar, profile form + PATCH /api/agent/profile, welcome card, placeholder pages (AUTH-05)
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 02-04-PLAN.md — Admin claim script (Node-only firebase-admin) + guarded /admin shell with red theme; non-admin gets 403 (AUTH-04)
+- [x] 02-04-PLAN.md — Admin claim script (Node-only firebase-admin) + guarded /admin shell with red theme; non-admin gets 403 (AUTH-04)
 
 **UI hint**: yes
 
@@ -149,7 +149,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Infrastructure Migration | 3/3 | Complete    | 2026-06-13 |
-| 2. Auth + Agent Onboarding | 1/4 | In Progress|  |
+| 2. Auth + Agent Onboarding | 4/4 | Complete    | 2026-06-13 |
 | 3. Subscription Billing | 0/TBD | Not started | - |
 | 4. Listings, Migration, and Leads | 0/TBD | Not started | - |
 | 5. Admin Panel + Agent Profiles | 0/TBD | Not started | - |

@@ -15,11 +15,11 @@
 
 ### Authentication
 
-- [ ] **AUTH-01**: Agent can register with email and password via Firebase Auth (email verification sent)
-- [ ] **AUTH-02**: Agent can log in and session persists via HttpOnly cookie (`next-firebase-auth-edge`)
-- [ ] **AUTH-03**: Agent can reset password via email link (Firebase built-in)
-- [ ] **AUTH-04**: Bernard's account has `admin: true` Firebase custom claim granting admin panel access
-- [ ] **AUTH-05**: Agent must complete profile before creating listings (name, photo URL, phone, brokerage, license #)
+- [x] **AUTH-01**: Agent can register with email and password via Firebase Auth (email verification sent)
+- [x] **AUTH-02**: Agent can log in and session persists via HttpOnly cookie (`next-firebase-auth-edge`)
+- [x] **AUTH-03**: Agent can reset password via email link (Firebase built-in)
+- [x] **AUTH-04**: Bernard's account has `admin: true` Firebase custom claim granting admin panel access
+- [x] **AUTH-05**: Agent must complete profile before creating listings (name, photo URL, phone, brokerage, license #)
 
 ### Listings
 
@@ -108,11 +108,11 @@ Updated 2026-06-10 — roadmap created, all 37 v1 requirements mapped.
 | INFRA-03 | Phase 1 | Complete |
 | INFRA-04 | Phase 1 | Complete |
 | INFRA-05 | Phase 1 | Complete |
-| AUTH-01 | Phase 2 | Pending |
-| AUTH-02 | Phase 2 | Pending |
-| AUTH-03 | Phase 2 | Pending |
-| AUTH-04 | Phase 2 | Pending |
-| AUTH-05 | Phase 2 | Pending |
+| AUTH-01 | Phase 2 | Complete |
+| AUTH-02 | Phase 2 | Complete |
+| AUTH-03 | Phase 2 | Complete |
+| AUTH-04 | Phase 2 | Complete |
+| AUTH-05 | Phase 2 | Complete |
 | BILL-01 | Phase 3 | Pending |
 | BILL-02 | Phase 3 | Pending |
 | BILL-03 | Phase 3 | Pending |
