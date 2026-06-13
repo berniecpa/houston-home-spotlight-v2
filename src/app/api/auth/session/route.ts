@@ -24,6 +24,34 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { authEdgeConfig } from '@/lib/auth-edge';
 
 /**
+ * Same-origin guard (WR-04): reject state-changing requests whose Origin (or,
+ * as a fallback, Referer) host does not match the request host. The session
+ * cookie is sameSite: 'lax', which does not protect non-GET cross-site
+ * requests in all browsers/embeddings, so we enforce origin here.
+ *
+ * Returns true when the request originates from the same host or carries no
+ * Origin/Referer (e.g. same-origin fetch in some runtimes). Returns false only
+ * when a present Origin/Referer host mismatches the request host.
+ */
+function isSameOrigin(request: NextRequest): boolean {
+  const host = request.headers.get('host');
+  if (!host) return false;
+
+  const origin = request.headers.get('origin');
+  const referer = request.headers.get('referer');
+  const candidate = origin ?? referer;
+
+  // No Origin/Referer present: allow (covers non-browser/same-origin callers).
+  if (!candidate) return true;
+
+  try {
+    return new URL(candidate).host === host;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * POST handler — exchange Firebase ID token for HttpOnly session cookie.
  *
  * Validates input, verifies the token, enforces the email_verified gate
@@ -33,6 +61,14 @@ import { authEdgeConfig } from '@/lib/auth-edge';
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    // --- Same-origin guard (WR-04: logout/login CSRF on a lax cookie) ---
+    if (!isSameOrigin(request)) {
+      return NextResponse.json(
+        { success: false, message: 'Cross-origin request rejected' },
+        { status: 403 }
+      );
+    }
+
     // --- Input validation (CLAUDE.md: validate at system boundaries) ---
     let body: unknown;
     try {
@@ -123,10 +159,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 /**
  * DELETE handler — clear the __session cookie (sign out).
  *
- * @returns {Promise<NextResponse>} 200 with cleared cookie
+ * Enforces a same-origin guard (WR-04) to prevent logout CSRF.
+ *
+ * @param request - Incoming DELETE request (used for the same-origin check)
+ * @returns {Promise<NextResponse>} 200 with cleared cookie; 403 cross-origin
  */
-export async function DELETE(): Promise<NextResponse> {
+export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {
+    // --- Same-origin guard (WR-04: prevent forced sign-out / logout CSRF) ---
+    if (!isSameOrigin(request)) {
+      return NextResponse.json(
+        { success: false, message: 'Cross-origin request rejected' },
+        { status: 403 }
+      );
+    }
+
     // removeAuthCookies(headers, options) -> NextResponse (confirmed v1.12.0 API)
     const response = removeAuthCookies(new Headers(), {
       cookieName: authEdgeConfig.cookieName,
