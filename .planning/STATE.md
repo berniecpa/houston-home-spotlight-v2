@@ -78,6 +78,7 @@ None yet.
 
 ### Blockers/Concerns
 
+- Phase 4: 4 pre-existing test failures in `src/tests/listing-detail-page.test.ts` (generateMetadata + Page Component "accept params with slug" / "call getListingBySlug") — brittle source-text assertions that don't match the Next.js 15 async-`params` shape in `src/app/listings/[slug]/page.tsx`. Untouched since base commit 5f2ba27; not auth-related. Fix when Phase 4 takes ownership of the public listings experience.
 - Phase 6: Cloudflare Queues vs. Durable Objects for async polling architecture needs phase research; Kie.ai rate limits and pricing need confirmation before planning
 
 ## Deferred Items
