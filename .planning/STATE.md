@@ -5,7 +5,7 @@ milestone_name: milestone
 status: executing
 stopped_at: context exhaustion at 76% (2026-06-13)
 last_updated: "2026-06-13T23:00:00.000Z"
-last_activity: 2026-06-13 -- Phase 02 Plan 02 complete
+last_activity: 2026-06-13 -- Phase 02 Plan 03 complete
 progress:
   total_phases: 6
   completed_phases: 1
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-10)
 ## Current Position
 
 Phase: 02 (auth-agent-onboarding) — EXECUTING
-Plan: 2 of 4 (complete)
+Plan: 3 of 4 (complete)
 Status: Executing Phase 02
-Last activity: 2026-06-13 -- Phase 02 Plan 02 complete
+Last activity: 2026-06-13 -- Phase 02 Plan 03 complete
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -68,6 +68,7 @@ Recent decisions affecting current work:
 - Init: Grace period enforced via SQL WHERE clause on every listing query — no cron job required
 - [Phase ?]: Upgraded next to 15.5.19 to satisfy @opennextjs/cloudflare peer dependency
 - [Phase 02-02]: Login Suspense boundary required for useSearchParams in App Router; ResetPasswordForm uses inline success state (no navigation per UI-SPEC)
+- [Phase 02-03]: AUTH-05 gate uses 4-field check (name/phone/brokerage/license); completionPercent tracks all 5 (adds photo_url); x-matched-path header for redirect-loop prevention; PATCH route derives uid from session only (T-02-12)
 - [Phase ?]: D1 migration file created in Plan 01 (not Plan 02) because cloudflare-deployment.test.ts Block 5 asserts its existence
 
 ### Pending Todos
@@ -88,6 +89,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-13T23:00:00.000Z
-Stopped at: Completed Phase 02 Plan 02 (02-02-SUMMARY.md)
+Last session: 2026-06-13T23:16:02.000Z
+Stopped at: Completed Phase 02 Plan 03 (02-03-SUMMARY.md)
 Resume file: None
