@@ -73,6 +73,14 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       );
     }
 
+    // WR-03: reject unverified tokens — only verified agents may write profile data.
+    if (!tokens.decodedToken.email_verified) {
+      return NextResponse.json(
+        { success: false, message: 'Please verify your email before updating your profile.' },
+        { status: 403 }
+      );
+    }
+
     const uid = tokens.decodedToken.uid;
 
     // --- 2. Parse and validate request body ---
@@ -134,7 +142,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
     // --- 3. Write to D1 (T-02-13: parameterized — no string concatenation) ---
     const { env } = await getCloudflareContext({ async: true });
 
-    await env.DB.prepare(
+    const result = await env.DB.prepare(
       `UPDATE agents
        SET display_name    = ?,
            photo_url       = ?,
@@ -153,6 +161,15 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
         uid
       )
       .run();
+
+    // WR-03: if no row matched, the agent record was never upserted. Report the
+    // failure instead of silently claiming success (which would lose the data).
+    if (!result.meta || result.meta.changes === 0) {
+      return NextResponse.json(
+        { success: false, message: 'Profile record not found. Please sign in again.' },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json({ success: true, message: 'Profile updated.' });
   } catch (error) {
