@@ -84,7 +84,14 @@ export default async function ProfilePage(): Promise<JSX.Element> {
       }
     }
   } catch (err) {
+    // WR-05: in production a D1 read failure must not masquerade as an empty
+    // profile (re-saving an empty form would overwrite good data). Re-throw so
+    // the Next.js error boundary handles it; only swallow locally where the
+    // Cloudflare binding is legitimately unavailable (next dev).
     console.error('ProfilePage: D1 agent read error', err);
+    if (process.env.NODE_ENV === 'production') {
+      throw err;
+    }
   }
 
   return (
