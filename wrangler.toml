@@ -16,10 +16,26 @@ service = "houston-home-spotlight-v2"
 [[d1_databases]]
 binding = "DB"
 database_name = "houston-home-spotlight"
-database_id = "PLACEHOLDER_RUN_wrangler_d1_create_to_get_UUID"
+database_id = "0b043fd9-2ebe-41a8-a23a-f9cbd605d02d"
 migrations_dir = "db/migrations"
 migrations_table = "d1_migrations"
 
 [vars]
 PERFEX_RE_URL = ""
 # PERFEX_RE_KEY must be set via: wrangler secret put PERFEX_RE_KEY
+
+# Firebase client-side config (NEXT_PUBLIC_ vars are statically inlined at cf:build time)
+# These are public values — safe to store in [vars]
+NEXT_PUBLIC_FIREBASE_API_KEY = ""
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = ""
+NEXT_PUBLIC_FIREBASE_PROJECT_ID = ""
+NEXT_PUBLIC_FIREBASE_APP_ID = ""
+
+# Firebase server-side (service account) — set via wrangler secret put, NEVER in [vars]
+# wrangler secret put FIREBASE_PROJECT_ID
+# wrangler secret put FIREBASE_CLIENT_EMAIL
+# wrangler secret put FIREBASE_PRIVATE_KEY   (store raw PEM; newlines will be double-escaped by wrangler)
+
+# Session cookie signing keys — set via wrangler secret put, NEVER in [vars]
+# wrangler secret put COOKIE_SECRET_CURRENT   (openssl rand -base64 32)
+# wrangler secret put COOKIE_SECRET_PREVIOUS  (openssl rand -base64 32)

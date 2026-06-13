@@ -33,6 +33,7 @@ yarn-error.log*
 # secrets
 *.key
 *.secret
+serviceAccountKey.json
 
 # logs
 *.log
