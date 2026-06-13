@@ -57,7 +57,7 @@ describe('firebase-errors module', () => {
     );
   });
 
-  it('firebase-errors.ts should map auth/wrong-password', () => {
+  it('firebase-errors.ts should map auth/wrong-password to the neutral credential copy', () => {
     // Arrange
     const filePath = path.join(srcRoot, 'lib', 'firebase-errors.ts');
     const content = fs.readFileSync(filePath, 'utf-8');
@@ -68,12 +68,12 @@ describe('firebase-errors module', () => {
       'must handle auth/wrong-password error code'
     );
     assert.ok(
-      content.includes('Incorrect password'),
-      'wrong-password must return the UI-SPEC copy'
+      content.includes('Incorrect email or password'),
+      'wrong-password must return the neutral credential copy (CR-03)'
     );
   });
 
-  it('firebase-errors.ts should map auth/user-not-found', () => {
+  it('firebase-errors.ts should not leak account existence for auth/user-not-found (CR-03)', () => {
     // Arrange
     const filePath = path.join(srcRoot, 'lib', 'firebase-errors.ts');
     const content = fs.readFileSync(filePath, 'utf-8');
@@ -84,8 +84,8 @@ describe('firebase-errors module', () => {
       'must handle auth/user-not-found error code'
     );
     assert.ok(
-      content.includes('No account found with this email'),
-      'user-not-found must return the UI-SPEC copy'
+      !content.includes('No account found with this email'),
+      'user-not-found must NOT reveal that no account exists (account enumeration)'
     );
   });
 

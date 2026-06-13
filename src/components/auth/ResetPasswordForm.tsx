@@ -102,7 +102,13 @@ export function ResetPasswordForm(): JSX.Element {
         err && typeof err === 'object' && 'code' in err
           ? String((err as { code: string }).code)
           : '';
-      setServerError(firebaseErrorMessage(code));
+      // CR-03: a non-existent email must look identical to a real one. Show the
+      // same neutral success state so the reset flow cannot enumerate accounts.
+      if (code === 'auth/user-not-found') {
+        setSubmitted(true);
+      } else {
+        setServerError(firebaseErrorMessage(code));
+      }
     } finally {
       setIsSubmitting(false);
     }

@@ -15,9 +15,8 @@
  *
  * Error codes handled (per UI-SPEC Copywriting Contract):
  * - auth/email-already-in-use: Account exists prompt
- * - auth/wrong-password: Incorrect password prompt
- * - auth/invalid-credential: Firebase v9+ alias for wrong-password/user-not-found
- * - auth/user-not-found: No account prompt
+ * - auth/wrong-password / auth/invalid-credential / auth/user-not-found:
+ *   one neutral credential message (CR-03 account-enumeration mitigation)
  * - auth/weak-password: Minimum 8 chars prompt
  * - auth/invalid-email: Valid email format prompt
  * - unknown: Generic fallback
@@ -30,15 +29,13 @@ export function firebaseErrorMessage(code: string): string {
     case 'auth/email-already-in-use':
       return 'An account with this email already exists. Log in instead.';
 
+    // CR-03: collapse wrong-password / user-not-found / invalid-credential into
+    // one neutral message so a registered email cannot be distinguished from an
+    // unregistered one (account-enumeration mitigation).
     case 'auth/wrong-password':
-      return 'Incorrect password. Try again or reset your password.';
-
     case 'auth/invalid-credential':
-      // Firebase v9+ SDK uses this code for wrong-password and user-not-found
-      return 'Incorrect password. Try again or reset your password.';
-
     case 'auth/user-not-found':
-      return 'No account found with this email. Create an account.';
+      return 'Incorrect email or password. Try again or reset your password.';
 
     case 'auth/weak-password':
       return 'Password must be at least 8 characters.';
