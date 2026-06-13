@@ -31,6 +31,14 @@ import { authEdgeConfig } from '@/lib/auth-edge';
 import { isProfileComplete } from '@/lib/profile';
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 
+/**
+ * Force per-request dynamic rendering on the Cloudflare Worker (CR-02).
+ * Without these, this cookie- and D1-reading segment can be evaluated
+ * outside the worker binding context, making the fail-open path reachable.
+ */
+export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
+
 /** Agent profile fields read from D1 for the completeness gate */
 interface AgentGateRow {
   display_name: string | null;
@@ -68,6 +76,10 @@ export default async function DashboardLayout({
 
   // --- 2. Read agent profile from D1 ---
   let agent: AgentGateRow | null = null;
+  // CR-02: a thrown D1 read must NOT be treated as "profile incomplete".
+  // We cannot determine completeness, so the gate fails CLOSED — deny the
+  // dashboard and hold the user on the profile route instead of rendering.
+  let readFailed = false;
 
   try {
     const { env } = await getCloudflareContext({ async: true });
@@ -78,12 +90,13 @@ export default async function DashboardLayout({
       .bind(uid)
       .first<AgentGateRow>();
   } catch (err) {
-    // Non-fatal in dev (getCloudflareContext unavailable in next dev).
-    // In production this should not fail — log and continue without gate.
+    // The read threw (binding unavailable, D1 outage). We cannot prove the
+    // profile is complete, so fail closed rather than rendering the gated app.
     console.error('DashboardLayout: D1 profile read error', err);
+    readFailed = true;
   }
 
-  const profileComplete = agent ? isProfileComplete(agent) : false;
+  const profileComplete = !readFailed && agent ? isProfileComplete(agent) : false;
 
   // --- 3. Profile gate (AUTH-05) — prevent redirect loop on /dashboard/profile ---
   // Determine current pathname from request headers.

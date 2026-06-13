@@ -21,6 +21,13 @@ import { authEdgeConfig } from '@/lib/auth-edge';
 import { ProfileForm } from '@/components/dashboard/ProfileForm';
 import type { ProfileFormValues } from '@/components/dashboard/ProfileForm';
 
+/**
+ * Force per-request dynamic rendering on the Cloudflare Worker (CR-02) so the
+ * cookie/D1 reads run in the worker binding context, not at static eval time.
+ */
+export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
+
 /** Page metadata */
 export const metadata: Metadata = {
   title: 'Your Profile — Houston Home Spotlight',
