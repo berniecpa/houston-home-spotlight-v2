@@ -7,9 +7,12 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 import { readFileSync, existsSync } from "fs";
-import { join } from "path";
+import { join, resolve } from "path";
+import { fileURLToPath } from "url";
 
-const ROOT_DIR = "/home/berniecpa/projects/houston-home-spotlight-v2";
+// Resolve project root from this test file's location (src/tests/ -> ../../),
+// not a hardcoded absolute path, so the suite runs on any machine.
+const ROOT_DIR = resolve(fileURLToPath(import.meta.url), "../../..");
 const PAGE_FILE = join(ROOT_DIR, "src/app/listings/page.tsx");
 
 describe("Listings Page (US-010)", () => {
