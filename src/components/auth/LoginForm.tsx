@@ -18,7 +18,7 @@
 'use client';
 
 import { useState, ChangeEvent, FormEvent } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { auth } from '@/lib/firebase-client';
 import { firebaseErrorMessage } from '@/lib/firebase-errors';
@@ -149,7 +149,11 @@ export function LoginForm(): JSX.Element {
       });
 
       if (!sessionRes.ok) {
-        // Session route rejected the token (likely email_verified === false)
+        // Session route rejected the token (likely email_verified === false).
+        // WR-02: sign the Firebase client out so the SDK does not retain an
+        // authenticated session for an account the server refused to mint a
+        // cookie for (keeps client and server auth state consistent).
+        await signOut(auth);
         const body = await sessionRes.json() as { message?: string };
         if (sessionRes.status === 403) {
           setServerError(
