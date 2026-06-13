@@ -27,6 +27,20 @@ import { authEdgeConfig } from '@/lib/auth-edge';
 /** Runtime must be edge for Cloudflare Workers compatibility */
 export const runtime = 'edge';
 
+/**
+ * Returns true only when `raw` parses as a URL with an http(s) scheme.
+ * Rejects javascript:/data:/file: and any other scheme so hostile values
+ * never reach D1 or an `<img src>` (CR-01).
+ */
+function isSafeHttpUrl(raw: string): boolean {
+  try {
+    const u = new URL(raw);
+    return u.protocol === 'https:' || u.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
 /** Expected request body shape */
 interface ProfilePatchBody {
   display_name: string;
@@ -103,6 +117,15 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
           { status: 400 }
         );
       }
+    }
+
+    // Enforce an http(s) scheme allow-list on photo_url before persisting (CR-01).
+    // React does not sanitize `src`, so reject javascript:/data: URLs here.
+    if (!isSafeHttpUrl((photo_url as string).trim())) {
+      return NextResponse.json(
+        { success: false, message: 'Photo URL must be a valid http(s) URL.' },
+        { status: 400 }
+      );
     }
 
     // Type assertion is safe: all fields passed validation above

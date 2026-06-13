@@ -70,6 +70,19 @@ export function ProfileForm({ initialValues }: ProfileFormProps): JSX.Element {
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  /**
+   * True only for http(s) URLs. Mirrors the server-side allow-list (CR-01) so
+   * a javascript:/data: value never binds to the preview `<img src>`.
+   */
+  function isSafeHttpUrl(raw: string): boolean {
+    try {
+      const u = new URL(raw);
+      return u.protocol === 'https:' || u.protocol === 'http:';
+    } catch {
+      return false;
+    }
+  }
+
   /** Validate a single field. Returns error string or empty string. */
   function validateField(name: keyof ProfileFormValues, value: string): string {
     if (!value.trim()) {
@@ -81,6 +94,9 @@ export function ProfileForm({ initialValues }: ProfileFormProps): JSX.Element {
         license_number: 'License number',
       };
       return `${labels[name]} is required.`;
+    }
+    if (name === 'photo_url' && !isSafeHttpUrl(value.trim())) {
+      return 'Photo URL must be a valid http(s) URL.';
     }
     return '';
   }
@@ -211,7 +227,7 @@ export function ProfileForm({ initialValues }: ProfileFormProps): JSX.Element {
         <div className="flex items-start gap-4">
           {/* 64x64 rounded-full preview — gray circle placeholder on empty/invalid */}
           <div className="flex-shrink-0 w-16 h-16 rounded-full bg-gray-200 overflow-hidden">
-            {previewUrl ? (
+            {previewUrl && isSafeHttpUrl(previewUrl.trim()) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={previewUrl}
