@@ -108,9 +108,14 @@ export default async function DashboardLayout({
     headersList.get('x-matched-path') ??
     headersList.get('next-url') ??
     headersList.get('x-invoke-path') ??
-    '';
+    null;
 
-  const onProfilePage = matchedPath.startsWith('/dashboard/profile');
+  // WR-01: these headers are adapter-dependent and may be absent. When the
+  // current path is undeterminable, fail TOWARD showing the profile form
+  // (onProfilePage = true) so an incomplete agent is never redirect-looped to
+  // /dashboard/profile. A known non-profile path still triggers the gate.
+  const onProfilePage =
+    matchedPath === null || matchedPath.startsWith('/dashboard/profile');
 
   if (!profileComplete && !onProfilePage) {
     redirect('/dashboard/profile');
