@@ -60,7 +60,7 @@ Plans:
 **Plans**: 4 plansPlans:
 **Wave 1**
 
-- [ ] 02-01-PLAN.md — Spike: install next-firebase-auth-edge + firebase, wire middleware + shared authEdgeConfig + client init + /api/auth/session, validate HttpOnly cookie round-trip in wrangler dev (AUTH-02)
+- [x] 02-01-PLAN.md — Spike: install next-firebase-auth-edge + firebase, wire middleware + shared authEdgeConfig + client init + /api/auth/session, validate HttpOnly cookie round-trip in wrangler dev (AUTH-02)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -149,7 +149,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Infrastructure Migration | 3/3 | Complete    | 2026-06-13 |
-| 2. Auth + Agent Onboarding | 0/4 | Planned | - |
+| 2. Auth + Agent Onboarding | 1/4 | In Progress|  |
 | 3. Subscription Billing | 0/TBD | Not started | - |
 | 4. Listings, Migration, and Leads | 0/TBD | Not started | - |
 | 5. Admin Panel + Agent Profiles | 0/TBD | Not started | - |
