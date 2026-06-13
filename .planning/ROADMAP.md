@@ -57,7 +57,13 @@ Plans:
   4. Bernard can access `/admin` routes; an unregistered or standard-agent account receives a 403 when attempting the same
   5. An agent who has not filled in name, phone, brokerage, and license number is blocked from creating listings and redirected to their profile form
 
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+
+- [ ] 02-01-PLAN.md — Spike: install next-firebase-auth-edge + firebase, wire middleware + shared authEdgeConfig + client init + /api/auth/session, validate HttpOnly cookie round-trip in wrangler dev (AUTH-02)
+- [ ] 02-02-PLAN.md — Auth UI vertical slice: register + email verification, login with persistent session, password reset; standalone auth cards + Firebase error mapping (AUTH-01, AUTH-02, AUTH-03)
+- [ ] 02-03-PLAN.md — Dashboard shell + AUTH-05 profile-completion gate: sidebar, profile form + PATCH /api/agent/profile, welcome card, placeholder pages (AUTH-05)
+- [ ] 02-04-PLAN.md — Admin claim script (Node-only firebase-admin) + guarded /admin shell with red theme; non-admin gets 403 (AUTH-04)
 **UI hint**: yes
 
 ### Phase 3: Subscription Billing
@@ -133,7 +139,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Infrastructure Migration | 3/3 | Complete    | 2026-06-13 |
-| 2. Auth + Agent Onboarding | 0/TBD | Not started | - |
+| 2. Auth + Agent Onboarding | 0/4 | Planned | - |
 | 3. Subscription Billing | 0/TBD | Not started | - |
 | 4. Listings, Migration, and Leads | 0/TBD | Not started | - |
 | 5. Admin Panel + Agent Profiles | 0/TBD | Not started | - |
