@@ -2,8 +2,9 @@
  * RegisterForm Component
  *
  * Client-side agent registration form. Implements the full registration flow:
- * createUserWithEmailAndPassword -> sendEmailVerification -> POST /api/auth/session
- * -> redirect to /check-email.
+ * createUserWithEmailAndPassword -> sendEmailVerification -> redirect to
+ * /check-email. The session cookie is minted at /login after verification
+ * (WR-06: no session is created for an unverified account).
  *
  * Per RESEARCH Pattern 3 and UI-SPEC /register spec:
  * - Instant onChange validation (email format, password >= 8 chars, passwords match)
@@ -143,7 +144,7 @@ export function RegisterForm(): JSX.Element {
 
   /**
    * Handle registration form submission.
-   * Flow: createUser -> sendEmailVerification -> getIdToken -> POST /api/auth/session -> /check-email
+   * Flow: createUser -> sendEmailVerification -> /check-email
    */
   async function handleSubmit(e: FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
@@ -164,15 +165,12 @@ export function RegisterForm(): JSX.Element {
       // 2. Send verification email
       await sendEmailVerification(user);
 
-      // 3. Exchange ID token for HttpOnly session cookie
-      const idToken = await user.getIdToken();
-      await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      });
-
-      // 4. Redirect to check-email confirmation page
+      // 3. Redirect to check-email confirmation page.
+      // WR-06: do NOT mint a session cookie here — the account is unverified,
+      // so the session route would reject it (403). The cookie is minted at
+      // /login after the user verifies. Firing a request whose result is
+      // discarded hid that contradiction and risked minting a session for an
+      // unverified user if the route ever relaxed.
       router.push('/check-email');
     } catch (err: unknown) {
       const code =
