@@ -9,9 +9,9 @@
 
 - [x] **INFRA-01**: Platform deploys to Cloudflare Workers via `@opennextjs/cloudflare` (replaces archived `@cloudflare/next-on-pages`)
 - [x] **INFRA-02**: `output: 'export'` is removed; dynamic API routes and middleware work at runtime
-- [ ] **INFRA-03**: Cloudflare D1 schema is applied (agents, listings, subscriptions, leads tables)
-- [ ] **INFRA-04**: Wrangler local dev workflow runs D1 locally via `initOpenNextCloudflareForDev()`
-- [ ] **INFRA-05**: GitHub Actions deploy pipeline updated to use OpenNext build + wrangler deploy
+- [x] **INFRA-03**: Cloudflare D1 schema is applied (agents, listings, subscriptions, leads tables)
+- [x] **INFRA-04**: Wrangler local dev workflow runs D1 locally via `initOpenNextCloudflareForDev()`
+- [x] **INFRA-05**: GitHub Actions deploy pipeline updated to use OpenNext build + wrangler deploy
 
 ### Authentication
 
@@ -105,9 +105,9 @@ Updated 2026-06-10 — roadmap created, all 37 v1 requirements mapped.
 |-------------|-------|--------|
 | INFRA-01 | Phase 1 | Complete |
 | INFRA-02 | Phase 1 | Complete |
-| INFRA-03 | Phase 1 | Pending |
-| INFRA-04 | Phase 1 | Pending |
-| INFRA-05 | Phase 1 | Pending |
+| INFRA-03 | Phase 1 | Complete |
+| INFRA-04 | Phase 1 | Complete |
+| INFRA-05 | Phase 1 | Complete |
 | AUTH-01 | Phase 2 | Pending |
 | AUTH-02 | Phase 2 | Pending |
 | AUTH-03 | Phase 2 | Pending |

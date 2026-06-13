@@ -13,7 +13,7 @@ Starting from a fully-static Next.js export, this roadmap transitions Houston Ho
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Infrastructure Migration** - Migrate from static export to Cloudflare Workers with D1 schema applied
+- [x] **Phase 1: Infrastructure Migration** - Migrate from static export to Cloudflare Workers with D1 schema applied (completed 2026-06-13)
 - [ ] **Phase 2: Auth + Agent Onboarding** - Agents can register, log in, and complete their profiles
 - [ ] **Phase 3: Subscription Billing** - Agents can subscribe via Stripe and manage their billing
 - [ ] **Phase 4: Listings, Migration, and Leads** - Full listing CRUD, public page migration from JSON to D1, and buyer lead routing
@@ -40,8 +40,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 
 - [x] 01-01-PLAN.md — Install @opennextjs/cloudflare adapter; rewrite wrangler.toml; update package.json and next.config.mjs; fix /api/leads env vars; rewrite deployment tests
-- [ ] 01-02-PLAN.md — Create D1 migration SQL (6 tables); create /api/health route; generate CloudflareEnv types; provision D1 and apply schema locally
-- [ ] 01-03-PLAN.md — Rewrite GitHub Actions deploy workflow for Workers; verify CI pipeline passes end-to-end
+- [x] 01-02-PLAN.md — Create D1 migration SQL (6 tables); create /api/health route; generate CloudflareEnv types; provision D1 and apply schema locally
+- [x] 01-03-PLAN.md — Rewrite GitHub Actions deploy workflow for Workers; verify CI pipeline passes end-to-end
 
 ### Phase 2: Auth + Agent Onboarding
 
@@ -132,7 +132,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Infrastructure Migration | 1/3 | In Progress|  |
+| 1. Infrastructure Migration | 3/3 | Complete    | 2026-06-13 |
 | 2. Auth + Agent Onboarding | 0/TBD | Not started | - |
 | 3. Subscription Billing | 0/TBD | Not started | - |
 | 4. Listings, Migration, and Leads | 0/TBD | Not started | - |
