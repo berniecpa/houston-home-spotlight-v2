@@ -3,28 +3,21 @@
  *
  * Dynamic page for displaying individual property listings.
  * Features photo gallery, property details, description, and inquiry form.
+ * Reads from Cloudflare D1 per request (force-dynamic); applies subscription
+ * gate via getListingBySlug so hidden/lapsed/paused listings return 404.
  *
  * @module app/listings/[slug]/page
  */
+
+export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { PhotoGallery } from '@/components/PhotoGallery';
 import { InquiryForm } from '@/components/InquiryForm';
-import { getListingBySlug, getAllListings } from '@/lib/data';
+import { getListingBySlug } from '@/lib/data';
 import { Listing } from '@/types';
 import { siteConfig } from '@/app/layout';
-
-/**
- * Generate static params for all listings at build time
- * Required for Next.js static export
- */
-export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  const listings = await getAllListings();
-  return listings.map((listing) => ({
-    slug: listing.slug,
-  }));
-}
 
 /**
  * Generate metadata for the listing detail page

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import Link from "next/link";
 import { ListingCard } from "@/components/ListingCard";
 import { getFeaturedListings } from "@/lib/data";
