@@ -8,7 +8,7 @@
  *   - Listings: "(Coming soon)" — renders as <span>, not clickable
  *   - Leads: "(Coming soon)" — renders as <span>, not clickable
  *   - Profile: active link — navigates to /dashboard/profile
- *   - Billing: "(Coming soon)" — renders as <span>, not clickable
+ *   - Billing: active link — navigates to /dashboard/billing (Phase 3)
  *
  * Active item detection: usePathname() matches current route to highlight
  * the Profile link with primary-700 background.
@@ -73,6 +73,7 @@ export function DashboardSidebar({
   }, [pathname]);
 
   const isProfileActive = pathname?.startsWith('/dashboard/profile');
+  const isBillingActive = pathname?.startsWith('/dashboard/billing');
 
   return (
     <>
@@ -241,11 +242,17 @@ export function DashboardSidebar({
               </Link>
             </li>
 
-            {/* Billing — Coming soon (not a link) */}
+            {/* Billing — active link to /dashboard/billing */}
             <li>
-              <span
-                className="flex items-center gap-2 px-4 min-h-[44px] rounded-lg text-primary-300 cursor-default select-none"
-                aria-disabled="true"
+              <Link
+                href="/dashboard/billing"
+                className={`flex items-center gap-2 px-4 min-h-[44px] rounded-lg transition-colors duration-150
+                  ${
+                    isBillingActive
+                      ? 'bg-primary-700 text-white font-semibold'
+                      : 'text-white hover:bg-primary-800'
+                  }`}
+                aria-current={isBillingActive ? 'page' : undefined}
               >
                 <svg
                   className="w-5 h-5 flex-shrink-0"
@@ -261,11 +268,8 @@ export function DashboardSidebar({
                     d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
                   />
                 </svg>
-                <span>
-                  Billing{' '}
-                  <span className="text-xs text-primary-400">(Coming soon)</span>
-                </span>
-              </span>
+                Billing
+              </Link>
             </li>
           </ul>
         </nav>
