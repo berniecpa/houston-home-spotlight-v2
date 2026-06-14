@@ -137,10 +137,10 @@ describe('Data Loading Utilities - US-005', () => {
         'should use two-query Map grouping instead of GROUP_CONCAT');
     });
 
-    it('should apply AGENT_PUBLISHABLE_SQL subscription gate', () => {
+    it('should apply AGENT_VISIBLE_SQL visibility gate (Phase 5: publishable + not suspended)', () => {
       const content = fs.readFileSync(dataFilePath, 'utf-8');
-      assert.ok(content.includes('AGENT_PUBLISHABLE_SQL'),
-        'should apply subscription gate from AGENT_PUBLISHABLE_SQL');
+      assert.ok(content.includes('AGENT_VISIBLE_SQL'),
+        'should apply Phase 5 visibility gate from AGENT_VISIBLE_SQL (subscription + suspension check)');
     });
   });
 

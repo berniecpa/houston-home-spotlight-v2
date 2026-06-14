@@ -8,9 +8,9 @@
  *
  * Verified patterns:
  * - getCloudflareContext import (D1 binding access)
- * - AGENT_PUBLISHABLE_SQL import (subscription gate)
+ * - AGENT_VISIBLE_SQL import (Phase 5 visibility gate: publishable + not suspended)
  * - All four async function signatures exported
- * - Subscription gate applied in getListingBySlug query
+ * - Visibility gate applied in getAllListings and getListingBySlug queries
  * - No legacy JSON imports from @/data/listings
  * - clearListingsCache remains exported (test compatibility no-op)
  *
@@ -41,11 +41,11 @@ describe('D1 Data Layer (src/lib/data.ts)', () => {
       );
     });
 
-    it('should import AGENT_PUBLISHABLE_SQL from @/lib/subscription', () => {
+    it('should import AGENT_VISIBLE_SQL from @/lib/subscription', () => {
       const content = readFileSync(dataPath, 'utf-8');
       assert.ok(
-        content.includes("import { AGENT_PUBLISHABLE_SQL } from '@/lib/subscription'"),
-        'Should import AGENT_PUBLISHABLE_SQL from subscription module for the subscription gate'
+        content.includes("import { AGENT_VISIBLE_SQL } from '@/lib/subscription'"),
+        'Should import AGENT_VISIBLE_SQL from subscription module for the Phase 5 visibility gate (publishable + not suspended)'
       );
     });
 
@@ -105,11 +105,11 @@ describe('D1 Data Layer (src/lib/data.ts)', () => {
   });
 
   describe('Subscription Gate in Queries', () => {
-    it('should embed AGENT_PUBLISHABLE_SQL in getListingBySlug query', () => {
+    it('should embed AGENT_VISIBLE_SQL in getAllListings and getListingBySlug queries', () => {
       const content = readFileSync(dataPath, 'utf-8');
       assert.ok(
-        content.includes('AGENT_PUBLISHABLE_SQL'),
-        'getListingBySlug should reference AGENT_PUBLISHABLE_SQL to gate hidden/lapsed listings'
+        content.includes('AGENT_VISIBLE_SQL'),
+        'Public listing reads should reference AGENT_VISIBLE_SQL to gate suspended/lapsed/hidden listings (Phase 5)'
       );
     });
 

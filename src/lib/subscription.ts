@@ -95,12 +95,44 @@ export function isAgentPublishable(agent: AgentSubscriptionState): boolean {
  *
  * unixepoch() returns current time in epoch seconds — the same unit as
  * subscription_grace_until stored in D1 (epoch seconds, not ms).
+ *
+ * NOTE: AGENT_PUBLISHABLE_SQL is the subscription-only gate used for
+ * create-listing eligibility. For PUBLIC VISIBILITY (browse, detail, leads),
+ * use AGENT_VISIBLE_SQL which also enforces is_suspended = 0 (Phase 5).
  */
 export const AGENT_PUBLISHABLE_SQL = `(
   a.is_admin = 1
   OR a.subscription_status = 'active'
   OR (a.subscription_status = 'grace' AND a.subscription_grace_until > unixepoch())
 )`;
+
+/**
+ * SQL WHERE fragment for Phase 5 public-visibility gate.
+ *
+ * Composes the Phase 3 subscription publishability gate with the Phase 5
+ * suspension check. A listing is publicly visible only when BOTH conditions
+ * are met:
+ *   1. The owning agent's subscription is publishable (AGENT_PUBLISHABLE_SQL).
+ *   2. The owning agent is NOT suspended (a.is_suspended = 0).
+ *
+ * This is the authoritative gate for ALL public listing reads:
+ *   - getAllListings (browse page)
+ *   - getListingBySlug (detail page)
+ *   - /api/leads listing-lookup (buyer inquiry — WR-05)
+ *
+ * AGENT_PUBLISHABLE_SQL remains the eligibility gate for create-listing
+ * (subscription check only; a suspended agent cannot create anyway via
+ * the separate is_suspended → 403 mutation guard).
+ *
+ * Requires agents table aliased as `a` in the JOIN.
+ *
+ * Example:
+ *   SELECT l.* FROM listings l
+ *   JOIN agents a ON l.agent_id = a.id
+ *   WHERE l.status = 'active'
+ *     AND ${AGENT_VISIBLE_SQL}
+ */
+export const AGENT_VISIBLE_SQL = `(${AGENT_PUBLISHABLE_SQL}) AND a.is_suspended = 0`;
 
 /**
  * Fetches subscription state fields for a single agent from D1.

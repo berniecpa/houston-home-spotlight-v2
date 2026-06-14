@@ -1,8 +1,9 @@
 /**
  * Listing data access layer — Cloudflare D1 backend
  *
- * Reads listings from D1 with the Phase 3 subscription gate applied:
- * only publishable agents' active listings are returned to public callers.
+ * Reads listings from D1 with the Phase 5 visibility gate applied:
+ * only active listings from publishable, non-suspended agents are returned
+ * to public callers (AGENT_VISIBLE_SQL — Phase 3 subscription + Phase 5 suspension).
  *
  * Two-query image grouping is used to avoid N-row JOIN fanout:
  *   1. SELECT listings (with agent publishability gate)
@@ -19,7 +20,7 @@
  */
 
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { AGENT_PUBLISHABLE_SQL } from '@/lib/subscription';
+import { AGENT_VISIBLE_SQL } from '@/lib/subscription';
 import type { Listing, FilterOptions } from '@/types';
 
 /**
@@ -85,9 +86,9 @@ function rowToListing(row: ListingRow, images: string[]): Listing {
 /**
  * Fetch all public listings from D1.
  *
- * Applies the subscription gate: only listings whose owning agent is
+ * Applies the visibility gate: only listings whose owning agent is
  * publishable (active subscription, within grace period, or admin) AND
- * whose own status is 'active' are returned.
+ * not suspended AND whose own status is 'active' are returned.
  *
  * Results are ordered by created_at DESC (newest first).
  *
@@ -106,7 +107,7 @@ export async function getAllListings(): Promise<Listing[]> {
          FROM listings l
          JOIN agents a ON l.agent_id = a.id
          WHERE l.status = 'active'
-           AND ${AGENT_PUBLISHABLE_SQL}
+           AND ${AGENT_VISIBLE_SQL}
          ORDER BY l.created_at DESC`
       )
       .all<ListingRow>();
@@ -145,10 +146,10 @@ export async function getAllListings(): Promise<Listing[]> {
 /**
  * Fetch a single public listing by its URL slug.
  *
- * Applies the same subscription gate as getAllListings. Returns null when:
+ * Applies the same visibility gate as getAllListings. Returns null when:
  * - No listing with the given slug exists
  * - The listing is paused (status !== 'active')
- * - The owning agent's subscription is lapsed / none
+ * - The owning agent's subscription is lapsed / none, or agent is suspended
  *
  * Returning null causes the detail page to call notFound() (404).
  *
@@ -169,7 +170,7 @@ export async function getListingBySlug(slug: string): Promise<Listing | null> {
          JOIN agents a ON l.agent_id = a.id
          WHERE l.slug = ?
            AND l.status = 'active'
-           AND ${AGENT_PUBLISHABLE_SQL}`
+           AND ${AGENT_VISIBLE_SQL}`
       )
       .bind(slug)
       .first<ListingRow>();
