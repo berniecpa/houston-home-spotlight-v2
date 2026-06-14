@@ -103,8 +103,24 @@ describe('src/lib/admin.ts — requireAdmin admin-claim check', () => {
 
   it('requireAdmin checks decodedToken.admin claim', () => {
     assert.ok(
-      adminSrc.includes('decodedToken.admin'),
-      'requireAdmin must gate on decodedToken.admin === true (not a body-supplied flag)'
+      adminSrc.includes('decodedToken.admin') || adminSrc.includes("claims['admin']"),
+      'requireAdmin must gate on the admin claim (not a body-supplied flag)'
+    );
+  });
+
+  it('requireAdmin uses STRICT equality on the admin claim (WR-01)', () => {
+    assert.ok(
+      adminSrc.includes("claims['admin'] !== true") ||
+        adminSrc.includes('claims["admin"] !== true'),
+      'requireAdmin must use strict !== true on the admin claim — a truthy non-boolean must NOT grant admin (WR-01)'
+    );
+  });
+
+  it('requireAdmin does NOT use a loose truthy admin check (WR-01)', () => {
+    assert.ok(
+      !adminSrc.includes("if (!claims['admin'])") &&
+        !adminSrc.includes('if (!claims["admin"])'),
+      'requireAdmin must NOT gate on a loose truthy !claims[admin] check (WR-01)'
     );
   });
 

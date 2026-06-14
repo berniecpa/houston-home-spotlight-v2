@@ -270,4 +270,21 @@ describe('middleware config', () => {
       'middleware must import authEdgeConfig from @/lib/auth-edge (single config source)'
     );
   });
+
+  it('middleware admin gate uses STRICT equality on the admin claim (WR-01)', () => {
+    // Arrange
+    const filePath = path.join(srcRoot, '..', 'middleware.ts');
+    const content = fs.readFileSync(filePath, 'utf-8');
+
+    // Act + Assert
+    assert.ok(
+      content.includes("claims['admin'] !== true") ||
+        content.includes('claims["admin"] !== true'),
+      'middleware must gate /admin with strict !== true — a truthy non-boolean claim must NOT grant admin (WR-01)'
+    );
+    assert.ok(
+      !content.includes('!decodedToken.admin'),
+      'middleware must NOT use a loose truthy !decodedToken.admin check (WR-01)'
+    );
+  });
 });

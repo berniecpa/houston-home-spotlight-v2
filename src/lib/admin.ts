@@ -128,8 +128,10 @@ export async function requireAdmin(): Promise<RequireAdminResult> {
 
   // 403 — valid session but no admin claim (T-05-10: non-admin calls admin API)
   // Firebase custom claims are not in DecodedIdToken's declared type — cast to access.
+  // WR-01: use STRICT equality (=== true). A custom claim accidentally set to a
+  // truthy non-boolean (e.g. the string "false") must NOT grant admin access.
   const claims = decodedToken as unknown as Record<string, unknown>;
-  if (!claims['admin']) {
+  if (claims['admin'] !== true) {
     return { status: 403, message: 'Forbidden: admin access required' };
   }
 

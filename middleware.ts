@@ -38,10 +38,13 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
      * Blocks /admin/* access for tokens without the admin custom claim.
      */
     handleValidToken: async ({ decodedToken }, headers) => {
-      // Block admin routes for tokens without the admin custom claim
+      // Block admin routes for tokens without the admin custom claim.
+      // WR-01: STRICT equality (=== true) — a truthy non-boolean claim (e.g. the
+      // string "false") must NOT grant admin access.
+      const claims = decodedToken as unknown as Record<string, unknown>;
       if (
         request.nextUrl.pathname.startsWith('/admin') &&
-        !decodedToken.admin
+        claims['admin'] !== true
       ) {
         return new NextResponse('Forbidden', { status: 403 });
       }
