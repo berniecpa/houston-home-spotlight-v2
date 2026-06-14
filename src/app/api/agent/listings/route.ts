@@ -16,6 +16,10 @@
  * Security (STRIDE T-04-05 mitigation):
  *   - POST gated on isAgentPublishable — lapsed/none agents receive 403.
  *
+ * Security (STRIDE T-05-03 mitigation):
+ *   - POST additionally gated on is_suspended — suspended agents receive 403.
+ *   - GET remains allowed: suspended agents can still view their own listings (read-only).
+ *
  * Security (STRIDE T-04-07 mitigation):
  *   - Photo URLs validated via isSafeHttpUrl before persisting.
  *
@@ -259,6 +263,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         {
           success: false,
           message: 'Active subscription required to create listings.',
+        },
+        { status: 403 }
+      );
+    }
+
+    // --- 3b. Suspension gate (T-05-03 / ADMIN-02) ---
+    // Suspended agents may not create new listings. Read is_suspended from D1
+    // for the session uid — never from the request body.
+    const suspendedRow = await env.DB.prepare(
+      'SELECT is_suspended FROM agents WHERE id = ?'
+    )
+      .bind(uid)
+      .first<{ is_suspended: number }>();
+
+    if (suspendedRow && suspendedRow.is_suspended === 1) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Account suspended — contact the administrator.',
         },
         { status: 403 }
       );

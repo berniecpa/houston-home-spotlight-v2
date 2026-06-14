@@ -16,6 +16,11 @@
  * Security (STRIDE T-04-06 mitigation):
  *   - All D1 queries use prepare().bind() — no string concatenation.
  *
+ * Security (STRIDE T-05-03 mitigation):
+ *   - PUT/DELETE/PATCH check agents.is_suspended for the session uid.
+ *   - Suspended agents receive 403 ("Account suspended — contact the administrator.").
+ *   - GET remains allowed: suspended agents can view own listings read-only.
+ *
  * @module app/api/agent/listings/[id]/route
  */
 
@@ -123,6 +128,34 @@ async function resolveOwnership(
 }
 
 /**
+ * Check whether the session agent is suspended (T-05-03).
+ *
+ * Returns a 403 NextResponse when is_suspended=1, or null when the agent
+ * is allowed to proceed. Must be called AFTER resolveOwnership (requires db).
+ *
+ * @param db  - D1Database binding from the owner result
+ * @param uid - Session-derived agent uid (never from body — T-04-08)
+ * @returns NextResponse (403) if suspended, null if allowed
+ */
+async function checkSuspended(
+  db: D1Database,
+  uid: string
+): Promise<NextResponse | null> {
+  const row = await db
+    .prepare('SELECT is_suspended FROM agents WHERE id = ?')
+    .bind(uid)
+    .first<{ is_suspended: number }>();
+
+  if (row && row.is_suspended === 1) {
+    return NextResponse.json(
+      { success: false, message: 'Account suspended — contact the administrator.' },
+      { status: 403 }
+    );
+  }
+  return null;
+}
+
+/**
  * Full listing detail row returned by GET (all editable columns).
  */
 interface ListingDetailRow {
@@ -224,7 +257,11 @@ export async function PUT(
     const ownerResult = await resolveOwnership(id);
 
     if (ownerResult instanceof NextResponse) return ownerResult;
-    const { listingId, db } = ownerResult;
+    const { uid, listingId, db } = ownerResult;
+
+    // Suspension gate (T-05-03): suspended agents may not edit listings.
+    const suspended = await checkSuspended(db, uid);
+    if (suspended) return suspended;
 
     // Parse body
     let body: unknown;
@@ -358,7 +395,11 @@ export async function DELETE(
     const ownerResult = await resolveOwnership(id);
 
     if (ownerResult instanceof NextResponse) return ownerResult;
-    const { listingId, db } = ownerResult;
+    const { uid, listingId, db } = ownerResult;
+
+    // Suspension gate (T-05-03): suspended agents may not delete listings.
+    const suspended = await checkSuspended(db, uid);
+    if (suspended) return suspended;
 
     await deleteListing(db, listingId);
 
@@ -392,6 +433,10 @@ export async function PATCH(
 
     if (ownerResult instanceof NextResponse) return ownerResult;
     const { uid, listingId, db } = ownerResult;
+
+    // Suspension gate (T-05-03): suspended agents may not toggle listing status.
+    const suspended = await checkSuspended(db, uid);
+    if (suspended) return suspended;
 
     // Parse body
     let body: unknown;

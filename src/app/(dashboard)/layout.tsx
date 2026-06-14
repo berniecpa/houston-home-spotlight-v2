@@ -1,5 +1,5 @@
 /**
- * Dashboard Layout — Session + Profile Completeness Gate
+ * Dashboard Layout — Session + Profile Completeness Gate + Suspension Banner
  *
  * React Server Component that gates all /dashboard/* routes:
  *
@@ -10,7 +10,12 @@
  *    Incomplete profile AND NOT already on /dashboard/profile
  *    → redirect to /dashboard/profile (Pitfall 4: avoid redirect loop).
  *
- * 3. Renders the dashboard shell: DashboardSidebar (left) + main content (right).
+ * 3. Suspension banner (ADMIN-02, T-05-03): when is_suspended=1, renders a
+ *    visible "Account suspended" read-only banner above {children}.
+ *    Server-side 403s in the mutation routes are the real enforcement;
+ *    the banner is advisory (informs the agent why actions are blocked).
+ *
+ * 4. Renders the dashboard shell: DashboardSidebar (left) + main content (right).
  *    No public Header or Footer — standalone agent app shell per CONTEXT.md.
  *
  * PATHNAME DETECTION (Pitfall 4, Assumption A7):
@@ -39,13 +44,15 @@ import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
-/** Agent profile fields read from D1 for the completeness gate */
+/** Agent profile fields read from D1 for the completeness gate and suspension check */
 interface AgentGateRow {
   display_name: string | null;
   photo_url: string | null;
   phone: string | null;
   brokerage: string | null;
   license_number: string | null;
+  /** 1 when the agent is suspended by the admin; 0 otherwise (ADMIN-02) */
+  is_suspended: number | null;
 }
 
 /** Props for the dashboard layout */
@@ -84,7 +91,7 @@ export default async function DashboardLayout({
   try {
     const { env } = await getCloudflareContext({ async: true });
     agent = await env.DB.prepare(
-      `SELECT display_name, photo_url, phone, brokerage, license_number
+      `SELECT display_name, photo_url, phone, brokerage, license_number, is_suspended
        FROM agents WHERE id = ?`
     )
       .bind(uid)
@@ -97,6 +104,11 @@ export default async function DashboardLayout({
   }
 
   const profileComplete = !readFailed && agent ? isProfileComplete(agent) : false;
+
+  // Derive suspension state from D1 (ADMIN-02 / T-05-03).
+  // When the D1 read failed we cannot know suspension state — fail toward NOT
+  // blocking the agent further (is_suspended defaults to 0 on fail-read).
+  const isSuspended = !readFailed && agent ? agent.is_suspended === 1 : false;
 
   // --- 3. Profile gate (AUTH-05) — prevent redirect loop on /dashboard/profile ---
   // Determine current pathname from request headers.
@@ -125,9 +137,24 @@ export default async function DashboardLayout({
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <DashboardSidebar isProfileComplete={profileComplete} />
-      <main className="flex-1 overflow-auto p-8">
-        {children}
-      </main>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {isSuspended && (
+          <div
+            role="alert"
+            aria-live="polite"
+            className="bg-red-600 text-white text-sm font-medium px-6 py-3 flex items-center gap-2 shrink-0"
+          >
+            <span aria-hidden="true">&#9888;</span>
+            <span>
+              Account suspended — contact the administrator. Your listings are
+              hidden from public view and listing actions are disabled.
+            </span>
+          </div>
+        )}
+        <main className="flex-1 overflow-auto p-8">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
