@@ -34,11 +34,11 @@
 
 ### Billing
 
-- [ ] **BILL-01**: Agent can subscribe via Stripe Checkout ($79/month, single tier, no setup fee)
-- [ ] **BILL-02**: Agent can self-manage subscription via Stripe Customer Portal (update card, cancel, view invoices)
-- [ ] **BILL-03**: Platform handles Stripe webhooks: `customer.subscription.created`, `customer.subscription.updated`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.deleted`
-- [ ] **BILL-04**: Agent's subscription status and 7-day grace period are stored on the D1 `agents` row and enforced in every listing SQL query
-- [ ] **BILL-05**: Stripe webhook events are idempotent (event log table prevents duplicate processing)
+- [x] **BILL-01**: Agent can subscribe via Stripe Checkout ($79/month, single tier, no setup fee)
+- [x] **BILL-02**: Agent can self-manage subscription via Stripe Customer Portal (update card, cancel, view invoices)
+- [x] **BILL-03**: Platform handles Stripe webhooks: `customer.subscription.created`, `customer.subscription.updated`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.deleted`
+- [x] **BILL-04**: Agent's subscription status and 7-day grace period are stored on the D1 `agents` row and enforced in every listing SQL query
+- [x] **BILL-05**: Stripe webhook events are idempotent (event log table prevents duplicate processing)
 
 ### Leads
 
@@ -113,11 +113,11 @@ Updated 2026-06-10 — roadmap created, all 37 v1 requirements mapped.
 | AUTH-03 | Phase 2 | Complete |
 | AUTH-04 | Phase 2 | Complete |
 | AUTH-05 | Phase 2 | Complete |
-| BILL-01 | Phase 3 | Pending |
-| BILL-02 | Phase 3 | Pending |
-| BILL-03 | Phase 3 | Pending |
-| BILL-04 | Phase 3 | Pending |
-| BILL-05 | Phase 3 | Pending |
+| BILL-01 | Phase 3 | Complete |
+| BILL-02 | Phase 3 | Complete |
+| BILL-03 | Phase 3 | Complete |
+| BILL-04 | Phase 3 | Complete |
+| BILL-05 | Phase 3 | Complete |
 | LIST-01 | Phase 4 | Pending |
 | LIST-02 | Phase 4 | Pending |
 | LIST-03 | Phase 4 | Pending |
