@@ -44,15 +44,26 @@ export const runtime = 'edge';
  * Derive a URL-safe slug from a title and address.
  * Lower-cases, strips non-alphanumeric characters, joins with hyphens.
  * Truncates to 100 characters to avoid D1 index issues.
+ *
+ * WR-06: titles/addresses consisting solely of non-ASCII characters
+ * (CJK, emoji, Cyrillic) collapse to an empty string after the strip/trim.
+ * When that happens we fall back to `listing-<random>` so we never insert an
+ * empty slug (which would collide on the next empty-slug listing and return a
+ * confusing 409).
  */
 function slugify(title: string, address: string): string {
   const combined = `${title} ${address}`;
-  return combined
+  const base = combined
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')
     .trim()
     .replace(/[\s-]+/g, '-')
     .slice(0, 100);
+
+  if (!base) {
+    return `listing-${crypto.randomUUID().slice(0, 8)}`;
+  }
+  return base;
 }
 
 /**
