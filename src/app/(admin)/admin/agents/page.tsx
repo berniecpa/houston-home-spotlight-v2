@@ -55,16 +55,24 @@ export default async function AgentsPage({
   const { env } = await getCloudflareContext({ async: true });
   const db = env.DB as unknown as D1Database;
 
-  // Parse ?page (1-indexed, default 1)
+  // Parse ?page (1-indexed, default 1).
+  // WR-03: clamp the raw parse to [1, MAX_PAGE] so a huge value (e.g.
+  // 999999999999999) cannot produce an absurd OFFSET. We re-clamp against
+  // totalPages once known, below.
+  const MAX_PAGE = 1_000_000;
   const resolvedSearchParams = await searchParams;
   const pageParam = resolvedSearchParams.page;
-  const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
+  const rawPage = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
+  const requestedPage = Math.min(rawPage, MAX_PAGE);
   const pageSize = ADMIN_PAGE_SIZE;
-  const offset = (page - 1) * pageSize;
+  const offset = (requestedPage - 1) * pageSize;
 
   const { agents, total } = await listAgentsPaginated(db, pageSize, offset);
 
+  // WR-03: clamp the page used for the UI to a sane bound so an out-of-range
+  // request never renders "Page 999999999999999 of N" with nonsensical links.
   const totalPages = Math.ceil(total / pageSize);
+  const page = Math.min(requestedPage, Math.max(1, totalPages));
   const hasPrev = page > 1;
   const hasNext = page < totalPages;
 

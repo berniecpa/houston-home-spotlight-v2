@@ -165,6 +165,14 @@ describe('agents page — pagination controls', () => {
       'agents/page.tsx must reference total for Prev/Next pagination logic'
     );
   });
+
+  it('agents/page.tsx clamps the page param to sane bounds (WR-03)', () => {
+    assert.ok(
+      agentsPageSrc.includes('Math.min') &&
+        (agentsPageSrc.includes('MAX_PAGE') || agentsPageSrc.includes('totalPages')),
+      'agents/page.tsx must clamp the ?page param (Math.min against MAX_PAGE / totalPages) so a huge value cannot produce an absurd OFFSET (WR-03)'
+    );
+  });
 });
 
 // ────────────────────────────────────────────────────────────────────────────

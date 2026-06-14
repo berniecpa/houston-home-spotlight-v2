@@ -55,8 +55,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // --- 2. Parse pagination params ---
     const url = new URL(request.url);
     const pageParam = url.searchParams.get('page');
-    // page is 1-indexed; coerce to integer; default to 1 on missing/invalid
-    const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
+    // page is 1-indexed; coerce to integer; default to 1 on missing/invalid.
+    // WR-03: clamp to [1, MAX_PAGE] so a huge value cannot produce an absurd
+    // OFFSET (an out-of-range page just returns an empty result set).
+    const MAX_PAGE = 1_000_000;
+    const page = Math.min(MAX_PAGE, Math.max(1, parseInt(pageParam ?? '1', 10) || 1));
     const pageSize = ADMIN_PAGE_SIZE;
     const offset = (page - 1) * pageSize;
 
