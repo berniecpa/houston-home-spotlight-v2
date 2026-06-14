@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-02-PLAN.md
-last_updated: "2026-06-14T22:35:43.956Z"
+stopped_at: Completed 06-04-PLAN.md
+last_updated: "2026-06-14T22:43:00.000Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 22
-  completed_plans: 20
-  percent: 91
+  completed_plans: 21
+  percent: 95
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-10)
 ## Current Position
 
 Phase: 06 (ai-video-generation) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-14
 
-Progress: [█████████░] 91%
+Progress: [█████████▌] 95%
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Progress: [█████████░] 91%
 | Phase 05-admin-panel-agent-profiles P03 | 12min | 4 tasks | 11 files |
 | Phase 06 P01 | 12 minutes | 2 tasks | 10 files |
 | Phase 06-ai-video-generation P02 | 25 minutes | 2 tasks | 6 files |
+| Phase 06-ai-video-generation P04 | 5 minutes | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -108,6 +109,10 @@ Recent decisions affecting current work:
 - [Phase 05-03]: DecodedIdToken cast through unknown to access custom .admin claim (Firebase SDK does not declare custom claims)
 - [Phase 05-03]: Admin pages read D1 directly in RSC (no API round-trip); same pattern as Phase 4 dashboard
 - [Phase 05-03]: ADMIN_PAGE_SIZE=25 exported from admin.ts; shared by API route and agents page
+- [Phase 06-04]: Poll interval 4s (in 3-5s range); POLL_MAX_MS=5min hard cap; clearInterval on unmount (T-06-10)
+- [Phase 06-04]: 409 Conflict adopts in-flight job silently — no error banner, just startPolling
+- [Phase 06-04]: W1 fix: dashboard/listings/page SELECT includes video_status/video_url; videoStates initialised from initialListings for page-refresh persistence
+- [Phase 06-04]: Public detail page: native video element with controls/preload; force-dynamic preserved, no runtime='edge'
 
 ### Pending Todos
 
@@ -128,6 +133,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-14T22:35:43.950Z
-Stopped at: Completed 05-02-PLAN.md
+Last session: 2026-06-14T22:43:00.000Z
+Stopped at: Completed 06-04-PLAN.md
 Resume file: None
