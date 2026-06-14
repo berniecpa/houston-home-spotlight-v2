@@ -53,7 +53,7 @@
 - [ ] **ADMIN-01**: Bernard can view a list of all registered agents with account status
 - [ ] **ADMIN-02**: Bernard can suspend or unsuspend any agent (suspended agents' listings are hidden)
 - [ ] **ADMIN-03**: Bernard can view platform stats: total agents, active subscriptions, total listings, total leads
-- [ ] **ADMIN-04**: Each agent has a public profile page at `/agents/[slug]` displaying their name, photo, brokerage, and active listings
+- [x] **ADMIN-04**: Each agent has a public profile page at `/agents/[slug]` displaying their name, photo, brokerage, and active listings
 
 ### AI Video Generation
 
@@ -134,7 +134,7 @@ Updated 2026-06-10 — roadmap created, all 37 v1 requirements mapped.
 | ADMIN-01 | Phase 5 | Pending |
 | ADMIN-02 | Phase 5 | Pending |
 | ADMIN-03 | Phase 5 | Pending |
-| ADMIN-04 | Phase 5 | Pending |
+| ADMIN-04 | Phase 5 | Complete |
 | VIDEO-01 | Phase 6 | Pending |
 | VIDEO-02 | Phase 6 | Pending |
 | VIDEO-03 | Phase 6 | Pending |

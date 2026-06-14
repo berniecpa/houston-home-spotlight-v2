@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed Phase 05 Plan 01 (05-01-SUMMARY.md) — AGENT_VISIBLE_SQL + slug gen + suspension gates
-last_updated: "2026-06-14T00:26:39Z"
-last_activity: 2026-06-14 -- Phase 05 Plan 01 complete
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-06-14T15:39:57.505Z"
+last_activity: 2026-06-14 -- Phase 05 Plan 01 complete (AGENT_VISIBLE_SQL + slug + suspension)
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 18
-  completed_plans: 16
-  percent: 72
+  completed_plans: 17
+  percent: 67
 ---
 
 # Project State
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-06-10)
 ## Current Position
 
 Phase: 05 (admin-panel-agent-profiles) — EXECUTING
-Plan: 2 of 3 (Plan 01 complete)
-Status: Executing Phase 05
+Plan: 3 of 3 (Plan 01 complete)
+Status: Ready to execute
 Last activity: 2026-06-14 -- Phase 05 Plan 01 complete (AGENT_VISIBLE_SQL + slug + suspension)
 
 Progress: [█████████░] 90% (Phase 05 Plan 01 complete)
@@ -63,6 +63,7 @@ Progress: [█████████░] 90% (Phase 05 Plan 01 complete)
 | Phase 04-listings-migration-and-leads P03 | 4min | 2 tasks | 5 files |
 | Phase 04 P04 | 18 minutes | 3 tasks | 5 files |
 | Phase 04-listings-migration-and-leads P05 | 7 minutes | 2 tasks | 4 files |
+| Phase 05 P02 | 6min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,9 @@ Recent decisions affecting current work:
 - [Phase 05-01]: AGENT_VISIBLE_SQL = (AGENT_PUBLISHABLE_SQL) AND a.is_suspended=0 — single shared fragment; AGENT_PUBLISHABLE_SQL unchanged as subscription-only gate
 - [Phase 05-01]: Backfill migration is 0004 not 0003 — 0003_seed_legacy_listings.sql already existed from Phase 4
 - [Phase 05-01]: checkSuspended() shared helper in [id]/route.ts returns NextResponse|null — matches resolveOwnership pattern
+- [Phase ?]: Two-step D1 query in getAgentProfileBySlug: agent lookup first then scoped listings — clean short-circuit on suspended agents
+- [Phase ?]: AgentProfileHeaderProps omits email/phone — PII never reaches the client component on the public profile path (T-05-06)
+- [Phase ?]: force-dynamic only on /agents/[slug] page (no runtime='edge') — consistent with listings detail page pattern
 
 ### Pending Todos
 
@@ -116,6 +120,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-14T00:26:39Z
-Stopped at: Completed Phase 05 Plan 01 (05-01-SUMMARY.md) — AGENT_VISIBLE_SQL + slug gen + suspension gates
+Last session: 2026-06-14T15:39:57.501Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None
