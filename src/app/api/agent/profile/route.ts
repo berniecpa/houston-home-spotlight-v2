@@ -1,14 +1,20 @@
 /**
  * Agent Profile PATCH API Route
  *
- * PATCH /api/agent/profile — Updates the agent's profile fields in D1.
+ * PATCH /api/agent/profile — Updates the agent's profile fields in D1
+ * and generates/refreshes the agent slug from display_name (ADMIN-04).
  *
  * Security (STRIDE T-02-12 mitigation):
  *   - uid derived from getTokens(session cookie) — NEVER from request body
  *   - WHERE id = sessionUid only — no cross-agent writes possible
+ *   - Slug is keyed off the session uid, never a body-supplied id (T-05-04)
  *
  * Security (T-02-13 mitigation):
  *   - All field values bound via D1 prepare().bind() — no string concatenation
+ *
+ * Security (T-05-05 mitigation):
+ *   - Slug uniqueness enforced via UNIQUE constraint on agents.slug
+ *   - Collision resolved with numeric suffix loop excluding caller's own row
  *
  * Validation (CLAUDE.md "validate input at system boundaries"):
  *   - All five profile fields must be non-empty strings
@@ -39,6 +45,37 @@ function isSafeHttpUrl(raw: string): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Derive a URL-safe slug from an agent's display name.
+ *
+ * Mirrors the listings slugify WR-06 pattern:
+ *   1. Lowercase the input.
+ *   2. Strip all non-alphanumeric characters (keeping existing hyphens).
+ *   3. Collapse consecutive whitespace/hyphens into a single hyphen.
+ *   4. Trim leading/trailing hyphens.
+ *   5. Truncate to 80 characters to avoid D1 index issues.
+ *   6. Fall back to `agent-<random8>` when the result is empty (e.g. CJK-only names).
+ *
+ * Collision resolution (numeric suffix) is performed at the call site, not here.
+ *
+ * @param displayName - The agent's display_name field value
+ * @returns A URL-safe base slug (without collision suffix)
+ */
+export function slugifyName(displayName: string): string {
+  const base = displayName
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/[\s-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+
+  if (!base) {
+    return `agent-${crypto.randomUUID().slice(0, 8)}`;
+  }
+  return base;
 }
 
 /** Expected request body shape */
@@ -139,9 +176,31 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
     // Type assertion is safe: all fields passed validation above
     const validated = body as ProfilePatchBody;
 
-    // --- 3. Write to D1 (T-02-13: parameterized — no string concatenation) ---
+    // --- 3. Generate/refresh agent slug from display_name (ADMIN-04, T-05-04) ---
+    // Slug is always derived server-side from the session uid's display_name.
+    // NEVER use a body-supplied slug or uid (T-05-04 spoofing mitigation).
     const { env } = await getCloudflareContext({ async: true });
 
+    const baseSlug = slugifyName(validated.display_name.trim());
+
+    // Resolve UNIQUE collision with numeric suffix: jane-smith, jane-smith-2, jane-smith-3 ...
+    // Exclude the caller's own row so re-saving the same name keeps the same slug (T-05-05).
+    let resolvedSlug = baseSlug;
+    let suffix = 2;
+    while (true) {
+      const collision = await env.DB.prepare(
+        'SELECT id FROM agents WHERE slug = ? AND id != ?'
+      )
+        .bind(resolvedSlug, uid)
+        .first<{ id: string }>();
+
+      if (!collision) break;
+
+      resolvedSlug = `${baseSlug}-${suffix}`;
+      suffix += 1;
+    }
+
+    // --- 4. Write to D1 (T-02-13: parameterized — no string concatenation) ---
     const result = await env.DB.prepare(
       `UPDATE agents
        SET display_name    = ?,
@@ -149,6 +208,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
            phone           = ?,
            brokerage       = ?,
            license_number  = ?,
+           slug            = ?,
            updated_at      = unixepoch()
        WHERE id = ?`
     )
@@ -158,6 +218,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
         validated.phone.trim(),
         validated.brokerage.trim(),
         validated.license_number.trim(),
+        resolvedSlug,
         uid
       )
       .run();
@@ -171,7 +232,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    return NextResponse.json({ success: true, message: 'Profile updated.' });
+    return NextResponse.json({ success: true, message: 'Profile updated.', slug: resolvedSlug });
   } catch (error) {
     console.error('PATCH /api/agent/profile error:', error);
     return NextResponse.json(
