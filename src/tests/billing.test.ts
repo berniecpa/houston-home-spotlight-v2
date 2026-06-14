@@ -165,10 +165,11 @@ async function refHandleStripeEvent(
     case 'invoice.paid': {
       const invoice = event.data.object;
       const customerId = invoice['customer'] as string;
+      // WR-06: do not resurrect a lapsed (deleted) subscription — mirrors source.
       await db.batch([
         idempotencyStmt,
         db.prepare(
-          "UPDATE agents SET subscription_status = 'active', subscription_grace_until = NULL, updated_at = unixepoch() WHERE stripe_customer_id = ?"
+          "UPDATE agents SET subscription_status = 'active', subscription_grace_until = NULL, updated_at = unixepoch() WHERE stripe_customer_id = ? AND subscription_status != 'lapsed'"
         ).bind(customerId),
       ]);
       return { status: 'active', graceUntil: null };
@@ -191,14 +192,16 @@ async function refHandleStripeEvent(
     case 'customer.subscription.deleted': {
       const sub = event.data.object;
       const customerId = sub['customer'] as string;
+      // WR-03: upsert the subscriptions row so a deleted-before-created event
+      // still records 'canceled' instead of matching 0 rows — mirrors source.
       await db.batch([
         idempotencyStmt,
         db.prepare(
           "UPDATE agents SET subscription_status = 'lapsed', subscription_grace_until = NULL, updated_at = unixepoch() WHERE stripe_customer_id = ?"
         ).bind(customerId),
         db.prepare(
-          "UPDATE subscriptions SET status = 'canceled', updated_at = unixepoch() WHERE stripe_subscription_id = ?"
-        ).bind(sub['id']),
+          "INSERT INTO subscriptions (id, agent_id, stripe_subscription_id, status, current_period_start, current_period_end, created_at, updated_at) SELECT ?, agents.id, ?, 'canceled', 0, 0, unixepoch(), unixepoch() FROM agents WHERE stripe_customer_id = ? ON CONFLICT(stripe_subscription_id) DO UPDATE SET status = 'canceled', updated_at = unixepoch()"
+        ).bind('uuid', sub['id'], customerId),
       ]);
       return { status: 'lapsed', graceUntil: null };
     }
