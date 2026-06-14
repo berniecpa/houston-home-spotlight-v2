@@ -7,6 +7,12 @@ interface __BaseEnv_CloudflareEnv {
 	PERFEX_RE_URL: string;
 	PERFEX_RE_KEY: string;
 	WORKER_SELF_REFERENCE: Fetcher /* houston-home-spotlight-v2 */;
+	// Stripe secrets — Phase 3 subscription billing (Plan 03-01)
+	// These are wrangler secrets, NOT [vars] — never appear in wrangler.toml.
+	// Local dev: add to .dev.vars (gitignored). Production: wrangler secret put STRIPE_SECRET_KEY
+	STRIPE_SECRET_KEY: string;
+	STRIPE_WEBHOOK_SECRET: string;
+	STRIPE_PRICE_ID: string;
 }
 declare namespace Cloudflare {
 	interface Env extends __BaseEnv_CloudflareEnv {}
