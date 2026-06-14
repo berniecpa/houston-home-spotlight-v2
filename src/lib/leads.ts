@@ -38,6 +38,36 @@ interface SendLeadEmailParams {
 }
 
 /**
+ * Escape the five HTML-significant characters so buyer-supplied values cannot
+ * inject markup (script/img/onerror/anchor phishing) into the notification
+ * email body delivered to the agent and Bernard (BL-01 / HTML injection).
+ *
+ * @param s - Raw, untrusted string
+ * @returns HTML-safe string
+ */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Strip CR/LF (and surrounding whitespace) from a value used in an email
+ * header such as the subject line, preventing email-header injection
+ * (BL-01). Resend builds headers from these fields, so embedded newlines
+ * could otherwise inject additional headers.
+ *
+ * @param s - Raw, untrusted string destined for a header
+ * @returns single-line string with CR/LF removed
+ */
+function stripNewlines(s: string): string {
+  return s.replace(/[\r\n]+/g, ' ').trim();
+}
+
+/**
  * Send a lead notification email via Resend REST API.
  *
  * Uses raw fetch — no SDK — for full Cloudflare Workers compatibility.
@@ -66,21 +96,31 @@ export async function sendLeadEmail(params: SendLeadEmailParams): Promise<void> 
     phonenumber,
   } = params;
 
+  // Escape every interpolated value before embedding in HTML (BL-01).
+  // buyerName/phonenumber/message are buyer-controlled; listingAddress/slug
+  // come from D1 but are escaped too for cheap defense-in-depth.
+  const safeName = escapeHtml(buyerName);
+  const safePhone = escapeHtml(phonenumber);
+  const safeMessage = escapeHtml(message || '(no message)');
+  const safeAddress = escapeHtml(listingAddress);
+  const safeSlug = encodeURIComponent(listingSlug);
+
   const emailBody = {
     from: fromEmail,
     to: [agentEmail],
     cc: [adminEmail],
     reply_to: buyerEmail,
-    subject: `New Inquiry: ${listingAddress}`,
+    // Strip CR/LF so the address can never inject extra email headers (BL-01).
+    subject: `New Inquiry: ${stripNewlines(listingAddress)}`,
     html: `
-      <p>New inquiry from <strong>${buyerName}</strong>
-         (<a href="tel:${phonenumber}">${phonenumber}</a>).</p>
+      <p>New inquiry from <strong>${safeName}</strong>
+         (<a href="tel:${encodeURIComponent(phonenumber)}">${safePhone}</a>).</p>
       <p><strong>Listing:</strong>
-         <a href="https://houstonhomespotlight.com/listings/${listingSlug}">
-           ${listingAddress}
+         <a href="https://houstonhomespotlight.com/listings/${safeSlug}">
+           ${safeAddress}
          </a>
       </p>
-      <p><strong>Message:</strong> ${message || '(no message)'}</p>
+      <p><strong>Message:</strong> ${safeMessage}</p>
       <p>Reply directly to this email to contact the buyer.</p>
     `.trim(),
   };
