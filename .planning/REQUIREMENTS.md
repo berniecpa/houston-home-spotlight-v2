@@ -42,11 +42,11 @@
 
 ### Leads
 
-- [ ] **LEAD-01**: Buyer can submit an inquiry on any listing detail page (name, email, phone, message)
-- [ ] **LEAD-02**: Inquiry is saved to Cloudflare D1 `leads` table linked to the listing and agent
-- [ ] **LEAD-03**: Agent receives an email notification via Resend for every new inquiry on their listing
-- [ ] **LEAD-04**: Bernard receives a CC email on every inquiry regardless of which agent owns the listing
-- [ ] **LEAD-05**: Agent can view all inquiries for their listings in a dashboard lead inbox
+- [x] **LEAD-01**: Buyer can submit an inquiry on any listing detail page (name, email, phone, message)
+- [x] **LEAD-02**: Inquiry is saved to Cloudflare D1 `leads` table linked to the listing and agent
+- [x] **LEAD-03**: Agent receives an email notification via Resend for every new inquiry on their listing
+- [x] **LEAD-04**: Bernard receives a CC email on every inquiry regardless of which agent owns the listing
+- [x] **LEAD-05**: Agent can view all inquiries for their listings in a dashboard lead inbox
 
 ### Admin
 
@@ -126,11 +126,11 @@ Updated 2026-06-10 — roadmap created, all 37 v1 requirements mapped.
 | LIST-06 | Phase 4 | Complete |
 | LIST-07 | Phase 4 | Complete |
 | LIST-08 | Phase 4 | Complete |
-| LEAD-01 | Phase 4 | Pending |
-| LEAD-02 | Phase 4 | Pending |
-| LEAD-03 | Phase 4 | Pending |
-| LEAD-04 | Phase 4 | Pending |
-| LEAD-05 | Phase 4 | Pending |
+| LEAD-01 | Phase 4 | Complete |
+| LEAD-02 | Phase 4 | Complete |
+| LEAD-03 | Phase 4 | Complete |
+| LEAD-04 | Phase 4 | Complete |
+| LEAD-05 | Phase 4 | Complete |
 | ADMIN-01 | Phase 5 | Pending |
 | ADMIN-02 | Phase 5 | Pending |
 | ADMIN-03 | Phase 5 | Pending |

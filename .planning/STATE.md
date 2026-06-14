@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed Phase 04 Plan 01 (04-01-SUMMARY.md)
-last_updated: "2026-06-14T02:43:22.309Z"
+last_updated: "2026-06-14T02:55:12.613Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 15
-  completed_plans: 13
-  percent: 87
+  completed_plans: 14
+  percent: 50
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-10)
 ## Current Position
 
 Phase: 04 (listings-migration-and-leads) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-06-14
 
@@ -60,6 +60,7 @@ Progress: [█████████░] 87%
 | Phase 03-subscription-billing P03 | 12 minutes | 2 tasks | 4 files |
 | Phase 04-listings-migration P01 | 9 minutes | 3 tasks | 7 files |
 | Phase 04-listings-migration-and-leads P03 | 4min | 2 tasks | 5 files |
+| Phase 04 P04 | 18 minutes | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,8 @@ Recent decisions affecting current work:
 - [Phase 03-03]: Admin flag is OR of Firebase token claim and D1 is_admin=1 — Firebase token is authoritative
 - [Phase 04-01]: D1 listing read path uses two-query image grouping (no GROUP_CONCAT) + AGENT_PUBLISHABLE_SQL subscription gate on every public SELECT
 - [Phase 04-01]: 0003 seed migration uses INSERT OR IGNORE keyed on UNIQUE slug; agent_id resolves via subquery (no hardcoded UID)
+- [Phase ?]: D1 INSERT is source of truth for leads; Resend+Perfex are best-effort via Promise.allSettled (LEAD-04)
+- [Phase ?]: env cast via unknown to Record for Workers secrets not in wrangler-generated CloudflareEnv type
 
 ### Pending Todos
 
@@ -108,6 +111,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-14T02:43:22.304Z
+Last session: 2026-06-14T02:55:08.561Z
 Stopped at: Completed Phase 04 Plan 01 (04-01-SUMMARY.md)
 Resume file: None
