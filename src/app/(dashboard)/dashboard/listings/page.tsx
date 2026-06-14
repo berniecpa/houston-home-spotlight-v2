@@ -1,13 +1,32 @@
 /**
- * Listings Placeholder Page
+ * Listings Dashboard Page — Agent listing management RSC shell
  *
- * Phase 2 scaffold — listing management content will be delivered in Phase 4.
- * Per UI-SPEC /dashboard/listings spec and Copywriting Contract.
+ * force-dynamic RSC: reads session cookie + D1 on every request.
+ * Loads the calling agent's own listings (scoped by agent_id, LIST-08) and
+ * renders the client <ListingsManager /> component which handles all mutations.
+ *
+ * Note: No runtime='edge' export on this page per autonomous directive.
+ * The parent layout.tsx already sets runtime='edge' for the dashboard group.
+ * This page uses force-dynamic to ensure per-request D1 reads.
+ *
+ * Security (T-04-17 mitigation):
+ *   D1 SELECT scoped WHERE agent_id = session uid — never returns other agents' listings.
+ *   uid always from getTokens (session cookie); never from query params or request body.
  *
  * @module app/(dashboard)/dashboard/listings/page
  */
 
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { getTokens } from 'next-firebase-auth-edge';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { authEdgeConfig } from '@/lib/auth-edge';
+import { ListingsManager } from '@/components/dashboard/ListingsManager';
+import type { OwnListing } from '@/components/dashboard/ListingsManager';
+
+/** Force per-request dynamic rendering (session cookie + D1 read) */
+export const dynamic = 'force-dynamic';
 
 /** Page metadata */
 export const metadata: Metadata = {
@@ -15,19 +34,45 @@ export const metadata: Metadata = {
 };
 
 /**
- * ListingsPage — placeholder RSC for /dashboard/listings.
+ * ListingsPage — RSC shell that loads the agent's own listings and
+ * passes them to the client ListingsManager for management.
  *
- * @returns {JSX.Element} Placeholder page with Phase 4 coming-soon copy
+ * @returns {Promise<JSX.Element>} Listings management page
  */
-export default function ListingsPage(): JSX.Element {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-      <h1 className="font-serif text-2xl font-semibold leading-snug text-gray-900 mb-4">
-        Listings
-      </h1>
-      <p className="text-base text-gray-500">
-        Listing management coming in Phase 4.
-      </p>
-    </div>
-  );
+export default async function ListingsPage(): Promise<JSX.Element> {
+  // --- 1. Verify session (T-04-17: uid from session, not request) ---
+  const cookieStore = await cookies();
+  const tokens = await getTokens(cookieStore, authEdgeConfig);
+
+  if (!tokens) {
+    redirect('/login?redirect=/dashboard/listings');
+  }
+
+  const uid = tokens.decodedToken.uid;
+
+  // --- 2. Load agent's own listings scoped by agent_id (LIST-08) ---
+  let listings: OwnListing[] = [];
+
+  try {
+    const { env } = await getCloudflareContext({ async: true });
+
+    const result = await env.DB.prepare(
+      `SELECT id, title, slug, address, price, beds, baths, status, created_at
+       FROM listings
+       WHERE agent_id = ?
+       ORDER BY created_at DESC`
+    )
+      .bind(uid)
+      .all<OwnListing>();
+
+    listings = result.results;
+  } catch (err) {
+    // D1 read failure: render the manager with empty state rather than
+    // crashing the page. The client component can re-fetch on mount.
+    console.error('ListingsPage: D1 read error', err);
+    listings = [];
+  }
+
+  // --- 3. Render client ListingsManager with server-loaded initial data ---
+  return <ListingsManager initialListings={listings} />;
 }
