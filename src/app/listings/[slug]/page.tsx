@@ -370,7 +370,9 @@ export default async function ListingDetailPage({
                 <div className="flex justify-between py-2 border-b border-gray-100">
                   <span className="text-gray-600">Price per Sqft</span>
                   <span className="font-medium text-gray-900">
-                    ${formatNumber(Math.round(listing.price / listing.sqft))}
+                    {listing.sqft > 0
+                      ? `$${formatNumber(Math.round(listing.price / listing.sqft))}`
+                      : 'N/A'}
                   </span>
                 </div>
               </div>
