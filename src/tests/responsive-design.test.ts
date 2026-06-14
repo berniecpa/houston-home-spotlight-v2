@@ -135,11 +135,14 @@ describe('Responsive Design Verification - US-018', () => {
     });
 
     it('Listings page uses responsive grid layout', () => {
-      const listingsPath = join(APP_DIR, 'listings/page.tsx');
-      const content = readFile(listingsPath);
-      
+      // The RSC page.tsx delegates rendering to ListingsClient.tsx (force-dynamic split);
+      // check either file for the responsive grid class.
+      const listingsPageContent = readFile(join(APP_DIR, 'listings/page.tsx'));
+      const listingsClientContent = readFile(join(APP_DIR, 'listings/ListingsClient.tsx'));
+      const combined = listingsPageContent + listingsClientContent;
+
       assert.ok(
-        content.includes('grid-cols-1 md:grid-cols-2 lg:grid-cols-3'),
+        combined.includes('grid-cols-1 md:grid-cols-2 lg:grid-cols-3'),
         'Listings page should use responsive grid (1 col mobile, 2 tablet, 3 desktop)'
       );
     });
