@@ -1,7 +1,7 @@
 # wrangler.toml — Cloudflare Workers configuration
 # Source: opennext.js.org/cloudflare/get-started + developers.cloudflare.com/d1/reference/migrations/
 name = "houston-home-spotlight-v2"
-main = ".open-next/worker.js"
+main = "./custom-worker.ts"
 compatibility_date = "2024-12-30"
 compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
 
@@ -19,6 +19,15 @@ database_name = "houston-home-spotlight"
 database_id = "0b043fd9-2ebe-41a8-a23a-f9cbd605d02d"
 migrations_dir = "db/migrations"
 migrations_table = "d1_migrations"
+
+# Video-job poller fallback cron (Plan 06-03).
+# Scans video_jobs WHERE status='processing' AND updated_at < unixepoch()-300
+# to catch missed Kie.ai callbacks and complete HiggsField jobs (VIDEO-02/03).
+# DEFERRED HUMAN VALIDATION: apply 0005_video_jobs migration before first deploy;
+# confirm the cron fires via Cloudflare dashboard or locally with:
+#   curl "http://localhost:8787/cdn-cgi/handler/scheduled?cron=%2A%2F5+%2A+%2A+%2A+%2A"
+[triggers]
+crons = ["*/5 * * * *"]
 
 [vars]
 PERFEX_RE_URL = ""

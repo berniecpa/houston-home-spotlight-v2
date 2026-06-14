@@ -2,7 +2,7 @@
  * Cloudflare Workers Deployment Tests
  *
  * Tests verify that:
- * 1. wrangler.toml has main = ".open-next/worker.js" and nodejs_compat
+ * 1. wrangler.toml has main = "./custom-worker.ts" and nodejs_compat
  * 2. next.config.mjs does NOT contain output: 'export' or distDir: 'dist'
  * 3. open-next.config.ts exists with defineCloudflareConfig
  * 4. @opennextjs/cloudflare is in devDependencies
@@ -31,9 +31,9 @@ describe('Cloudflare Workers Deployment Configuration', () => {
       assert.ok(fs.existsSync(wranglerPath), 'wrangler.toml should exist');
     });
 
-    it('should have main pointing to worker.js', () => {
+    it('should have main pointing to custom-worker.ts (OpenNext extension with scheduled handler)', () => {
       const content = fs.readFileSync(wranglerPath, 'utf-8');
-      assert.ok(content.includes('main = ".open-next/worker.js"'), 'wrangler.toml should point to .open-next/worker.js');
+      assert.ok(content.includes('main = "./custom-worker.ts"'), 'wrangler.toml should point to ./custom-worker.ts (custom-worker.ts re-exports the OpenNext fetch handler and adds the video-job poller cron)');
     });
 
     it('should have compatibility_date 2024-12-30', () => {
