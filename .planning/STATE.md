@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed Phase 03 Plan 01 (03-01-SUMMARY.md)
-last_updated: "2026-06-14T00:43:46.280Z"
+stopped_at: Completed Phase 03 Plan 02 (03-02-SUMMARY.md)
+last_updated: "2026-06-14T01:00:00.000Z"
 last_activity: 2026-06-14 -- Phase 03 execution started
 progress:
   total_phases: 6
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-10)
 ## Current Position
 
 Phase: 03 (subscription-billing) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
-Last activity: 2026-06-14 -- Phase 03 execution started
+Last activity: 2026-06-14 -- Phase 03 Plan 02 complete
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 | Phase 01 P01 | 10 | 2 tasks | 10 files |
 | Phase 03-subscription-billing P01 | 12 minutes | 3 tasks | 8 files |
+| Phase 03-subscription-billing P02 | 9 minutes | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,8 @@ Recent decisions affecting current work:
 - [Phase ?]: stripe@22.2.1 singleton accepts secretKey parameter (not module-level env read) — keeps module tree-shakeable and prevents static key exposure
 - [Phase ?]: AGENT_PUBLISHABLE_SQL uses unixepoch() epoch seconds to match D1 INTEGER column — never Date.now() milliseconds (RESEARCH Pitfall 6)
 - [Phase ?]: No export const runtime = 'edge' in any Phase 3 file — @opennextjs/cloudflare v1.x does not support edge runtime declaration (RESEARCH Pitfall 4)
+- [Phase 03-02]: handleStripeEvent extracted to stripe-events.ts to keep webhook/route.ts under 500 lines; test req.json() check must filter comment lines (JSDoc documents what NOT to do)
+- [Phase 03-02]: customer.subscription.updated with non-active Stripe status maps to 'lapsed' — grace only set by invoice.payment_failed
 
 ### Pending Todos
 
