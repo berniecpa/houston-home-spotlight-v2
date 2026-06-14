@@ -57,11 +57,11 @@
 
 ### AI Video Generation
 
-- [ ] **VIDEO-01**: Agent can trigger AI video generation from a listing's dashboard page
-- [ ] **VIDEO-02**: Platform submits an async job to Kie.ai with the listing's photo URLs and returns a task ID immediately
-- [ ] **VIDEO-03**: Platform polls Kie.ai for job completion and writes the `video_url` to the listing row in D1
-- [ ] **VIDEO-04**: Listing detail page displays the generated video when `video_url` is present
-- [ ] **VIDEO-05**: Platform retries or falls back to HiggsField/alternative provider on Kie.ai failure
+- [x] **VIDEO-01**: Agent can trigger AI video generation from a listing's dashboard page
+- [x] **VIDEO-02**: Platform submits an async job to Kie.ai with the listing's photo URLs and returns a task ID immediately
+- [x] **VIDEO-03**: Platform polls Kie.ai for job completion and writes the `video_url` to the listing row in D1
+- [x] **VIDEO-04**: Listing detail page displays the generated video when `video_url` is present
+- [x] **VIDEO-05**: Platform retries or falls back to HiggsField/alternative provider on Kie.ai failure
 
 ## v2 Requirements
 
@@ -135,11 +135,11 @@ Updated 2026-06-10 — roadmap created, all 37 v1 requirements mapped.
 | ADMIN-02 | Phase 5 | Complete |
 | ADMIN-03 | Phase 5 | Complete |
 | ADMIN-04 | Phase 5 | Complete |
-| VIDEO-01 | Phase 6 | Pending |
-| VIDEO-02 | Phase 6 | Pending |
-| VIDEO-03 | Phase 6 | Pending |
-| VIDEO-04 | Phase 6 | Pending |
-| VIDEO-05 | Phase 6 | Pending |
+| VIDEO-01 | Phase 6 | Complete |
+| VIDEO-02 | Phase 6 | Complete |
+| VIDEO-03 | Phase 6 | Complete |
+| VIDEO-04 | Phase 6 | Complete |
+| VIDEO-05 | Phase 6 | Complete |
 
 **Coverage:**
 
