@@ -53,6 +53,23 @@ try {
   adminIdRouteSrc = '';
 }
 
+/** Read the GET agent-list route source for pagination-clamp assertions (WR-03) */
+const ADMIN_LIST_ROUTE = join(
+  PROJECT_ROOT,
+  'src',
+  'app',
+  'api',
+  'admin',
+  'agents',
+  'route.ts'
+);
+let adminListRouteSrc: string;
+try {
+  adminListRouteSrc = readFileSync(ADMIN_LIST_ROUTE, 'utf-8');
+} catch {
+  adminListRouteSrc = '';
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // File existence
 // ────────────────────────────────────────────────────────────────────────────
@@ -219,6 +236,13 @@ describe('src/lib/admin.ts — listAgentsPaginated query structure', () => {
     );
   });
 
+  it('listAgentsPaginated null-guards rowsResult.results (WR-04)', () => {
+    assert.ok(
+      adminSrc.includes('rowsResult.results ?? []'),
+      'listAgentsPaginated must return rowsResult.results ?? [] so a null result cannot 500 the admin page (WR-04)'
+    );
+  });
+
   it('listAgentsPaginated selects display_name, email, subscription_status, is_suspended', () => {
     assert.ok(
       adminSrc.includes('display_name') &&
@@ -284,6 +308,13 @@ describe('src/lib/admin.ts — setAgentSuspended UPDATE structure', () => {
         adminIdRouteSrc.includes('404') &&
         adminIdRouteSrc.includes('Agent not found'),
       'PATCH /api/admin/agents/[id] must return 404 "Agent not found." when setAgentSuspended changed 0 rows (WR-02)'
+    );
+  });
+
+  it('GET agent-list route clamps the page param to an upper bound (WR-03)', () => {
+    assert.ok(
+      adminListRouteSrc.includes('Math.min') && adminListRouteSrc.includes('MAX_PAGE'),
+      'GET /api/admin/agents must clamp ?page with Math.min(MAX_PAGE, ...) so a huge value cannot produce an absurd OFFSET (WR-03)'
     );
   });
 

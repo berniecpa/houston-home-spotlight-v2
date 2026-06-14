@@ -187,7 +187,10 @@ export async function listAgentsPaginated(
     .first<{ total: number }>();
 
   return {
-    agents: rowsResult.results,
+    // WR-04: null-guard the rows symmetrically with the COUNT result below, so
+    // an unexpected null/undefined result shape can't 500 the admin page when
+    // AgentsPage immediately calls agents.length / agents.map(...).
+    agents: rowsResult.results ?? [],
     total: countResult?.total ?? 0,
   };
 }
