@@ -30,11 +30,11 @@ describe('Listing Detail Page', () => {
       assert.ok(existsSync(pagePath), 'page.tsx should exist in src/app/listings/[slug]/');
     });
 
-    it('should export generateStaticParams function', () => {
+    it('should NOT export generateStaticParams (force-dynamic removes static generation)', () => {
       const content = readFileSync(pagePath, 'utf-8');
       assert.ok(
-        content.includes('export async function generateStaticParams'),
-        'Should export generateStaticParams function'
+        !content.includes('export async function generateStaticParams'),
+        'generateStaticParams must be absent for force-dynamic pages'
       );
     });
 
@@ -88,11 +88,12 @@ describe('Listing Detail Page', () => {
       );
     });
 
-    it('should import data functions from lib/data', () => {
+    it('should import getListingBySlug from lib/data', () => {
       const content = readFileSync(pagePath, 'utf-8');
       assert.ok(
-        content.includes("import { getListingBySlug, getAllListings } from '@/lib/data'"),
-        'Should import getListingBySlug and getAllListings'
+        content.includes("from '@/lib/data'") && content.includes('getListingBySlug') &&
+          !content.includes('getAllListings'),
+        'Should import only getListingBySlug from @/lib/data (getAllListings no longer needed)'
       );
     });
 
@@ -106,45 +107,38 @@ describe('Listing Detail Page', () => {
   });
 
   describe('generateStaticParams', () => {
-    it('should return array of slug objects', () => {
+    it('should not have static params return type (force-dynamic removes static generation)', () => {
       const content = readFileSync(pagePath, 'utf-8');
       assert.ok(
-        content.includes('Promise<{ slug: string }[]>'),
-        'Should return Promise with slug objects array'
+        !content.includes('Promise<{ slug: string }[]>'),
+        'Should not have generateStaticParams return type — function must be absent for force-dynamic'
       );
     });
 
-    it('should call getAllListings', () => {
+    it('should not call getAllListings (no longer needed without static generation)', () => {
       const content = readFileSync(pagePath, 'utf-8');
       assert.ok(
-        content.includes('getAllListings()'),
-        'Should call getAllListings to get all listings'
-      );
-    });
-
-    it('should map listings to slug params', () => {
-      const content = readFileSync(pagePath, 'utf-8');
-      assert.ok(
-        content.includes('listings.map') && content.includes('slug: listing.slug'),
-        'Should map listings to slug parameters'
+        !content.includes('getAllListings()'),
+        'Should not call getAllListings — detail page no longer needs it for static paths'
       );
     });
   });
 
   describe('generateMetadata', () => {
-    it('should accept params with slug', () => {
+    it('should accept params as Promise<{ slug: string }>', () => {
       const content = readFileSync(pagePath, 'utf-8');
       assert.ok(
-        content.includes('params: { slug: string }'),
-        'Should accept params with slug property'
+        content.includes('params: Promise<{ slug: string }>'),
+        'Should use Next.js 15 async params pattern'
       );
     });
 
-    it('should call getListingBySlug', () => {
+    it('should call getListingBySlug with awaited slug', () => {
       const content = readFileSync(pagePath, 'utf-8');
       assert.ok(
-        content.includes('getListingBySlug(params.slug)'),
-        'Should call getListingBySlug with slug param'
+        content.includes('const { slug } = await params') &&
+          content.includes('getListingBySlug(slug)'),
+        'Should destructure slug via await params then pass to getListingBySlug'
       );
     });
 
@@ -174,19 +168,20 @@ describe('Listing Detail Page', () => {
   });
 
   describe('Page Component', () => {
-    it('should accept params with slug', () => {
+    it('should accept params as Promise<{ slug: string }>', () => {
       const content = readFileSync(pagePath, 'utf-8');
       assert.ok(
-        content.includes('params: { slug: string }'),
-        'Should accept params with slug'
+        content.includes('params: Promise<{ slug: string }>'),
+        'Should use Next.js 15 async params pattern'
       );
     });
 
-    it('should call getListingBySlug to fetch listing', () => {
+    it('should call getListingBySlug with awaited slug', () => {
       const content = readFileSync(pagePath, 'utf-8');
       assert.ok(
-        content.includes('getListingBySlug(params.slug)'),
-        'Should fetch listing by slug'
+        content.includes('const { slug } = await params') &&
+          content.includes('getListingBySlug(slug)'),
+        'Should destructure slug via await params then pass to getListingBySlug'
       );
     });
 

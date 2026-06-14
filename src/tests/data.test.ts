@@ -73,32 +73,34 @@ describe('Data Loading Utilities - US-005', () => {
   });
 
   describe('Caching Implementation', () => {
-    it('should have a cache variable for listings', () => {
+    it('should use D1 (no module-level cache variable declaration)', () => {
       const content = fs.readFileSync(dataFilePath, 'utf-8');
-      assert.ok(content.includes('listingsCache'), 'should have listingsCache variable');
-      assert.ok(content.includes('Listing[] | null'), 'cache should be typed as Listing[] | null');
+      // D1-backed data layer has no module-level cache; reads D1 per request
+      // (listingsCache may appear in JSDoc comments but not as a variable declaration)
+      assert.ok(!/let\s+listingsCache/.test(content),
+        'D1 data layer should not declare a listingsCache variable');
     });
 
-    it('should check cache in getAllListings before loading', () => {
+    it('should use getCloudflareContext for D1 binding (replaces cache pattern)', () => {
       const content = fs.readFileSync(dataFilePath, 'utf-8');
-      // Check for if (listingsCache) pattern
-      assert.ok(/if\s*\(\s*listingsCache\s*\)/.test(content), 
-        'should check if listingsCache exists');
+      assert.ok(content.includes('getCloudflareContext'),
+        'should call getCloudflareContext to access D1 binding');
     });
 
-    it('should clear cache when clearListingsCache is called', () => {
+    it('should export clearListingsCache as no-op for test compatibility', () => {
       const content = fs.readFileSync(dataFilePath, 'utf-8');
-      assert.ok(content.includes('listingsCache = null'), 
-        'should set listingsCache to null');
+      assert.ok(content.includes('export function clearListingsCache'),
+        'should still export clearListingsCache for backward-compatibility');
     });
   });
 
   describe('Error Handling', () => {
     it('should have try-catch blocks in async functions', () => {
       const content = fs.readFileSync(dataFilePath, 'utf-8');
-      // Count try blocks - should have at least 4 (one per async function)
+      // D1 data layer: getAllListings and getListingBySlug have their own try-catch;
+      // getFeaturedListings and filterListings delegate to getAllListings (inherits error handling)
       const tryMatches = content.match(/try\s*\{/g);
-      assert.ok(tryMatches && tryMatches.length >= 4, 
+      assert.ok(tryMatches && tryMatches.length >= 2,
         `should have try blocks in async functions (found ${tryMatches?.length || 0})`);
     });
 
@@ -118,25 +120,27 @@ describe('Data Loading Utilities - US-005', () => {
   });
 
   describe('Data Loading Logic', () => {
-    it('should import all 3 listing JSON files', () => {
+    it('should read from D1 via getCloudflareContext (not JSON files)', () => {
       const content = fs.readFileSync(dataFilePath, 'utf-8');
-      assert.ok(content.includes('riverside-terrace-modern-craftsman.json'), 
-        'should import riverside listing');
-      assert.ok(content.includes('heights-bungalow-historic.json'), 
-        'should import heights listing');
-      assert.ok(content.includes('sugarland-estate-pool.json'), 
-        'should import sugarland listing');
+      // D1 data layer replaces JSON file imports with D1 queries
+      assert.ok(!content.includes('@/data/listings/'),
+        'should not import from @/data/listings/ — D1 is now the data source');
+      assert.ok(content.includes('getCloudflareContext'),
+        'should use getCloudflareContext to access D1 binding');
     });
 
-    it('should use dynamic import for JSON files', () => {
+    it('should use two-query image grouping (not GROUP_CONCAT)', () => {
       const content = fs.readFileSync(dataFilePath, 'utf-8');
-      assert.ok(content.includes('import('), 'should use dynamic import');
-      assert.ok(content.includes('@/data/listings/'), 'should use @/data/listings/ path');
+      assert.ok(content.includes('listing_images') && content.includes('display_order ASC'),
+        'should query listing_images ordered by display_order');
+      assert.ok(!content.includes('GROUP_CONCAT'),
+        'should use two-query Map grouping instead of GROUP_CONCAT');
     });
 
-    it('should use Promise.all for parallel loading', () => {
+    it('should apply AGENT_PUBLISHABLE_SQL subscription gate', () => {
       const content = fs.readFileSync(dataFilePath, 'utf-8');
-      assert.ok(content.includes('Promise.all'), 'should use Promise.all for parallel loading');
+      assert.ok(content.includes('AGENT_PUBLISHABLE_SQL'),
+        'should apply subscription gate from AGENT_PUBLISHABLE_SQL');
     });
   });
 
@@ -144,22 +148,28 @@ describe('Data Loading Utilities - US-005', () => {
     it('should filter by minPrice', () => {
       const content = fs.readFileSync(dataFilePath, 'utf-8');
       assert.ok(content.includes('minPrice'), 'should reference minPrice');
-      assert.ok(content.includes('listing.price < filters.minPrice'), 
-        'should compare listing.price with minPrice');
+      assert.ok(
+        content.includes('.price < filters.minPrice'),
+        'should compare listing price with minPrice'
+      );
     });
 
     it('should filter by maxPrice', () => {
       const content = fs.readFileSync(dataFilePath, 'utf-8');
       assert.ok(content.includes('maxPrice'), 'should reference maxPrice');
-      assert.ok(content.includes('listing.price > filters.maxPrice'), 
-        'should compare listing.price with maxPrice');
+      assert.ok(
+        content.includes('.price > filters.maxPrice'),
+        'should compare listing price with maxPrice'
+      );
     });
 
     it('should filter by minBeds', () => {
       const content = fs.readFileSync(dataFilePath, 'utf-8');
       assert.ok(content.includes('minBeds'), 'should reference minBeds');
-      assert.ok(content.includes('listing.beds < filters.minBeds'), 
-        'should compare listing.beds with minBeds');
+      assert.ok(
+        content.includes('.beds < filters.minBeds'),
+        'should compare listing beds with minBeds'
+      );
     });
 
     it('should check for undefined before applying filters', () => {
