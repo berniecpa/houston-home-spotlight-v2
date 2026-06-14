@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 06-04-PLAN.md
-last_updated: "2026-06-14T22:43:00.000Z"
+status: verifying
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-06-14T22:55:21.694Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 22
-  completed_plans: 21
-  percent: 95
+  completed_plans: 22
+  percent: 100
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-10)
 
 Phase: 06 (ai-video-generation) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-14
 
 Progress: [█████████▌] 95%
@@ -69,6 +69,7 @@ Progress: [█████████▌] 95%
 | Phase 06 P01 | 12 minutes | 2 tasks | 10 files |
 | Phase 06-ai-video-generation P02 | 25 minutes | 2 tasks | 6 files |
 | Phase 06-ai-video-generation P04 | 5 minutes | 2 tasks | 4 files |
+| Phase 06-ai-video-generation P03 | 6 minutes | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,9 @@ Recent decisions affecting current work:
 - [Phase 06-04]: 409 Conflict adopts in-flight job silently — no error banner, just startPolling
 - [Phase 06-04]: W1 fix: dashboard/listings/page SELECT includes video_status/video_url; videoStates initialised from initialListings for page-refresh persistence
 - [Phase 06-04]: Public detail page: native video element with controls/preload; force-dynamic preserved, no runtime='edge'
+- [Phase ?]: KIE_ATTEMPT_CAP=2 in poller mirrors VIDEO-03 cap; failover guarded by provider=kie AND attempts < 2
+- [Phase ?]: custom-worker.ts OpenNext extension: re-exports handler.fetch + adds scheduled() calling ctx.waitUntil(pollVideoJobs)
+- [Phase ?]: wrangler.toml main updated to custom-worker.ts + [triggers] crons for 5-minute video-job poller fallback
 
 ### Pending Todos
 
@@ -133,6 +137,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-14T22:43:00.000Z
-Stopped at: Completed 06-04-PLAN.md
+Last session: 2026-06-14T22:55:21.689Z
+Stopped at: Completed 06-03-PLAN.md
 Resume file: None

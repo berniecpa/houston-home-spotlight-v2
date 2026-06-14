@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Subscription Billing** - Agents can subscribe via Stripe and manage their billing (completed 2026-06-14)
 - [x] **Phase 4: Listings, Migration, and Leads** - Full listing CRUD, public page migration from JSON to D1, and buyer lead routing (completed 2026-06-14)
 - [x] **Phase 5: Admin Panel + Agent Profiles** - Bernard admin tools and public agent profile pages (completed 2026-06-14)
-- [ ] **Phase 6: AI Video Generation** - Agents can generate listing videos via Kie.ai async job pipeline
+- [x] **Phase 6: AI Video Generation** - Agents can generate listing videos via Kie.ai async job pipeline (completed 2026-06-14)
 
 ## Phase Details
 
@@ -153,4 +153,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Subscription Billing | 3/3 | Complete    | 2026-06-14 |
 | 4. Listings, Migration, and Leads | 5/5 | Complete    | 2026-06-14 |
 | 5. Admin Panel + Agent Profiles | 3/3 | Complete    | 2026-06-14 |
-| 6. AI Video Generation | 3/4 | In Progress|  |
+| 6. AI Video Generation | 4/4 | Complete   | 2026-06-14 |
