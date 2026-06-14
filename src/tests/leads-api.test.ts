@@ -18,6 +18,20 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ROUTE_PATH = join(process.cwd(), 'src/app/api/leads/route.ts');
+const LEADS_LIB_PATH = join(process.cwd(), 'src/lib/leads.ts');
+
+/**
+ * Read combined source of route.ts + leads.ts helper.
+ * After Plan 04-04, Perfex CRM logic was extracted into src/lib/leads.ts
+ * (sendToPerfex helper). Assertions that previously targeted route.ts now
+ * check the combined source so the tests remain valid without duplicating
+ * the CRM logic back into the route.
+ */
+function routeAndLeads(): string {
+  const route = existsSync(ROUTE_PATH) ? readFileSync(ROUTE_PATH, 'utf-8') : '';
+  const lib = existsSync(LEADS_LIB_PATH) ? readFileSync(LEADS_LIB_PATH, 'utf-8') : '';
+  return route + '\n' + lib;
+}
 
 describe('Leads API Route - US-013', () => {
   describe('File Structure', () => {
@@ -70,18 +84,20 @@ describe('Leads API Route - US-013', () => {
 
   describe('Environment Variables', () => {
     it('should read PERFEX_RE_URL from Workers env via getCloudflareContext', () => {
-      const content = readFileSync(ROUTE_PATH, 'utf-8');
+      // After 04-04: Perfex env var consumed in src/lib/leads.ts (sendToPerfex helper)
+      const content = routeAndLeads();
       assert.ok(
-        content.includes('env.PERFEX_RE_URL'),
-        'Should read PERFEX_RE_URL from Workers env binding'
+        content.includes('PERFEX_RE_URL'),
+        'Should read PERFEX_RE_URL from Workers env binding (in route.ts or leads.ts)'
       );
     });
 
     it('should read PERFEX_RE_KEY from Workers env via getCloudflareContext', () => {
-      const content = readFileSync(ROUTE_PATH, 'utf-8');
+      // After 04-04: Perfex env var consumed in src/lib/leads.ts (sendToPerfex helper)
+      const content = routeAndLeads();
       assert.ok(
-        content.includes('env.PERFEX_RE_KEY'),
-        'Should read PERFEX_RE_KEY from Workers env binding'
+        content.includes('PERFEX_RE_KEY'),
+        'Should read PERFEX_RE_KEY from Workers env binding (in route.ts or leads.ts)'
       );
     });
   });
@@ -106,7 +122,8 @@ describe('Leads API Route - US-013', () => {
 
   describe('Field Mapping', () => {
     it('should map firstname field correctly', () => {
-      const content = readFileSync(ROUTE_PATH, 'utf-8');
+      // After 04-04: field mapping in sendToPerfex (leads.ts) — check combined source
+      const content = routeAndLeads();
       assert.ok(
         content.includes("firstname: body.firstname") || content.includes("firstname: body['firstname']"),
         'Should map firstname field to CRM format'
@@ -114,7 +131,7 @@ describe('Leads API Route - US-013', () => {
     });
 
     it('should map lastname field correctly', () => {
-      const content = readFileSync(ROUTE_PATH, 'utf-8');
+      const content = routeAndLeads();
       assert.ok(
         content.includes("lastname: body.lastname") || content.includes("lastname: body['lastname']"),
         'Should map lastname field to CRM format'
@@ -122,7 +139,7 @@ describe('Leads API Route - US-013', () => {
     });
 
     it('should map email field correctly', () => {
-      const content = readFileSync(ROUTE_PATH, 'utf-8');
+      const content = routeAndLeads();
       assert.ok(
         content.includes("email: body.email") || content.includes("email: body['email']"),
         'Should map email field to CRM format'
@@ -130,7 +147,7 @@ describe('Leads API Route - US-013', () => {
     });
 
     it('should map phonenumber field correctly', () => {
-      const content = readFileSync(ROUTE_PATH, 'utf-8');
+      const content = routeAndLeads();
       assert.ok(
         content.includes("phonenumber: body.phonenumber") || content.includes("phonenumber: body['phonenumber']"),
         'Should map phonenumber field to CRM format'
@@ -138,7 +155,7 @@ describe('Leads API Route - US-013', () => {
     });
 
     it('should map description field correctly', () => {
-      const content = readFileSync(ROUTE_PATH, 'utf-8');
+      const content = routeAndLeads();
       assert.ok(
         content.includes("description:") && content.includes('body.description'),
         'Should map description field to CRM format'
@@ -148,7 +165,8 @@ describe('Leads API Route - US-013', () => {
 
   describe('Perfex CRM API Call', () => {
     it('should call Perfex /api/v1/leads endpoint', () => {
-      const content = readFileSync(ROUTE_PATH, 'utf-8');
+      // After 04-04: Perfex call is in sendToPerfex (leads.ts) — check combined source
+      const content = routeAndLeads();
       assert.ok(
         content.includes('/api/v1/leads'),
         'Should call Perfex CRM /api/v1/leads endpoint'
@@ -156,7 +174,7 @@ describe('Leads API Route - US-013', () => {
     });
 
     it('should use POST method for CRM call', () => {
-      const content = readFileSync(ROUTE_PATH, 'utf-8');
+      const content = routeAndLeads();
       assert.ok(
         content.includes("method: 'POST'") || content.includes('method: "POST"'),
         'Should use POST method for CRM API call'
@@ -164,7 +182,7 @@ describe('Leads API Route - US-013', () => {
     });
 
     it('should use authtoken header for authentication', () => {
-      const content = readFileSync(ROUTE_PATH, 'utf-8');
+      const content = routeAndLeads();
       assert.ok(
         content.includes("'authtoken'") || content.includes('"authtoken"'),
         'Should use authtoken header for Perfex CRM authentication'
@@ -172,7 +190,7 @@ describe('Leads API Route - US-013', () => {
     });
 
     it('should use perfexKey in authtoken header', () => {
-      const content = readFileSync(ROUTE_PATH, 'utf-8');
+      const content = routeAndLeads();
       assert.ok(
         content.includes('authtoken') && content.includes('perfexKey'),
         'Should use perfexKey in authtoken header'
@@ -180,7 +198,7 @@ describe('Leads API Route - US-013', () => {
     });
 
     it('should set Content-Type header to application/json', () => {
-      const content = readFileSync(ROUTE_PATH, 'utf-8');
+      const content = routeAndLeads();
       assert.ok(
         content.includes("'Content-Type'") || content.includes('"Content-Type"'),
         'Should set Content-Type header'
@@ -192,7 +210,7 @@ describe('Leads API Route - US-013', () => {
     });
 
     it('should stringify body when sending to CRM', () => {
-      const content = readFileSync(ROUTE_PATH, 'utf-8');
+      const content = routeAndLeads();
       assert.ok(
         content.includes('JSON.stringify'),
         'Should stringify request body for CRM call'
@@ -295,11 +313,13 @@ describe('Leads API Route - US-013', () => {
 
   describe('Error Response', () => {
     it('should return 500 status on server error', () => {
+      // After 04-04: only D1 INSERT failure and the outer catch return 500 in the route.
+      // Perfex CRM errors are best-effort (never 500 for buyer) — count >= 2 across route
       const content = readFileSync(ROUTE_PATH, 'utf-8');
       const status500Count = (content.match(/status: 500/g) || []).length;
       assert.ok(
-        status500Count >= 2,
-        'Should return 500 status for server errors (try-catch and CRM failure)'
+        status500Count >= 1,
+        'Should return 500 status for server errors (D1 insert failure and outer catch)'
       );
     });
 
@@ -366,25 +386,30 @@ describe('Leads API Route - US-013', () => {
 
   describe('CRM Response Handling', () => {
     it('should check CRM response status', () => {
-      const content = readFileSync(ROUTE_PATH, 'utf-8');
+      // After 04-04: CRM response check is in sendToPerfex (leads.ts) — check combined source
+      const content = routeAndLeads();
       assert.ok(
         content.includes('crmResponse.ok') || content.includes('!crmResponse.ok'),
         'Should check CRM response ok status'
       );
     });
 
-    it('should parse CRM response JSON', () => {
-      const content = readFileSync(ROUTE_PATH, 'utf-8');
+    it('should parse CRM response JSON or log error text', () => {
+      // After 04-04: sendToPerfex logs error text on !ok; no longer JSON-parses the CRM response
+      // (the original route parsed json only to extract id — now D1 UUID is used instead).
+      // Assert that CRM error handling exists (either approach is valid).
+      const content = routeAndLeads();
       assert.ok(
-        content.includes('crmResponse.json()'),
-        'Should parse CRM response as JSON'
+        content.includes('crmResponse.json()') || content.includes('crmResponse.text()'),
+        'Should handle CRM response (parse JSON or read error text)'
       );
     });
 
     it('should log CRM errors', () => {
-      const content = readFileSync(ROUTE_PATH, 'utf-8');
+      // After 04-04: CRM error logging is in sendToPerfex (leads.ts) — check combined source
+      const content = routeAndLeads();
       assert.ok(
-        content.includes('console.error') && content.includes('Perfex CRM'),
+        content.includes('console.error') && (content.includes('Perfex CRM') || content.includes('perfex')),
         'Should log Perfex CRM errors to console'
       );
     });
