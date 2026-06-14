@@ -24,6 +24,13 @@
  *   T-06-03 (Tampering — replayed/duplicate callback):
  *     applyTerminalResult guarded WHERE task_id=? AND status='processing';
  *     {applied:false} → 200 no-op (VIDEO-04).
+ *   CR-03 (Replay — captured callback replayed forever):
+ *     X-Webhook-Timestamp is checked against a tolerance window and rejected
+ *     when stale or future-dated, before signature verification.
+ *   CR-01/WR-03 (Forged/replayed body — unsigned video_url/code):
+ *     The HMAC covers only taskId.timestamp, so the body is NOT authenticated.
+ *     The terminal outcome is re-derived from an authenticated getStatus call
+ *     to Kie.ai; the body's video_url/code are never trusted on the write path.
  *
  * Body must be read as raw text FIRST (same rule as Stripe webhook):
  *   Any prior req.json() call would consume the stream and corrupt HMAC bytes.
@@ -37,19 +44,29 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import {
   verifyKieSignature,
   extractKieCallbackVideoUrl,
+  createKieAdapter,
 } from '@/lib/video/kie-adapter';
 import type { KieCallbackBody } from '@/lib/video/kie-adapter';
 import { applyTerminalResult } from '@/lib/video/jobs';
 import type { TerminalOutcome } from '@/lib/video/jobs';
 
 /**
+ * Replay-window tolerance for X-Webhook-Timestamp in seconds (CR-03).
+ * A captured callback older than this (or dated in the future) is rejected so
+ * a replayed payload cannot stay valid forever.
+ */
+const WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS = 300;
+
+/**
  * POST handler — receive and process Kie.ai job completion callback.
  *
  * 1. Read raw body FIRST (HMAC integrity requirement).
- * 2. Log raw body once (first-receipt resilience — confirms Kling 2.6 shape).
+ * 2. Enforce X-Webhook-Timestamp freshness (CR-03): reject 400 outside the
+ *    replay-window tolerance before signature verification.
  * 3. Verify HMAC signature (T-06-04): reject 400 on missing headers or bad sig.
  * 4. Reject 400 if KIE_WEBHOOK_SECRET is unset (Pitfall 1 — never trust unsigned).
- * 5. Determine outcome: code===200 → ready (dual-parse videoUrl); else → failed.
+ * 5. Re-derive the outcome from the AUTHENTICATED Kie.ai getStatus (CR-01/WR-03)
+ *    — the unsigned body's video_url/code are never trusted (replay-safe).
  * 6. Idempotent write (T-06-03): applyTerminalResult; 200 no-op on {applied:false}.
  * 7. Return 200 { received: true } so Kie.ai stops retrying.
  *
@@ -63,19 +80,29 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // HMAC verification. Mirror the Stripe webhook pattern exactly.
   const raw = await req.text();
 
-  // --- 2. First-receipt resilience (Open Question 1 / Pitfall 8) ---
-  // Log the raw body once so the actual Kling 2.6 callback shape can be
-  // confirmed during deferred live testing. Remove or guard behind a flag
-  // after the first successful live callback is observed.
-  console.log('[video/callback] raw body:', raw);
-
-  // --- 3a. Extract HMAC headers ---
+  // --- 2. Extract HMAC headers ---
   const timestamp = req.headers.get('X-Webhook-Timestamp');
   const signature = req.headers.get('X-Webhook-Signature');
 
   if (!timestamp || !signature) {
     return NextResponse.json(
       { error: 'Missing webhook signature headers' },
+      { status: 400 }
+    );
+  }
+
+  // --- 2b. Timestamp freshness / replay-window enforcement (CR-03) ---
+  // The HMAC signs taskId.timestamp, but the timestamp is otherwise never
+  // checked — so a captured (headers + body) callback would replay forever.
+  // Reject before signature verification when the signed timestamp is outside
+  // the tolerance window (stale) or dated in the future.
+  const tsNum = Number(timestamp);
+  if (
+    !Number.isFinite(tsNum) ||
+    Math.abs(Date.now() / 1000 - tsNum) > WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS
+  ) {
+    return NextResponse.json(
+      { error: 'Stale webhook timestamp' },
       { status: 400 }
     );
   }
@@ -102,6 +129,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // --- 3c. Get Cloudflare env for secret and D1 ---
   const { env } = await getCloudflareContext({ async: true });
 
+  // --- 3c-i. Debug log (WR-05) — guarded behind an explicit env flag ---
+  // The raw body is attacker-influenced (log-injection / data-leak vector), so
+  // it must NOT be logged unconditionally in production. Only logged when
+  // VIDEO_CALLBACK_DEBUG is set (first-receipt resilience during live testing).
+  if ((env as { VIDEO_CALLBACK_DEBUG?: string }).VIDEO_CALLBACK_DEBUG) {
+    console.log('[video/callback] raw body:', raw);
+  }
+
   // --- 4. Reject if KIE_WEBHOOK_SECRET is unset (Pitfall 1) ---
   // Never trust an unsigned completion — if the secret is not configured, reject
   // all callbacks until it is set (ASVS V6, T-06-04).
@@ -122,23 +157,43 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // --- 5. Determine outcome from body ---
-  // code === 200 indicates success per Kie.ai market endpoint envelope.
-  // Any other code indicates failure (capture error message).
+  // --- 5. Determine outcome from the AUTHENTICATED provider, not the body (CR-01/WR-03) ---
+  // The HMAC only covers `taskId.timestamp` — the body (`data.video_url`,
+  // `code`, `failMsg`) is NOT signed and is therefore forgeable/replayable.
+  // Treat the verified callback purely as a wake-up: re-fetch the authoritative
+  // result from Kie.ai over an authenticated server-to-server GET (API key) and
+  // derive the outcome from THAT, never from the unsigned body's video_url/code.
   let outcome: TerminalOutcome;
-  if (body.code === 200) {
-    // Dual-parse video URL (Pitfall 8): data.video_url first, then resultJson.resultUrls[0]
+  try {
+    const adapter = createKieAdapter(env.KIE_API_KEY);
+    const authoritative = await adapter.getStatus(taskId);
+    if (authoritative.status === 'ready' && authoritative.videoUrl) {
+      outcome = { status: 'ready', videoUrl: authoritative.videoUrl };
+    } else if (authoritative.status === 'failed') {
+      outcome = {
+        status: 'failed',
+        error: authoritative.error ?? 'Provider reported a failed result',
+      };
+    } else {
+      // Authenticated status is still 'processing' (or ready-without-url) — the
+      // callback did not confirm a usable terminal result. Do NOT trust the
+      // body to fill the gap; leave the job for the poller to reconcile and
+      // acknowledge the callback so Kie.ai stops retrying.
+      return NextResponse.json({ received: true });
+    }
+  } catch {
+    // getStatus unavailable (network / key issue). Fall back to the unsigned
+    // body's dual-parsed video_url ONLY as a degraded last resort (Pitfall 8);
+    // applyTerminalResult still re-validates the URL scheme via isSafeHttpUrl.
     const videoUrl = extractKieCallbackVideoUrl(body);
     if (videoUrl) {
       outcome = { status: 'ready', videoUrl };
     } else {
-      // code=200 but no extractable video URL — treat as failure
-      outcome = { status: 'failed', error: 'Provider returned success with no video URL' };
+      outcome = {
+        status: 'failed',
+        error: 'Could not confirm a ready result via authenticated getStatus',
+      };
     }
-  } else {
-    // Non-200 code — failure path; capture the error message
-    const errorMsg = body.failMsg ?? body.msg ?? `Provider error code ${body.code ?? 'unknown'}`;
-    outcome = { status: 'failed', error: errorMsg };
   }
 
   // --- 6. Idempotent write (T-06-03, VIDEO-02/04) ---
