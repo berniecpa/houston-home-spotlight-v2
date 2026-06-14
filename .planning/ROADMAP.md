@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Infrastructure Migration** - Migrate from static export to Cloudflare Workers with D1 schema applied (completed 2026-06-13)
 - [x] **Phase 2: Auth + Agent Onboarding** - Agents can register, log in, and complete their profiles (completed 2026-06-13)
 - [x] **Phase 3: Subscription Billing** - Agents can subscribe via Stripe and manage their billing (completed 2026-06-14)
-- [ ] **Phase 4: Listings, Migration, and Leads** - Full listing CRUD, public page migration from JSON to D1, and buyer lead routing
+- [x] **Phase 4: Listings, Migration, and Leads** - Full listing CRUD, public page migration from JSON to D1, and buyer lead routing (completed 2026-06-14)
 - [ ] **Phase 5: Admin Panel + Agent Profiles** - Bernard admin tools and public agent profile pages
 - [ ] **Phase 6: AI Video Generation** - Agents can generate listing videos via Kie.ai async job pipeline
 
