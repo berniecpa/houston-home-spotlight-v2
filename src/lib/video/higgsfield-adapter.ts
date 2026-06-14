@@ -116,7 +116,7 @@ export async function higgsSubmit(
 export async function higgsGetStatus(
   requestId: string,
   credentials: string
-): Promise<{ status: 'processing' | 'ready' | 'failed'; videoUrl?: string }> {
+): Promise<{ status: 'processing' | 'ready' | 'failed'; videoUrl?: string; error?: string }> {
   const res = await fetch(
     `https://platform.higgsfield.ai/requests/${encodeURIComponent(requestId)}/status`,
     {
@@ -138,7 +138,8 @@ export async function higgsGetStatus(
   }
 
   if (json.status === 'nsfw' || json.status === 'failed') {
-    return { status: 'failed' };
+    // IN-02: surface the provider's terminal status as the failure reason.
+    return { status: 'failed', error: `HiggsField reported ${json.status}` };
   }
 
   // queued | in_progress
@@ -169,7 +170,7 @@ export function createHiggsAdapter(credentials: string): VideoProvider {
       return higgsSubmit(imageUrl, credentials);
     },
 
-    getStatus(requestId: string): Promise<{ status: 'processing' | 'ready' | 'failed'; videoUrl?: string }> {
+    getStatus(requestId: string): Promise<{ status: 'processing' | 'ready' | 'failed'; videoUrl?: string; error?: string }> {
       return higgsGetStatus(requestId, credentials);
     },
   };

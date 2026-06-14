@@ -120,7 +120,7 @@ export async function kieSubmit(
 export async function kieGetStatus(
   taskId: string,
   apiKey: string
-): Promise<{ status: 'processing' | 'ready' | 'failed'; videoUrl?: string }> {
+): Promise<{ status: 'processing' | 'ready' | 'failed'; videoUrl?: string; error?: string }> {
   const url = `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${encodeURIComponent(taskId)}`;
   const res = await fetch(url, {
     method: 'GET',
@@ -132,7 +132,7 @@ export async function kieGetStatus(
   }
 
   const json = (await res.json()) as KieRecordInfoResponse;
-  const { state, resultJson } = json.data;
+  const { state, resultJson, failMsg, failCode } = json.data;
 
   if (state === 'success') {
     const mockBody: KieCallbackBody = { data: { resultJson } };
@@ -141,7 +141,10 @@ export async function kieGetStatus(
   }
 
   if (state === 'fail') {
-    return { status: 'failed' };
+    // WR-06 / IN-02: surface the provider failure reason instead of dropping it.
+    const error =
+      failMsg ?? (failCode ? `Kie.ai failCode ${failCode}` : 'Kie.ai reported failed');
+    return { status: 'failed', error };
   }
 
   // waiting | queuing | generating
@@ -284,7 +287,7 @@ export function createKieAdapter(apiKey: string): VideoProvider {
       return kieSubmit(imageUrl, callbackUrl, apiKey);
     },
 
-    getStatus(taskId: string): Promise<{ status: 'processing' | 'ready' | 'failed'; videoUrl?: string }> {
+    getStatus(taskId: string): Promise<{ status: 'processing' | 'ready' | 'failed'; videoUrl?: string; error?: string }> {
       return kieGetStatus(taskId, apiKey);
     },
   };

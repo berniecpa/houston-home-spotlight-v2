@@ -47,6 +47,8 @@ export interface VideoProvider {
   getStatus(taskId: string): Promise<{
     status: 'processing' | 'ready' | 'failed';
     videoUrl?: string;
+    /** Provider-supplied failure reason on a 'failed' status (WR-06 / IN-02). */
+    error?: string;
   }>;
 }
 
