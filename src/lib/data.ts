@@ -235,3 +235,142 @@ export async function filterListings(filters: FilterOptions): Promise<Listing[]>
 export function clearListingsCache(): void {
   // No-op: D1 data layer has no module-level cache to clear
 }
+
+/**
+ * Public-safe fields returned on the agent profile path.
+ *
+ * Intentionally omits email and phone — PII must never reach the public
+ * profile page. Only display_name, photo_url, brokerage, license_number,
+ * and slug are exposed (T-05-06).
+ */
+export interface AgentProfile {
+  /** Agent display name — shown in header and page title */
+  display_name: string;
+  /** Photo URL for the profile avatar; may be null if not set */
+  photo_url: string | null;
+  /** Brokerage/company name */
+  brokerage: string | null;
+  /** Real estate license number */
+  license_number: string | null;
+  /** URL-friendly agent slug */
+  slug: string;
+  /** Agent's active, publicly-visible listings */
+  listings: Listing[];
+}
+
+/**
+ * Raw D1 row for agent profile fields (public-safe columns only).
+ * Never includes email or phone.
+ */
+interface AgentProfileRow {
+  id: string;
+  display_name: string;
+  photo_url: string | null;
+  brokerage: string | null;
+  license_number: string | null;
+  slug: string;
+  /** 0 or 1 — checked to return null immediately if suspended (T-05-07) */
+  is_suspended: number;
+}
+
+/**
+ * Fetch a public agent profile by slug.
+ *
+ * Returns an AgentProfile with the agent's public-safe identity fields
+ * (display_name, photo_url, brokerage, license_number, slug) plus the
+ * agent's active, publicly-visible listings (status='active' AND
+ * AGENT_VISIBLE_SQL), scoped to that agent, ordered created_at DESC.
+ *
+ * Returns null when:
+ * - No agent row matches the given slug
+ * - The matched agent has is_suspended = 1 (T-05-07)
+ *
+ * PII safety (T-05-06): email and phone are never selected — defense in
+ * depth ensures the data layer itself never returns them on this path.
+ *
+ * SQL injection prevention (T-05-08): slug is bound via prepare().bind(),
+ * never concatenated into the query string.
+ *
+ * @param slug - The URL-friendly agent slug from the /agents/[slug] route
+ * @returns AgentProfile with listings, or null if unknown/suspended.
+ */
+export async function getAgentProfileBySlug(slug: string): Promise<AgentProfile | null> {
+  try {
+    const { env } = await getCloudflareContext({ async: true });
+    const db = env.DB;
+
+    // Step 1: Resolve agent by slug — select only public-safe columns.
+    // email and phone are intentionally omitted (T-05-06).
+    const agentRow = await db
+      .prepare(
+        `SELECT id, display_name, photo_url, brokerage, license_number, slug, is_suspended
+         FROM agents
+         WHERE slug = ?`
+      )
+      .bind(slug)
+      .first<AgentProfileRow>();
+
+    // Unknown slug → 404
+    if (!agentRow) return null;
+
+    // Suspended agent → 404 (T-05-07); listings also hidden by AGENT_VISIBLE_SQL
+    if (agentRow.is_suspended === 1) return null;
+
+    // Step 2: Fetch agent's active, visible listings (two-query image grouping).
+    // Reuses AGENT_VISIBLE_SQL so subscription + suspension gate is consistent.
+    const listingRows = await db
+      .prepare(
+        `SELECT l.id, l.slug, l.address, l.city, l.state, l.zip,
+                l.price, l.beds, l.baths, l.sqft, l.description,
+                l.video_url, l.created_at, l.featured
+         FROM listings l
+         JOIN agents a ON l.agent_id = a.id
+         WHERE l.agent_id = ?
+           AND l.status = 'active'
+           AND ${AGENT_VISIBLE_SQL}
+         ORDER BY l.created_at DESC`
+      )
+      .bind(agentRow.id)
+      .all<ListingRow>();
+
+    let listings: Listing[] = [];
+
+    if (listingRows.results.length > 0) {
+      // Batch-fetch images for all profile listings (two-query grouping)
+      const ids = listingRows.results.map((r) => r.id);
+      const placeholders = ids.map(() => '?').join(',');
+      const imageRows = await db
+        .prepare(
+          `SELECT listing_id, url FROM listing_images
+           WHERE listing_id IN (${placeholders})
+           ORDER BY display_order ASC`
+        )
+        .bind(...ids)
+        .all<ImageRow>();
+
+      // Group images by listing_id using in-memory Map
+      const imageMap = new Map<string, string[]>();
+      for (const img of imageRows.results) {
+        const arr = imageMap.get(img.listing_id) ?? [];
+        arr.push(img.url);
+        imageMap.set(img.listing_id, arr);
+      }
+
+      listings = listingRows.results.map((row) =>
+        rowToListing(row, imageMap.get(row.id) ?? [])
+      );
+    }
+
+    return {
+      display_name: agentRow.display_name,
+      photo_url: agentRow.photo_url,
+      brokerage: agentRow.brokerage,
+      license_number: agentRow.license_number,
+      slug: agentRow.slug,
+      listings,
+    };
+  } catch (error) {
+    console.error(`getAgentProfileBySlug D1 error for "${slug}":`, error);
+    return null;
+  }
+}
