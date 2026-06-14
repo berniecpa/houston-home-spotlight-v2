@@ -21,6 +21,7 @@
 
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { AGENT_VISIBLE_SQL } from '@/lib/subscription';
+import { isSafeHttpUrl } from '@/lib/listings-db';
 import type { Listing, FilterOptions } from '@/types';
 
 /**
@@ -59,7 +60,8 @@ interface ImageRow {
  * - zip ?? '' — zip is optional in schema
  * - sqft ?? 0 — sqft is optional in schema
  * - description ?? '' — description is optional in schema
- * - videoUrl from video_url (undefined when null)
+ * - videoUrl from video_url (undefined when null OR when the persisted URL
+ *   fails the isSafeHttpUrl scheme check — read-path defense in depth, WR-01)
  * - featured: row.featured === 1 (INTEGER 1/0 to boolean)
  * - createdAt: epoch seconds → ISO 8601 string
  */
@@ -77,7 +79,8 @@ function rowToListing(row: ListingRow, images: string[]): Listing {
     sqft: row.sqft ?? 0,
     description: row.description ?? '',
     images,
-    videoUrl: row.video_url ?? undefined,
+    videoUrl:
+      row.video_url && isSafeHttpUrl(row.video_url) ? row.video_url : undefined,
     featured: row.featured === 1,
     createdAt: new Date(row.created_at * 1000).toISOString(),
   };
