@@ -31,7 +31,7 @@ import {
   deleteListing,
   setListingStatus,
   isSafeHttpUrl,
-  type ListingWriteFields,
+  type ListingUpdateFields,
 } from '@/lib/listings-db';
 
 /** Runtime must be edge for Cloudflare Workers compatibility */
@@ -120,6 +120,89 @@ async function resolveOwnership(
   }
 
   return { uid, listingId, db: db as D1Database };
+}
+
+/**
+ * Full listing detail row returned by GET (all editable columns).
+ */
+interface ListingDetailRow {
+  id: string;
+  title: string;
+  slug: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string | null;
+  price: number;
+  beds: number;
+  baths: number;
+  sqft: number | null;
+  description: string | null;
+  status: 'active' | 'paused';
+}
+
+/**
+ * GET handler — return the owner's full listing detail for the edit form (CR-02).
+ *
+ * The summary list endpoint (GET /api/agent/listings) returns only a subset of
+ * columns, which previously forced the edit form to seed city/state/zip/sqft/
+ * description with hardcoded defaults — silently overwriting real data on save.
+ * This endpoint returns every editable column plus the ordered image URLs so
+ * the form can pre-fill from real values.
+ *
+ * @param _request - Incoming GET request
+ * @param context  - Route context with async params
+ * @returns { success: boolean, listing?: {...}, imageUrls?: string[], message?: string }
+ */
+export async function GET(
+  _request: NextRequest,
+  { params }: RouteContext
+): Promise<NextResponse> {
+  try {
+    const id = await getListingId(params);
+    const ownerResult = await resolveOwnership(id);
+
+    if (ownerResult instanceof NextResponse) return ownerResult;
+    const { listingId, db } = ownerResult;
+
+    const row = await db
+      .prepare(
+        `SELECT id, title, slug, address, city, state, zip,
+                price, beds, baths, sqft, description, status
+         FROM listings
+         WHERE id = ?`
+      )
+      .bind(listingId)
+      .first<ListingDetailRow>();
+
+    if (!row) {
+      return NextResponse.json(
+        { success: false, message: 'Listing not found.' },
+        { status: 404 }
+      );
+    }
+
+    const images = await db
+      .prepare(
+        `SELECT url FROM listing_images
+         WHERE listing_id = ?
+         ORDER BY display_order ASC`
+      )
+      .bind(listingId)
+      .all<{ url: string }>();
+
+    return NextResponse.json({
+      success: true,
+      listing: row,
+      imageUrls: images.results.map((r) => r.url),
+    });
+  } catch (error) {
+    console.error('GET /api/agent/listings/[id] error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Something went wrong. Please try again.' },
+      { status: 500 }
+    );
+  }
 }
 
 /**
@@ -225,17 +308,11 @@ export async function PUT(
       }
     }
 
-    // Derive a new slug from the updated title + address
-    const derivedSlug = `${(title as string).trim()} ${(address as string).trim()}`
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .trim()
-      .replace(/[\s-]+/g, '-')
-      .slice(0, 100);
-
-    const fields: ListingWriteFields = {
+    // CR-02: do NOT regenerate the slug on edit — the original slug is
+    // preserved so the public /listings/[slug] URL never breaks. The slug
+    // column is therefore omitted from updateListing entirely.
+    const fields: ListingUpdateFields = {
       title: (title as string).trim(),
-      slug: derivedSlug,
       address: (address as string).trim(),
       city: typeof city === 'string' && city.trim() ? city.trim() : 'Houston',
       state: typeof state === 'string' && state.trim() ? state.trim() : 'TX',

@@ -129,25 +129,34 @@ export async function createListing(
 }
 
 /**
+ * Editable fields for an existing listing, excluding the slug.
+ *
+ * On edit the slug is intentionally NOT updated: the public /listings/[slug]
+ * URL must remain stable so inbound links / SEO do not break (CR-02). The
+ * slug is derived only on CREATE.
+ */
+export type ListingUpdateFields = Omit<ListingWriteFields, 'slug'>;
+
+/**
  * Update editable columns on an existing listing.
  *
- * The route layer must verify ownership (agent_id = session uid) before
- * calling this function.
+ * The slug column is deliberately left untouched so the listing's public URL
+ * never changes on edit (CR-02). The route layer must verify ownership
+ * (agent_id = session uid) before calling this function.
  *
  * @param db        D1Database binding
  * @param listingId listings.id of the row to update
- * @param fields    New values for the editable columns
+ * @param fields    New values for the editable columns (slug excluded)
  */
 export async function updateListing(
   db: D1Database,
   listingId: string,
-  fields: ListingWriteFields
+  fields: ListingUpdateFields
 ): Promise<void> {
   await db
     .prepare(
       `UPDATE listings
        SET title       = ?,
-           slug        = ?,
            address     = ?,
            city        = ?,
            state       = ?,
@@ -162,7 +171,6 @@ export async function updateListing(
     )
     .bind(
       fields.title,
-      fields.slug,
       fields.address,
       fields.city,
       fields.state,

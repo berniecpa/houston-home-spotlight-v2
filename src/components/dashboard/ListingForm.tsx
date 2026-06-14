@@ -24,7 +24,7 @@
 
 'use client';
 
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import type { OwnListing } from '@/components/dashboard/ListingsManager';
 
 /** Fields managed by this form */
@@ -94,23 +94,58 @@ function isSafeHttpUrl(raw: string): boolean {
   }
 }
 
+/** Full listing detail returned by GET /api/agent/listings/[id] (CR-02) */
+interface ListingDetail {
+  title: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string | null;
+  price: number;
+  beds: number;
+  baths: number;
+  sqft: number | null;
+  description: string | null;
+}
+
 /**
- * Seed ListingFormFields from an existing listing for edit mode.
- * Note: GET /api/agent/listings returns summary fields only (title, address, price,
- * beds, baths, status). City/state/zip/sqft/description must be re-entered by the agent.
+ * Seed ListingFormFields from the full listing detail for edit mode (CR-02).
+ *
+ * Previously this seeded city/state/zip/sqft/description with hardcoded
+ * defaults because only summary columns were available, which silently
+ * overwrote real data on save. The form now fetches the full record from
+ * GET /api/agent/listings/[id] and seeds every field from real values.
  */
-function seedFromListing(listing: OwnListing): ListingFormFields {
+function seedFromDetail(detail: ListingDetail): ListingFormFields {
   return {
+    title: detail.title,
+    address: detail.address,
+    city: detail.city ?? '',
+    state: detail.state ?? '',
+    zip: detail.zip ?? '',
+    price: String(detail.price),
+    beds: String(detail.beds),
+    baths: String(detail.baths),
+    sqft: detail.sqft != null ? String(detail.sqft) : '',
+    description: detail.description ?? '',
+  };
+}
+
+/**
+ * Seed the minimal summary fields synchronously so the edit form is not blank
+ * while the full detail fetch is in flight. The remaining columns are filled
+ * once GET /api/agent/listings/[id] resolves (CR-02).
+ */
+function seedSummary(listing: OwnListing): ListingFormFields {
+  return {
+    ...DEFAULT_FIELDS,
     title: listing.title,
     address: listing.address,
-    city: 'Houston',
-    state: 'TX',
-    zip: '',
     price: String(listing.price),
     beds: String(listing.beds),
     baths: String(listing.baths),
-    sqft: '',
-    description: '',
+    city: '',
+    state: '',
   };
 }
 
@@ -131,7 +166,7 @@ export function ListingForm({
 }: ListingFormProps): JSX.Element {
   const [fields, setFields] = useState<ListingFormFields>(
     mode === 'edit' && existingListing
-      ? seedFromListing(existingListing)
+      ? seedSummary(existingListing)
       : DEFAULT_FIELDS
   );
 
@@ -142,6 +177,48 @@ export function ListingForm({
   const [fieldErrors, setFieldErrors] = useState<ListingFormErrors>({});
   const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Edit mode: load the FULL listing record (all columns + image URLs) so the
+  // form seeds from real values rather than hardcoded defaults (CR-02).
+  const isEditMode = mode === 'edit' && existingListing != null;
+  const [isLoadingDetail, setIsLoadingDetail] = useState(isEditMode);
+
+  useEffect(() => {
+    if (!isEditMode || !existingListing) return;
+    let cancelled = false;
+
+    async function loadDetail(id: string): Promise<void> {
+      setIsLoadingDetail(true);
+      try {
+        const res = await fetch(`/api/agent/listings/${id}`);
+        const data = (await res.json()) as {
+          success: boolean;
+          listing?: ListingDetail;
+          imageUrls?: string[];
+          message?: string;
+        };
+        if (cancelled) return;
+        if (res.ok && data.success && data.listing) {
+          setFields(seedFromDetail(data.listing));
+          const urls =
+            data.imageUrls && data.imageUrls.length > 0 ? data.imageUrls : [''];
+          setImageUrls(urls);
+          setUrlErrors(urls.map(() => ''));
+        } else {
+          setServerError(data.message ?? 'Failed to load listing details.');
+        }
+      } catch {
+        if (!cancelled) setServerError('Network error loading listing details.');
+      } finally {
+        if (!cancelled) setIsLoadingDetail(false);
+      }
+    }
+
+    void loadDetail(existingListing.id);
+    return () => {
+      cancelled = true;
+    };
+  }, [isEditMode, existingListing]);
 
   // -------------------------------------------------------------------------
   // Field change + validation
@@ -336,7 +413,7 @@ export function ListingForm({
     ].join(' ');
   }
 
-  const isDisabled = isSubmitting;
+  const isDisabled = isSubmitting || isLoadingDetail;
 
   // -------------------------------------------------------------------------
   // Render
@@ -344,6 +421,17 @@ export function ListingForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+      {/* Loading existing listing details (edit mode, CR-02) */}
+      {isLoadingDetail && (
+        <div
+          className="text-sm text-gray-500"
+          role="status"
+          aria-live="polite"
+        >
+          Loading listing details...
+        </div>
+      )}
+
       {/* Server error banner */}
       {serverError && (
         <div
