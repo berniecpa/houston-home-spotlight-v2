@@ -13,6 +13,11 @@ interface __BaseEnv_CloudflareEnv {
 	STRIPE_SECRET_KEY: string;
 	STRIPE_WEBHOOK_SECRET: string;
 	STRIPE_PRICE_ID: string;
+	// Video generation secrets — Phase 6 (Plan 06-01 / 06-02)
+	// Local dev: add to .dev.vars (gitignored). Production: wrangler secret put KIE_API_KEY
+	KIE_API_KEY: string;
+	KIE_WEBHOOK_SECRET: string;
+	HIGGSFIELD_API_KEY: string;
 }
 declare namespace Cloudflare {
 	interface Env extends __BaseEnv_CloudflareEnv {}
