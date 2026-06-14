@@ -74,6 +74,8 @@ export function DashboardSidebar({
 
   const isProfileActive = pathname?.startsWith('/dashboard/profile');
   const isBillingActive = pathname?.startsWith('/dashboard/billing');
+  const isListingsActive = pathname?.startsWith('/dashboard/listings');
+  const isLeadsActive = pathname?.startsWith('/dashboard/leads');
 
   return (
     <>
@@ -158,11 +160,17 @@ export function DashboardSidebar({
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4" aria-label="Dashboard navigation">
           <ul className="space-y-1">
-            {/* Listings — Coming soon (not a link) */}
+            {/* Listings — active link to /dashboard/listings */}
             <li>
-              <span
-                className="flex items-center gap-2 px-4 min-h-[44px] rounded-lg text-primary-300 cursor-default select-none"
-                aria-disabled="true"
+              <Link
+                href="/dashboard/listings"
+                className={`flex items-center gap-2 px-4 min-h-[44px] rounded-lg transition-colors duration-150
+                  ${
+                    isListingsActive
+                      ? 'bg-primary-700 text-white font-semibold'
+                      : 'text-white hover:bg-primary-800'
+                  }`}
+                aria-current={isListingsActive ? 'page' : undefined}
               >
                 <svg
                   className="w-5 h-5 flex-shrink-0"
@@ -178,18 +186,21 @@ export function DashboardSidebar({
                     d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                   />
                 </svg>
-                <span>
-                  Listings{' '}
-                  <span className="text-xs text-primary-400">(Coming soon)</span>
-                </span>
-              </span>
+                Listings
+              </Link>
             </li>
 
-            {/* Leads — Coming soon (not a link) */}
+            {/* Leads — active link to /dashboard/leads */}
             <li>
-              <span
-                className="flex items-center gap-2 px-4 min-h-[44px] rounded-lg text-primary-300 cursor-default select-none"
-                aria-disabled="true"
+              <Link
+                href="/dashboard/leads"
+                className={`flex items-center gap-2 px-4 min-h-[44px] rounded-lg transition-colors duration-150
+                  ${
+                    isLeadsActive
+                      ? 'bg-primary-700 text-white font-semibold'
+                      : 'text-white hover:bg-primary-800'
+                  }`}
+                aria-current={isLeadsActive ? 'page' : undefined}
               >
                 <svg
                   className="w-5 h-5 flex-shrink-0"
@@ -205,11 +216,8 @@ export function DashboardSidebar({
                     d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"
                   />
                 </svg>
-                <span>
-                  Leads{' '}
-                  <span className="text-xs text-primary-400">(Coming soon)</span>
-                </span>
-              </span>
+                Leads
+              </Link>
             </li>
 
             {/* Profile — active link */}
