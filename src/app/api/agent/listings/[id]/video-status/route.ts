@@ -151,17 +151,24 @@ export async function GET(
       .bind(listingId)
       .first<ListingVideoRow>();
 
-    const videoUrl = listingRow?.video_url ?? null;
+    // WR-04: only expose video_url when the effective status is 'ready'.
+    // Otherwise a previously-ready listing whose latest generation fails (or is
+    // still processing) would return { status: 'failed', videoUrl: <old url> },
+    // and the dashboard would surface a stale "View video" link.
+    const persistedUrl = listingRow?.video_url ?? null;
 
     if (!jobRow) {
       // No job has been submitted yet — fall back to listings.video_status
       const status = listingRow?.video_status ?? 'none';
-      return NextResponse.json({ status, videoUrl });
+      return NextResponse.json({
+        status,
+        videoUrl: status === 'ready' ? persistedUrl : null,
+      });
     }
 
     return NextResponse.json({
       status: jobRow.status,
-      videoUrl,
+      videoUrl: jobRow.status === 'ready' ? persistedUrl : null,
     });
   } catch (error) {
     console.error('GET /api/agent/listings/[id]/video-status error:', error);
