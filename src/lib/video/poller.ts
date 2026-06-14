@@ -194,34 +194,24 @@ async function failoverToHiggsfield(
   // We do not have the original imageUrl stored in video_jobs; the poller
   // cannot re-submit a new job. Instead, re-read the listing's hero image
   // from D1 to get the original photo URL for the fallover submission.
-  const listing = await db
-    .prepare(`SELECT image_urls FROM listings WHERE id = ?`)
+  // Photos live in the listing_images table (NOT a column on listings) —
+  // use the same hero-photo query the trigger route uses.
+  const heroImage = await db
+    .prepare(
+      `SELECT url FROM listing_images WHERE listing_id = ?
+       ORDER BY display_order ASC LIMIT 1`
+    )
     .bind(job.listing_id)
-    .first<{ image_urls: string | null }>();
+    .first<{ url: string | null }>();
 
-  // If the listing has no image_urls, fail the job terminally (by id — the
+  // If the listing has no images, fail the job terminally (by id — the
   // kie task_id may already be the target of a late callback).
-  if (!listing?.image_urls) {
+  const imageUrl = heroImage?.url ?? '';
+  if (!imageUrl) {
     await failJobById(
       db,
       job.id,
-      'HiggsField failover: no image_urls available on listing for resubmission'
-    );
-    return;
-  }
-
-  // Parse the first image URL (same hero-photo convention as the trigger route)
-  let imageUrl: string;
-  try {
-    const urls = JSON.parse(listing.image_urls) as string[];
-    const first = urls[0];
-    if (!first) throw new Error('empty image_urls array');
-    imageUrl = first;
-  } catch {
-    await failJobById(
-      db,
-      job.id,
-      'HiggsField failover: could not parse image_urls on listing'
+      'HiggsField failover: no listing image available for resubmission'
     );
     return;
   }
