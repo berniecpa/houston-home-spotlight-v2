@@ -185,9 +185,17 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
 
     // Resolve UNIQUE collision with numeric suffix: jane-smith, jane-smith-2, jane-smith-3 ...
     // Exclude the caller's own row so re-saving the same name keeps the same slug (T-05-05).
+    //
+    // CR-01: cap the collision-resolution loop at MAX_SLUG_COLLISION_ATTEMPTS D1
+    // round-trips. baseSlug is derived from attacker-controlled display_name, so
+    // many duplicate names (e.g. "John Smith") would otherwise walk an unbounded
+    // chain of sequential D1 subrequests per save — a resource-exhaustion vector
+    // against the worker's subrequest/CPU limits. After the cap we fall back to a
+    // random suffix (mirroring slugifyName's empty-base fallback) and let the
+    // agents.slug UNIQUE constraint be the real backstop.
+    const MAX_SLUG_COLLISION_ATTEMPTS = 50;
     let resolvedSlug = baseSlug;
-    let suffix = 2;
-    while (true) {
+    for (let suffix = 2; ; suffix++) {
       const collision = await env.DB.prepare(
         'SELECT id FROM agents WHERE slug = ? AND id != ?'
       )
@@ -196,8 +204,13 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
 
       if (!collision) break;
 
+      if (suffix > MAX_SLUG_COLLISION_ATTEMPTS) {
+        // Hard cap on D1 round-trips — fall back to a random suffix.
+        resolvedSlug = `${baseSlug}-${crypto.randomUUID().slice(0, 8)}`;
+        break;
+      }
+
       resolvedSlug = `${baseSlug}-${suffix}`;
-      suffix += 1;
     }
 
     // --- 4. Write to D1 (T-02-13: parameterized — no string concatenation) ---

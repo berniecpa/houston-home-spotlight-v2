@@ -96,10 +96,26 @@ describe('profile/route.ts — PATCH handler slug generation (T-05-04, T-05-05)'
     );
   });
 
-  it('PATCH uses numeric suffix loop for collision resolution', () => {
+  it('PATCH uses an incrementing numeric suffix loop for collision resolution', () => {
     assert.ok(
-      profileRoute.includes('suffix') && profileRoute.includes('suffix += 1'),
+      profileRoute.includes('suffix') &&
+        (profileRoute.includes('suffix++') || profileRoute.includes('suffix += 1')),
       'PATCH must resolve slug collisions with an incrementing numeric suffix'
+    );
+  });
+
+  it('PATCH caps the collision loop and falls back to a random suffix (CR-01)', () => {
+    assert.ok(
+      profileRoute.includes('MAX_SLUG_COLLISION_ATTEMPTS') &&
+        !profileRoute.includes('while (true)'),
+      'PATCH must bound the slug-collision loop (no unbounded while(true)) to avoid attacker-driven D1 subrequest exhaustion (CR-01)'
+    );
+  });
+
+  it('PATCH collision fallback uses a random crypto suffix after the cap (CR-01)', () => {
+    assert.ok(
+      profileRoute.includes('crypto.randomUUID().slice(0, 8)'),
+      'PATCH must fall back to crypto.randomUUID().slice(0, 8) once the collision cap is exceeded (CR-01)'
     );
   });
 
