@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-02-PLAN.md
-last_updated: "2026-06-14T15:39:57.505Z"
-last_activity: 2026-06-14 -- Phase 05 Plan 01 complete (AGENT_VISIBLE_SQL + slug + suspension)
+stopped_at: Completed 05-03-PLAN.md
+last_updated: "2026-06-14T15:53:00.000Z"
+last_activity: 2026-06-14 -- Phase 05 Plan 03 complete (admin panel — agent list + suspend + stats)
 progress:
   total_phases: 6
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 18
-  completed_plans: 17
-  percent: 67
+  completed_plans: 18
+  percent: 94
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-06-10)
 
 ## Current Position
 
-Phase: 05 (admin-panel-agent-profiles) — EXECUTING
-Plan: 3 of 3 (Plan 01 complete)
-Status: Ready to execute
-Last activity: 2026-06-14 -- Phase 05 Plan 01 complete (AGENT_VISIBLE_SQL + slug + suspension)
+Phase: 05 (admin-panel-agent-profiles) — COMPLETE
+Plan: 3 of 3 (all complete)
+Status: Complete — ready for Phase 06
+Last activity: 2026-06-14 -- Phase 05 Plan 03 complete (admin panel — agent list + suspend + stats)
 
-Progress: [█████████░] 90% (Phase 05 Plan 01 complete)
+Progress: [██████████] 94% (Phase 05 complete)
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [█████████░] 90% (Phase 05 Plan 01 complete)
 | Phase 04 P04 | 18 minutes | 3 tasks | 5 files |
 | Phase 04-listings-migration-and-leads P05 | 7 minutes | 2 tasks | 4 files |
 | Phase 05 P02 | 6min | 3 tasks | 5 files |
+| Phase 05-admin-panel-agent-profiles P03 | 12min | 4 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,10 @@ Recent decisions affecting current work:
 - [Phase ?]: Two-step D1 query in getAgentProfileBySlug: agent lookup first then scoped listings — clean short-circuit on suspended agents
 - [Phase ?]: AgentProfileHeaderProps omits email/phone — PII never reaches the client component on the public profile path (T-05-06)
 - [Phase ?]: force-dynamic only on /agents/[slug] page (no runtime='edge') — consistent with listings detail page pattern
+- [Phase 05-03]: requireAdmin returns typed AdminTokenResult|AdminTokenRejection union; isAdminRejection() type guard used in all admin routes
+- [Phase 05-03]: DecodedIdToken cast through unknown to access custom .admin claim (Firebase SDK does not declare custom claims)
+- [Phase 05-03]: Admin pages read D1 directly in RSC (no API round-trip); same pattern as Phase 4 dashboard
+- [Phase 05-03]: ADMIN_PAGE_SIZE=25 exported from admin.ts; shared by API route and agents page
 
 ### Pending Todos
 

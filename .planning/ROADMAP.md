@@ -152,5 +152,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Auth + Agent Onboarding | 4/4 | Complete    | 2026-06-13 |
 | 3. Subscription Billing | 3/3 | Complete    | 2026-06-14 |
 | 4. Listings, Migration, and Leads | 5/5 | Complete    | 2026-06-14 |
-| 5. Admin Panel + Agent Profiles | 2/3 | In Progress|  |
+| 5. Admin Panel + Agent Profiles | 3/3 | Complete    | 2026-06-14 |
 | 6. AI Video Generation | 0/TBD | Not started | - |
