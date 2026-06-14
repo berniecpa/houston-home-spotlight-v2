@@ -11,7 +11,8 @@
  *   4. Calls getProviderByName + getStatus
  *   5. Calls applyTerminalResult for ready status
  *   6. Implements kie→higgsfield failover guarded by attempts < KIE_ATTEMPT_CAP (2)
- *   7. Records provider='higgsfield' + incremented attempts via recordAttempt
+ *   7. Atomically swaps provider='higgsfield' + new task_id + attempts+1 via
+ *      failoverProviderAtomic (CR-02/WR-07); finalizes-by-id on swap rejection
  *   8. Wraps per-job work in try/catch with console.error
  *   9. Exports pollVideoJobs
  *
@@ -166,17 +167,34 @@ describe('poller.ts — kie→higgsfield failover with attempt cap (VIDEO-03)', 
     );
   });
 
-  it("calls recordAttempt with provider='higgsfield' and attempts+1 (VIDEO-03)", () => {
+  it("atomically swaps provider='higgsfield' + new task_id + attempts+1 on failover (CR-02/WR-07/VIDEO-03)", () => {
+    // The failover must NOT use the old non-atomic setTaskId + recordAttempt
+    // pair (which left a crash window and orphaned late Kie callbacks). It must
+    // perform a single atomic provider+task_id+attempts swap.
     assert.ok(
-      poller.includes('recordAttempt') && poller.includes('higgsfield'),
-      "poller.ts must call recordAttempt(db, job.id, 'higgsfield', attempts+1) on failover (VIDEO-03)"
+      poller.includes('failoverProviderAtomic') && poller.includes('higgsfield'),
+      "poller.ts must call failoverProviderAtomic(db, job.id, 'higgsfield', newTaskId, attempts+1) on failover (CR-02/WR-07)"
+    );
+    assert.ok(
+      poller.includes('job.attempts + 1'),
+      'poller.ts failover must record attempts+1 (VIDEO-03 attempt cap)'
+    );
+    assert.ok(
+      !poller.includes('setTaskId') && !poller.includes('recordAttempt'),
+      'poller.ts must NOT use the non-atomic setTaskId/recordAttempt pair on the failover path (CR-02/WR-07 regression guard)'
     );
   });
 
-  it('calls setTaskId to store the new HiggsField task_id', () => {
+  it('finalizes the job as failed (by id) when the atomic swap cannot be applied (WR-07)', () => {
+    // A task_id UNIQUE collision (or unparseable image) must fail the job by id
+    // rather than leave it wedged in 'processing' forever.
     assert.ok(
-      poller.includes('setTaskId'),
-      'poller.ts must call setTaskId(db, job.id, newTaskId) after successful HiggsField submission'
+      poller.includes('failJobById'),
+      'poller.ts must call failJobById to finalize a job whose failover swap was rejected (WR-07)'
+    );
+    assert.ok(
+      poller.includes('taskIdCollision'),
+      'poller.ts must handle the task_id UNIQUE collision case explicitly (WR-07)'
     );
   });
 });

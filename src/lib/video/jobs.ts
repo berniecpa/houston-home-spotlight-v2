@@ -145,6 +145,130 @@ export async function recordAttempt(
     .run();
 }
 
+/** Outcome of an atomic failover transition (CR-02 / WR-07). */
+export interface FailoverWriteResult {
+  /** true when the row transitioned to the new provider/task_id atomically. */
+  applied: boolean;
+  /**
+   * Set when the UPDATE was rejected by the task_id UNIQUE constraint — the
+   * caller must finalize the job as failed rather than leave it wedged in
+   * 'processing' (WR-07).
+   */
+  taskIdCollision?: boolean;
+}
+
+/**
+ * Atomically transition a still-processing job onto the failover provider.
+ *
+ * CR-02 / WR-07: the kie→higgsfield failover must swap provider, task_id and
+ * attempts in a SINGLE guarded statement so:
+ *   - the original Kie task_id is replaced atomically — a late Kie callback for
+ *     the old task_id then matches NO processing row and is a clean no-op
+ *     (applyTerminalResult's WHERE task_id=? AND status='processing' guard);
+ *   - there is never a crash window where task_id points at HiggsField while
+ *     provider still reads 'kie' (the old two-write setTaskId+recordAttempt bug);
+ *   - the monotonic processing→terminal invariant the replay defense relies on
+ *     is preserved (the job is never returned to processing under a new id by a
+ *     non-atomic sequence).
+ *
+ * The UPDATE is guarded by `WHERE id=? AND status='processing'` so a job that
+ * was already advanced to a terminal state (by a callback) is not resurrected.
+ *
+ * If the new task_id collides with another row's UNIQUE task_id the UPDATE
+ * throws; this is caught and surfaced as `{ applied:false, taskIdCollision:true }`
+ * so the caller can fail the job terminally instead of wedging it (WR-07).
+ *
+ * @param db          D1Database binding
+ * @param jobId       video_jobs.id of the row to transition
+ * @param newProvider Failover provider name (e.g. 'higgsfield')
+ * @param newTaskId   Provider-assigned task identifier for the failover attempt
+ * @param attempts    New total attempt count
+ */
+export async function failoverProviderAtomic(
+  db: D1Database,
+  jobId: string,
+  newProvider: string,
+  newTaskId: string,
+  attempts: number
+): Promise<FailoverWriteResult> {
+  try {
+    const result = await db
+      .prepare(
+        `UPDATE video_jobs
+         SET provider   = ?,
+             task_id    = ?,
+             attempts   = ?,
+             error      = NULL,
+             updated_at = unixepoch()
+         WHERE id = ? AND status = 'processing'`
+      )
+      .bind(newProvider, newTaskId, attempts, jobId)
+      .run();
+
+    return { applied: result.meta.changes > 0 };
+  } catch (err) {
+    // task_id UNIQUE collision (or other constraint failure) — surface so the
+    // caller finalizes the job as failed rather than leaving it stuck (WR-07).
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/unique/i.test(msg) || /constraint/i.test(msg)) {
+      return { applied: false, taskIdCollision: true };
+    }
+    throw err;
+  }
+}
+
+/**
+ * Finalize a still-processing job as failed by its job id (CR-02 / WR-07).
+ *
+ * Unlike applyTerminalResult (which keys on task_id), this keys on the job's
+ * primary key, so it works even when the failover task_id swap could not be
+ * applied. Guarded by `AND status='processing'` to preserve idempotency — a
+ * job already terminal is a clean no-op and a 'ready' job is never resurrected.
+ *
+ * @param db     D1Database binding
+ * @param jobId  video_jobs.id of the row to fail
+ * @param error  Failure reason to persist on the job and reflect on the listing
+ */
+export async function failJobById(
+  db: D1Database,
+  jobId: string,
+  error: string
+): Promise<TerminalWriteResult> {
+  const updateResult = await db
+    .prepare(
+      `UPDATE video_jobs
+       SET status     = 'failed',
+           error      = ?,
+           updated_at = unixepoch()
+       WHERE id = ? AND status = 'processing'`
+    )
+    .bind(error, jobId)
+    .run();
+
+  if (updateResult.meta.changes === 0) {
+    return { applied: false };
+  }
+
+  const job = await db
+    .prepare(`SELECT listing_id FROM video_jobs WHERE id = ?`)
+    .bind(jobId)
+    .first<{ listing_id: string }>();
+
+  if (job) {
+    await db
+      .prepare(
+        `UPDATE listings
+         SET video_status = 'failed',
+             updated_at   = unixepoch()
+         WHERE id = ?`
+      )
+      .bind(job.listing_id)
+      .run();
+  }
+
+  return { applied: true };
+}
+
 /**
  * Apply a terminal result (ready or failed) to a video_jobs row and,
  * on success, write video_url / video_status to the listings table.

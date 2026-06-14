@@ -26,9 +26,9 @@ import type { VideoEnv } from '@/lib/video/provider';
 import { getProviderByName } from '@/lib/video/provider';
 import { createHiggsAdapter } from '@/lib/video/higgsfield-adapter';
 import {
-  setTaskId,
-  recordAttempt,
   applyTerminalResult,
+  failoverProviderAtomic,
+  failJobById,
 } from '@/lib/video/jobs';
 
 // ---------------------------------------------------------------------------
@@ -140,10 +140,13 @@ async function processStaleJob(
       return;
     }
 
-    // Already on HiggsField or attempts exhausted → terminal failure
+    // Already on HiggsField or attempts exhausted → terminal failure.
+    // Prefer the provider-supplied failure reason (WR-06 / IN-02) when present.
     await applyTerminalResult(db, job.task_id, {
       status: 'failed',
-      error: `Provider ${job.provider} reported failed after ${job.attempts} attempt(s)`,
+      error:
+        result.error ??
+        `Provider ${job.provider} reported failed after ${job.attempts} attempt(s)`,
     });
     return;
   }
@@ -154,15 +157,28 @@ async function processStaleJob(
 /**
  * Attempt a HiggsField failover for a stale Kie.ai job that reported failed.
  *
- * Submits the job to HiggsField, records the new task_id and incremented
- * attempt count, then leaves status='processing' for the next cron scan
- * (HiggsField completion is poller-only — no webhook — so the scan re-checks
- * the HiggsField status on the subsequent cron run).
+ * Submits the job to HiggsField, then atomically transitions the SAME row onto
+ * the HiggsField provider+task_id+attempts in a single guarded statement via
+ * failoverProviderAtomic. status stays 'processing' so the next cron scan
+ * re-checks the HiggsField task_id (HiggsField completion is poller-only — no
+ * webhook — per RESEARCH A3).
  *
- * If the HiggsField submission itself fails, applies a terminal failure
- * immediately.
+ * CR-02 / WR-07 correctness:
+ *   - The provider+task_id swap is ONE atomic UPDATE guarded by
+ *     `id=? AND status='processing'`. There is no crash window where task_id
+ *     points at HiggsField while provider still reads 'kie' (the old non-atomic
+ *     two-write sequence that this rework replaces).
+ *   - The original Kie task_id is replaced atomically, so a late Kie callback
+ *     for the old task_id matches NO processing row and is a clean no-op — the
+ *     legitimate (or replayed) Kie result can no longer write to this job.
+ *   - If the swap is rejected (task_id UNIQUE collision) or the row is no longer
+ *     'processing' (already advanced by a callback), the job is NOT left wedged:
+ *     a collision finalizes it as failed via failJobById; an already-terminal
+ *     row is a clean no-op (a 'ready' job is never resurrected).
  *
- * VIDEO-03: records provider='higgsfield' and attempts+1 via recordAttempt.
+ * If the HiggsField submission itself fails, the job is failed terminally.
+ *
+ * VIDEO-03: records provider='higgsfield' and attempts+1 atomically.
  *
  * @param db   D1Database binding
  * @param env  Cloudflare Worker env with video secrets
@@ -183,12 +199,14 @@ async function failoverToHiggsfield(
     .bind(job.listing_id)
     .first<{ image_urls: string | null }>();
 
-  // If the listing has no image_urls, fail the job terminally
+  // If the listing has no image_urls, fail the job terminally (by id — the
+  // kie task_id may already be the target of a late callback).
   if (!listing?.image_urls) {
-    await applyTerminalResult(db, job.task_id, {
-      status: 'failed',
-      error: 'HiggsField failover: no image_urls available on listing for resubmission',
-    });
+    await failJobById(
+      db,
+      job.id,
+      'HiggsField failover: no image_urls available on listing for resubmission'
+    );
     return;
   }
 
@@ -200,31 +218,48 @@ async function failoverToHiggsfield(
     if (!first) throw new Error('empty image_urls array');
     imageUrl = first;
   } catch {
-    await applyTerminalResult(db, job.task_id, {
-      status: 'failed',
-      error: 'HiggsField failover: could not parse image_urls on listing',
-    });
+    await failJobById(
+      db,
+      job.id,
+      'HiggsField failover: could not parse image_urls on listing'
+    );
     return;
   }
 
+  let newTaskId: string;
   try {
     // Submit to HiggsField (no callbackUrl — poller-only completion per RESEARCH A3)
-    const newTaskId = await higgsAdapter.submit(imageUrl, '');
-
-    // Record the new provider-assigned task_id (replaces the kie taskId in D1)
-    await setTaskId(db, job.id, newTaskId);
-
-    // Record the failover attempt: provider='higgsfield', attempts+1 (VIDEO-03)
-    await recordAttempt(db, job.id, 'higgsfield', job.attempts + 1);
-
-    // Leave status='processing' — the next cron scan will pick up the new task_id
-    // (the new task_id is now stored on the same job row; the scan re-checks it)
+    newTaskId = await higgsAdapter.submit(imageUrl, '');
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    // HiggsField submission failed — terminal failure
-    await applyTerminalResult(db, job.task_id, {
-      status: 'failed',
-      error: `HiggsField failover submit failed: ${msg}`,
-    });
+    // HiggsField submission failed — terminal failure (by id).
+    await failJobById(db, job.id, `HiggsField failover submit failed: ${msg}`);
+    return;
   }
+
+  // Atomic provider+task_id+attempts swap (CR-02 / WR-07). VIDEO-03: attempts+1.
+  const swap = await failoverProviderAtomic(
+    db,
+    job.id,
+    'higgsfield',
+    newTaskId,
+    job.attempts + 1
+  );
+
+  if (!swap.applied) {
+    if (swap.taskIdCollision) {
+      // task_id UNIQUE collision — do not wedge the job in 'processing'; fail it.
+      await failJobById(
+        db,
+        job.id,
+        'HiggsField failover: task_id collision — could not record failover attempt'
+      );
+    }
+    // Otherwise the row was no longer 'processing' (a callback already advanced
+    // it to a terminal state) — leave that terminal result intact (no-op).
+    return;
+  }
+
+  // Swap applied — status stays 'processing'; the next cron scan picks up the
+  // new HiggsField task_id and re-checks its status.
 }
