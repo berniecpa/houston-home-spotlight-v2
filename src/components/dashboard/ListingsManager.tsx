@@ -150,8 +150,11 @@ export function ListingsManager({
         setActionError(data.message ?? 'Delete failed. Please try again.');
         return;
       }
-      // Optimistic update — remove from local state, then confirm with server
-      setListings((prev) => prev.filter((l) => l.id !== listing.id));
+      // WR-08: single source of truth — re-fetch from the server rather than
+      // optimistically removing the row. This avoids the desync where a
+      // successful DELETE followed by a failed refetch leaves the row removed
+      // locally (or a stale refetch resurrects it). refreshListings surfaces
+      // its own error banner if the re-fetch fails.
       await refreshListings();
     } catch {
       setActionError('Network error. Please try again.');
