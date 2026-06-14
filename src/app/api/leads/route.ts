@@ -23,6 +23,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import type { LeadFormData, LeadSubmissionResponse } from '@/types';
 import { sendLeadEmail, sendToPerfex } from '@/lib/leads';
+import { AGENT_PUBLISHABLE_SQL } from '@/lib/subscription';
 
 /**
  * D1 row returned by the listing-lookup JOIN
@@ -78,11 +79,17 @@ export async function POST(
 
       // Resolve listing_id + agent_id + agent_email + address from slug.
       // NEVER trust a body-supplied UUID — T-04-11 spoofing mitigation.
+      // WR-05: apply the same status + subscription gate as the public read
+      // path (getListingBySlug) so a paused / lapsed listing returns
+      // "Listing not found." and records no lead — keeping the inquiry path
+      // consistent with what the buyer can actually see on the site.
       const listingRow = await env.DB.prepare(
         `SELECT l.id, l.agent_id, a.email AS agent_email, l.address
          FROM listings l
          JOIN agents a ON l.agent_id = a.id
-         WHERE l.slug = ?`
+         WHERE l.slug = ?
+           AND l.status = 'active'
+           AND ${AGENT_PUBLISHABLE_SQL}`
       )
         .bind(body.listingSlug.trim())
         .first<ListingLookupRow>();
