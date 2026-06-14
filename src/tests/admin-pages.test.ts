@@ -340,3 +340,30 @@ describe('admin layout — sidebar nav links', () => {
     );
   });
 });
+
+// ────────────────────────────────────────────────────────────────────────────
+// layout.tsx — server-side requireAdmin gate (BL-01 defense in depth)
+// ────────────────────────────────────────────────────────────────────────────
+
+describe('admin layout — server-side requireAdmin gate (BL-01)', () => {
+  it('layout.tsx calls requireAdmin() server-side (does not rely solely on middleware)', () => {
+    assert.ok(
+      layoutSrc.includes('requireAdmin'),
+      'layout.tsx must call requireAdmin() as a server-side choke point for all admin pages (BL-01)'
+    );
+  });
+
+  it('layout.tsx rejects non-admins via isAdminRejection + notFound', () => {
+    assert.ok(
+      layoutSrc.includes('isAdminRejection') && layoutSrc.includes('notFound'),
+      'layout.tsx must reject non-admins (isAdminRejection → notFound) before rendering admin pages (BL-01)'
+    );
+  });
+
+  it('layout.tsx is an async component (so it can await requireAdmin)', () => {
+    assert.ok(
+      layoutSrc.includes('export default async function'),
+      'layout.tsx must be an async component to await the requireAdmin() session check (BL-01)'
+    );
+  });
+});

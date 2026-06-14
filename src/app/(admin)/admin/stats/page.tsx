@@ -9,8 +9,9 @@
  *
  * (ADMIN-03)
  *
- * Security: middleware enforces the admin claim before this page renders.
- * Reads D1 directly in the RSC (no API round-trip needed).
+ * Security: the (admin) layout calls requireAdmin() server-side before this
+ * page renders (BL-01 defense in depth) and middleware enforces the admin claim
+ * upstream. Reads D1 directly in the RSC (no API round-trip needed).
  *
  * SEO: robots noindex/nofollow — admin pages must not be indexed (T-05-13).
  *

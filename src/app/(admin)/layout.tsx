@@ -4,16 +4,22 @@
  * React Server Component that renders the admin shell with a visually distinct
  * red sidebar to differentiate the admin area from the agent dashboard.
  *
- * Route protection is enforced upstream by middleware.ts — the middleware reads
- * the admin:true Firebase custom claim and returns 403 before this layout renders
- * for any token without the claim (T-02-17 mitigation). This layout does not
- * need to re-implement that gate; middleware is the single enforcement point.
+ * Route protection is enforced at two layers (BL-01 defense in depth):
+ *   1. middleware.ts reads the admin:true Firebase custom claim and returns 403
+ *      before this layout renders (T-02-17 mitigation).
+ *   2. This layout ALSO calls requireAdmin() server-side as a single choke point
+ *      for /admin, /admin/agents, and /admin/stats — so the admin pages never
+ *      rely solely on middleware. Any matcher regression or adapter quirk that
+ *      lets a non-admin request reach the RSC is still rejected here before any
+ *      D1 read or PII render.
+ *
+ * On rejection (missing token OR missing admin claim) we call notFound() — a
+ * 404 that does not reveal the existence of the /admin surface to non-admins.
  *
  * Admin Layout differences from Dashboard Layout:
  *   - Sidebar background: red-800 instead of primary-900
  *   - ADMIN badge displayed in sidebar header (red-100 text on red-700 bg)
  *   - No profile completeness gate (admin is Bernard, not an agent)
- *   - No D1 query required -- middleware already confirmed the admin claim
  *
  * Per UI-SPEC Admin Layout contract:
  *   - Sidebar background: red-800
@@ -26,6 +32,15 @@
  * @module app/(admin)/layout
  */
 
+import { notFound } from 'next/navigation';
+import { requireAdmin, isAdminRejection } from '@/lib/admin';
+
+/**
+ * Force per-request dynamic rendering on the Cloudflare Worker so the
+ * requireAdmin() session check runs on every request and is never cached.
+ */
+export const dynamic = 'force-dynamic';
+
 /** Props for the admin layout */
 interface AdminLayoutProps {
   /** Admin page content */
@@ -35,13 +50,25 @@ interface AdminLayoutProps {
 /**
  * AdminLayout -- Red-sidebar shell for all /admin/* routes.
  *
- * Middleware enforces admin claim before this renders.
- * Phase 2: shell structure only; Phase 5 fills admin page content.
+ * Calls requireAdmin() server-side (BL-01 defense in depth) as the single
+ * choke point for every admin page; rejects non-admins with notFound() before
+ * any child page reads D1 or renders agent PII.
  *
  * @param props.children - Admin page content
- * @returns {JSX.Element} Admin shell with red sidebar
+ * @returns {Promise<JSX.Element>} Admin shell with red sidebar
  */
-export default function AdminLayout({ children }: AdminLayoutProps): JSX.Element {
+export default async function AdminLayout({
+  children,
+}: AdminLayoutProps): Promise<JSX.Element> {
+  // BL-01: re-verify the admin claim server-side. Do NOT rely solely on
+  // middleware — a matcher regression or adapter quirk must not expose agent
+  // PII / platform stats to any authenticated non-admin.
+  const adminResult = await requireAdmin();
+  if (isAdminRejection(adminResult)) {
+    // 404 (not 403) so we never reveal the /admin surface to non-admins.
+    notFound();
+  }
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Red sidebar -- visually distinct from agent dashboard (primary-900) */}

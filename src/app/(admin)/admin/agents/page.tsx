@@ -5,8 +5,9 @@
  * account status (Active/Suspended) with an inline suspend/unsuspend toggle
  * (ADMIN-01 + ADMIN-02).
  *
- * Security: middleware enforces the admin claim before this page renders;
- * the AgentRow suspend toggle calls PATCH /api/admin/agents/[id] which
+ * Security: the (admin) layout calls requireAdmin() server-side before this
+ * page renders (BL-01 defense in depth) and middleware enforces the admin claim
+ * upstream; the AgentRow suspend toggle calls PATCH /api/admin/agents/[id] which
  * re-verifies the admin claim server-side (T-05-10 defense in depth).
  *
  * Pagination: server-side via ?page searchParam; page size is ADMIN_PAGE_SIZE (25).
