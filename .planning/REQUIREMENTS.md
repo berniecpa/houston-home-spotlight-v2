@@ -23,14 +23,14 @@
 
 ### Listings
 
-- [ ] **LIST-01**: Agent can create a listing with title, address, price, beds, baths, sqft, description, and photo URLs
-- [ ] **LIST-02**: Agent can edit any of their own listings
-- [ ] **LIST-03**: Agent can delete their own listings
+- [x] **LIST-01**: Agent can create a listing with title, address, price, beds, baths, sqft, description, and photo URLs
+- [x] **LIST-02**: Agent can edit any of their own listings
+- [x] **LIST-03**: Agent can delete their own listings
 - [ ] **LIST-04**: Agent can paste multiple image URLs per listing
-- [ ] **LIST-05**: Agent can toggle a listing between active and paused status
-- [ ] **LIST-06**: Listings are hidden from public browse when agent's subscription lapses past 7-day grace period
+- [x] **LIST-05**: Agent can toggle a listing between active and paused status
+- [x] **LIST-06**: Listings are hidden from public browse when agent's subscription lapses past 7-day grace period
 - [ ] **LIST-07**: All listing data is stored in Cloudflare D1 (migrated from static JSON files)
-- [ ] **LIST-08**: Existing public listing URLs (`/listings/[slug]`) are preserved after migration
+- [x] **LIST-08**: Existing public listing URLs (`/listings/[slug]`) are preserved after migration
 
 ### Billing
 
@@ -118,14 +118,14 @@ Updated 2026-06-10 — roadmap created, all 37 v1 requirements mapped.
 | BILL-03 | Phase 3 | Complete |
 | BILL-04 | Phase 3 | Complete |
 | BILL-05 | Phase 3 | Complete |
-| LIST-01 | Phase 4 | Pending |
-| LIST-02 | Phase 4 | Pending |
-| LIST-03 | Phase 4 | Pending |
+| LIST-01 | Phase 4 | Complete |
+| LIST-02 | Phase 4 | Complete |
+| LIST-03 | Phase 4 | Complete |
 | LIST-04 | Phase 4 | Pending |
-| LIST-05 | Phase 4 | Pending |
-| LIST-06 | Phase 4 | Pending |
+| LIST-05 | Phase 4 | Complete |
+| LIST-06 | Phase 4 | Complete |
 | LIST-07 | Phase 4 | Pending |
-| LIST-08 | Phase 4 | Pending |
+| LIST-08 | Phase 4 | Complete |
 | LEAD-01 | Phase 4 | Pending |
 | LEAD-02 | Phase 4 | Pending |
 | LEAD-03 | Phase 4 | Pending |
