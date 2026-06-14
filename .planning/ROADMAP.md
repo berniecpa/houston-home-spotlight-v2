@@ -150,7 +150,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Infrastructure Migration | 3/3 | Complete    | 2026-06-13 |
 | 2. Auth + Agent Onboarding | 4/4 | Complete    | 2026-06-13 |
-| 3. Subscription Billing | 0/TBD | Not started | - |
+| 3. Subscription Billing | 1/3 | In Progress|  |
 | 4. Listings, Migration, and Leads | 0/TBD | Not started | - |
 | 5. Admin Panel + Agent Profiles | 0/TBD | Not started | - |
 | 6. AI Video Generation | 0/TBD | Not started | - |

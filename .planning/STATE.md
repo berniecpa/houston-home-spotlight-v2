@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed Phase 02 Plan 04 (02-04-SUMMARY.md)
-last_updated: "2026-06-13T23:57:29.476Z"
-last_activity: 2026-06-13
+status: executing
+stopped_at: Completed Phase 03 Plan 01 (03-01-SUMMARY.md)
+last_updated: "2026-06-14T00:43:46.280Z"
+last_activity: 2026-06-14 -- Phase 03 execution started
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 10
+  completed_plans: 8
   percent: 33
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-10)
 
 **Core value:** Agents can publish Houston listings in minutes and receive buyer inquiries directly — the platform earns recurring subscription revenue while buyers get a curated, always-current marketplace.
-**Current focus:** Phase 02 — auth-agent-onboarding
+**Current focus:** Phase 03 — subscription-billing
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
-Status: Phase 02 complete; advancing to Phase 03
-Last activity: 2026-06-13
+Phase: 03 (subscription-billing) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-06-14 -- Phase 03 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -54,6 +54,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 01 P01 | 10 | 2 tasks | 10 files |
+| Phase 03-subscription-billing P01 | 12 minutes | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,9 @@ Recent decisions affecting current work:
 - [Phase 02-03]: AUTH-05 gate uses 4-field check (name/phone/brokerage/license); completionPercent tracks all 5 (adds photo_url); x-matched-path header for redirect-loop prevention; PATCH route derives uid from session only (T-02-12)
 - [Phase 02-04]: Admin layout delegates auth to middleware (single enforcement point); firebase-admin boundary guard excludes test files (Node.js-only); BERNARD_UID read from env at runtime, never hardcoded
 - [Phase ?]: D1 migration file created in Plan 01 (not Plan 02) because cloudflare-deployment.test.ts Block 5 asserts its existence
+- [Phase ?]: stripe@22.2.1 singleton accepts secretKey parameter (not module-level env read) — keeps module tree-shakeable and prevents static key exposure
+- [Phase ?]: AGENT_PUBLISHABLE_SQL uses unixepoch() epoch seconds to match D1 INTEGER column — never Date.now() milliseconds (RESEARCH Pitfall 6)
+- [Phase ?]: No export const runtime = 'edge' in any Phase 3 file — @opennextjs/cloudflare v1.x does not support edge runtime declaration (RESEARCH Pitfall 4)
 
 ### Pending Todos
 
@@ -92,6 +96,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-13T23:26:43Z
-Stopped at: Completed Phase 02 Plan 04 (02-04-SUMMARY.md)
+Last session: 2026-06-14T00:43:46.275Z
+Stopped at: Completed Phase 03 Plan 01 (03-01-SUMMARY.md)
 Resume file: None
