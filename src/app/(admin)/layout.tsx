@@ -62,7 +62,7 @@ export default function AdminLayout({ children }: AdminLayoutProps): JSX.Element
           </div>
         </div>
 
-        {/* Sidebar navigation -- Phase 5 fills additional nav items */}
+        {/* Sidebar navigation */}
         <nav className="flex-1 p-4" aria-label="Admin menu">
           <ul className="space-y-1">
             <li>
@@ -72,6 +72,24 @@ export default function AdminLayout({ children }: AdminLayoutProps): JSX.Element
                 aria-label="Admin panel home"
               >
                 Admin Panel
+              </a>
+            </li>
+            <li>
+              <a
+                href="/admin/agents"
+                className="flex items-center px-4 py-3 rounded-lg text-red-100 hover:bg-red-700 hover:text-white transition-colors touch-target"
+                aria-label="Manage agents"
+              >
+                Agents
+              </a>
+            </li>
+            <li>
+              <a
+                href="/admin/stats"
+                className="flex items-center px-4 py-3 rounded-lg text-red-100 hover:bg-red-700 hover:text-white transition-colors touch-target"
+                aria-label="Platform stats"
+              >
+                Platform Stats
               </a>
             </li>
           </ul>
