@@ -142,8 +142,13 @@ async function refHandleStripeEvent(
       const customerId = sub['customer'] as string;
       const subStatus = sub['status'] as string;
       const status: SubscriptionStatus = subStatus === 'active' ? 'active' : 'lapsed';
-      const periodEnd = (sub['current_period_end'] as number) ?? 0;
-      const periodStart = (sub['current_period_start'] as number) ?? 0;
+      // Period boundaries live on the subscription item (Basil-era API
+      // 2026-05-27.dahlia), not on the Subscription object — mirrors
+      // src/lib/stripe-events.ts.
+      const items = sub['items'] as { data?: Array<Record<string, unknown>> } | undefined;
+      const item = items?.data?.[0];
+      const periodEnd = (item?.['current_period_end'] as number | undefined) ?? 0;
+      const periodStart = (item?.['current_period_start'] as number | undefined) ?? 0;
 
       await db.batch([
         idempotencyStmt,
@@ -151,7 +156,7 @@ async function refHandleStripeEvent(
           'UPDATE agents SET subscription_status = ?, subscription_grace_until = NULL, updated_at = unixepoch() WHERE stripe_customer_id = ?'
         ).bind(status, customerId),
         db.prepare(
-          'INSERT INTO subscriptions (id, agent_id, stripe_subscription_id, status, current_period_start, current_period_end, created_at, updated_at) SELECT ?, agents.id, ?, ?, ?, ?, unixepoch(), unixepoch() FROM agents WHERE stripe_customer_id = ? ON CONFLICT(stripe_subscription_id) DO UPDATE SET status = excluded.status, current_period_end = excluded.current_period_end, updated_at = unixepoch()'
+          'INSERT INTO subscriptions (id, agent_id, stripe_subscription_id, status, current_period_start, current_period_end, created_at, updated_at) SELECT ?, agents.id, ?, ?, ?, ?, unixepoch(), unixepoch() FROM agents WHERE stripe_customer_id = ? ON CONFLICT(stripe_subscription_id) DO UPDATE SET status = excluded.status, current_period_start = CASE WHEN excluded.current_period_start > 0 THEN excluded.current_period_start ELSE current_period_start END, current_period_end = CASE WHEN excluded.current_period_end > 0 THEN excluded.current_period_end ELSE current_period_end END, updated_at = unixepoch()'
         ).bind('uuid', sub['id'], sub['id'], sub['status'], periodStart, periodEnd, customerId),
       ]);
       return { status, graceUntil: null };
@@ -338,8 +343,14 @@ describe('handleStripeEvent behavioral tests (BILL-03)', () => {
           id: 'sub_abc',
           customer: 'cus_001',
           status: 'active',
-          current_period_start: 1000000,
-          current_period_end: 1002592000,
+          items: {
+            data: [
+              {
+                current_period_start: 1000000,
+                current_period_end: 1002592000,
+              },
+            ],
+          },
         },
       },
     };
@@ -367,8 +378,14 @@ describe('handleStripeEvent behavioral tests (BILL-03)', () => {
           id: 'sub_abc',
           customer: 'cus_001',
           status: 'past_due',
-          current_period_start: 1000000,
-          current_period_end: 1002592000,
+          items: {
+            data: [
+              {
+                current_period_start: 1000000,
+                current_period_end: 1002592000,
+              },
+            ],
+          },
         },
       },
     };

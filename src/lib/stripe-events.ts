@@ -87,9 +87,16 @@ export async function handleStripeEvent(
       const customerId = sub.customer as string;
       // Map only 'active' to active; all other statuses (past_due, incomplete, etc.) → lapsed
       const status = sub.status === 'active' ? 'active' : 'lapsed';
-      // current_period_end is epoch seconds on Subscription objects (Assumption A2)
-      const periodEnd = (sub as unknown as Record<string, unknown>)['current_period_end'] as number ?? 0;
-      const periodStart = (sub as unknown as Record<string, unknown>)['current_period_start'] as number ?? 0;
+      // On the pinned API version (2026-05-27.dahlia, Basil-era), current_period_start /
+      // current_period_end live on each subscription ITEM, not on the Subscription object.
+      // Verified against node_modules/stripe (22.2.1):
+      //   - SubscriptionItem.current_period_end / current_period_start are `number` (non-optional)
+      //   - Subscription has no such fields (only list-query filters reference the names)
+      // Read from the first item. If absent, leave the persisted value untouched via
+      // COALESCE in the ON CONFLICT update (do NOT overwrite a good value with 0).
+      const item = sub.items?.data?.[0];
+      const periodEnd = item?.current_period_end ?? 0;
+      const periodStart = item?.current_period_start ?? 0;
 
       await db.batch([
         idempotencyStmt,
@@ -110,7 +117,13 @@ export async function handleStripeEvent(
            FROM agents WHERE stripe_customer_id = ?
            ON CONFLICT(stripe_subscription_id) DO UPDATE SET
              status = excluded.status,
-             current_period_end = excluded.current_period_end,
+             -- Only overwrite the period boundary when we actually resolved a
+             -- non-zero value from the subscription item; otherwise keep the
+             -- previously-persisted (correct) value rather than zeroing it.
+             current_period_start = CASE WHEN excluded.current_period_start > 0
+               THEN excluded.current_period_start ELSE current_period_start END,
+             current_period_end = CASE WHEN excluded.current_period_end > 0
+               THEN excluded.current_period_end ELSE current_period_end END,
              updated_at = unixepoch()`
         ).bind(
           randomUUID(),
