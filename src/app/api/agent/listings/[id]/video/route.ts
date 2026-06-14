@@ -265,9 +265,12 @@ export async function POST(
         callbackUrl
       );
       clearTimeout(timeoutId);
-      // Success: record the provider-assigned task_id and attempt details
+      // Success: record the provider-assigned task_id and attempt details.
+      // WR-02: persist the TRUE attempt count from submitWithFallback (not a
+      // hard-coded 1) so the poller's failover cap (attempts < KIE_ATTEMPT_CAP)
+      // is not corrupted when Kie.ai was retried before success.
       await setTaskId(db, jobId, submitResult.taskId);
-      await recordAttempt(db, jobId, submitResult.provider, 1);
+      await recordAttempt(db, jobId, submitResult.provider, submitResult.attempts);
     } catch (submitError) {
       clearTimeout(timeoutId);
       // PLAN-CHECKER FIX W2: record the failure BEFORE returning 202 so the

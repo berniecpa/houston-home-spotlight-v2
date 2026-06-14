@@ -44,6 +44,13 @@ export interface SubmitResult {
   provider: 'kie' | 'higgsfield';
   /** Provider-assigned task identifier to store in video_jobs.task_id. */
   taskId: string;
+  /**
+   * Total submission attempts consumed up to and including the successful one
+   * (WR-02). The trigger route must persist THIS value — not a hard-coded 1 —
+   * so the poller's failover cap (attempts < KIE_ATTEMPT_CAP) is not corrupted.
+   * Example: two failed Kie attempts then a HiggsField success → attempts = 3.
+   */
+  attempts: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -72,13 +79,17 @@ export async function submitWithFallback(
 ): Promise<SubmitResult> {
   const KIE_MAX_ATTEMPTS = 2;
   const errors: string[] = [];
+  // Running total of submission attempts consumed (WR-02). Incremented before
+  // each provider call so the returned count reflects the true number of tries.
+  let attempts = 0;
 
   // --- Kie.ai primary: up to 2 attempts (VIDEO-03) ---
   const kieAdapter = createKieAdapter(env.KIE_API_KEY);
   for (let attempt = 1; attempt <= KIE_MAX_ATTEMPTS; attempt++) {
+    attempts++;
     try {
       const taskId = await kieAdapter.submit(imageUrl, callbackUrl);
-      return { provider: 'kie', taskId };
+      return { provider: 'kie', taskId, attempts };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       errors.push(`Kie.ai attempt ${attempt}: ${msg}`);
@@ -87,9 +98,10 @@ export async function submitWithFallback(
 
   // --- HiggsField fallback: one attempt ---
   const higgsAdapter = createHiggsAdapter(env.HIGGSFIELD_API_KEY);
+  attempts++;
   try {
     const taskId = await higgsAdapter.submit(imageUrl, callbackUrl);
-    return { provider: 'higgsfield', taskId };
+    return { provider: 'higgsfield', taskId, attempts };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     errors.push(`HiggsField: ${msg}`);
