@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed Phase 03 Plan 03 (03-03-SUMMARY.md) — Phase 03 complete
-last_updated: "2026-06-14T01:29:28.092Z"
-last_activity: 2026-06-14
+status: executing
+stopped_at: Completed Phase 04 Plan 01 (04-01-SUMMARY.md)
+last_updated: "2026-06-14T02:07:46.605Z"
+last_activity: 2026-06-14 -- Completed Phase 04 Plan 01 (04-01-SUMMARY.md)
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 10
-  completed_plans: 10
-  percent: 50
+  total_plans: 15
+  completed_plans: 11
+  percent: 53
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-10)
 
 **Core value:** Agents can publish Houston listings in minutes and receive buyer inquiries directly — the platform earns recurring subscription revenue while buyers get a curated, always-current marketplace.
-**Current focus:** Phase 03 — subscription-billing
+**Current focus:** Phase 04 — listings-migration-and-leads
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
-Status: Phase 03 complete — ready for Phase 04
-Last activity: 2026-06-14
+Phase: 04 (listings-migration-and-leads) — EXECUTING
+Plan: 2 of 5
+Status: Executing Phase 04
+Last activity: 2026-06-14 -- Completed Phase 04 Plan 01 (04-01-SUMMARY.md)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03-subscription-billing P01 | 12 minutes | 3 tasks | 8 files |
 | Phase 03-subscription-billing P02 | 9 minutes | 3 tasks | 5 files |
 | Phase 03-subscription-billing P03 | 12 minutes | 2 tasks | 4 files |
+| Phase 04-listings-migration P01 | 9 minutes | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,8 @@ Recent decisions affecting current work:
 - [Phase 03-03]: BillingWidget receives only status/grace/renewal/isAdmin — stripe_customer_id never in client bundle (T-03-BW-I)
 - [Phase 03-03]: billing/page.tsx D1 error fails toward 'none' state (fail-closed) — never falsely grants isAdmin from D1
 - [Phase 03-03]: Admin flag is OR of Firebase token claim and D1 is_admin=1 — Firebase token is authoritative
+- [Phase 04-01]: D1 listing read path uses two-query image grouping (no GROUP_CONCAT) + AGENT_PUBLISHABLE_SQL subscription gate on every public SELECT
+- [Phase 04-01]: 0003 seed migration uses INSERT OR IGNORE keyed on UNIQUE slug; agent_id resolves via subquery (no hardcoded UID)
 
 ### Pending Todos
 
@@ -91,7 +94,7 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 4: 4 pre-existing test failures in `src/tests/listing-detail-page.test.ts` (generateMetadata + Page Component "accept params with slug" / "call getListingBySlug") — brittle source-text assertions that don't match the Next.js 15 async-`params` shape in `src/app/listings/[slug]/page.tsx`. Untouched since base commit 5f2ba27; not auth-related. Fix when Phase 4 takes ownership of the public listings experience.
+- Phase 4: 4 anticipated test failures in `src/tests/listing-detail-page.test.ts` (generateStaticParams absence + imports) — tests updated in 04-01 to anticipate the force-dynamic conversion. Will go green when 04-03 removes generateStaticParams and getAllListings from detail page.
 - Phase 6: Cloudflare Queues vs. Durable Objects for async polling architecture needs phase research; Kie.ai rate limits and pricing need confirmation before planning
 
 ## Deferred Items
@@ -104,6 +107,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-14T02:00:00.000Z
-Stopped at: Completed Phase 03 Plan 03 (03-03-SUMMARY.md) — Phase 03 complete
+Last session: 2026-06-14T02:18:00.000Z
+Stopped at: Completed Phase 04 Plan 01 (04-01-SUMMARY.md)
 Resume file: None
