@@ -80,7 +80,12 @@ export function BillingWidget({
         throw new Error(body.message ?? 'Unable to start checkout. Please try again.');
       }
 
-      const { url } = await res.json() as { url: string };
+      const { url } = await res.json() as { url?: string | null };
+      // WR-05: validate the URL is a non-empty string before navigating, so a
+      // missing/null URL surfaces as an error rather than navigating to "null".
+      if (typeof url !== 'string' || url.length === 0) {
+        throw new Error('Unable to start checkout. Please try again.');
+      }
       window.location.href = url;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
