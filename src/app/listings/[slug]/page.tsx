@@ -384,8 +384,17 @@ export default async function ListingDetailPage({
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
                   Video Tour
                 </h2>
-                <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
-                  <p className="text-gray-500">Video tour coming soon</p>
+                <div className="aspect-video rounded-lg overflow-hidden bg-gray-900">
+                  <video
+                    controls
+                    preload="metadata"
+                    className="w-full rounded-lg"
+                    src={listing.videoUrl}
+                    aria-label={`Video tour of ${listing.address}`}
+                  >
+                    Your browser does not support the video tag. Please visit the listing
+                    page for details about {listing.address}.
+                  </video>
                 </div>
               </section>
             )}
