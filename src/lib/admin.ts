@@ -205,16 +205,22 @@ export async function listAgentsPaginated(
  * Updates updated_at = unixepoch() so the change is timestamped.
  * All values bound via prepare().bind() — no string concatenation (T-05-12).
  *
+ * WR-02: returns the number of rows changed so the caller can distinguish a
+ * real update from a no-op (agentId matched no row — deleted agent, stale id
+ * from a long-open admin tab, fabricated id) and respond 404 instead of
+ * silently claiming success.
+ *
  * @param db        - D1Database binding from Cloudflare Worker env
  * @param agentId   - agents.id to update (from the URL route segment)
  * @param suspended - true to suspend (is_suspended=1), false to unsuspend (is_suspended=0)
+ * @returns The number of agent rows updated (0 when no row matched agentId)
  */
 export async function setAgentSuspended(
   db: D1Database,
   agentId: string,
   suspended: boolean
-): Promise<void> {
-  await db
+): Promise<number> {
+  const result = await db
     .prepare(
       `UPDATE agents
        SET is_suspended = ?,
@@ -223,6 +229,8 @@ export async function setAgentSuspended(
     )
     .bind(suspended ? 1 : 0, agentId)
     .run();
+
+  return result.meta?.changes ?? 0;
 }
 
 // ────────────────────────────────────────────────────────────────────────────

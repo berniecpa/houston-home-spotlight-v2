@@ -35,6 +35,24 @@ try {
   adminSrc = '';
 }
 
+/** Read the suspend/unsuspend [id] route source for affected-row assertions (WR-02) */
+const ADMIN_ID_ROUTE = join(
+  PROJECT_ROOT,
+  'src',
+  'app',
+  'api',
+  'admin',
+  'agents',
+  '[id]',
+  'route.ts'
+);
+let adminIdRouteSrc: string;
+try {
+  adminIdRouteSrc = readFileSync(ADMIN_ID_ROUTE, 'utf-8');
+} catch {
+  adminIdRouteSrc = '';
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // File existence
 // ────────────────────────────────────────────────────────────────────────────
@@ -250,6 +268,22 @@ describe('src/lib/admin.ts — setAgentSuspended UPDATE structure', () => {
     assert.ok(
       adminSrc.includes('.bind('),
       'setAgentSuspended must use prepare().bind() — no string concatenation (T-05-12)'
+    );
+  });
+
+  it('setAgentSuspended returns the changed-row count (WR-02)', () => {
+    assert.ok(
+      adminSrc.includes('meta?.changes'),
+      'setAgentSuspended must return result.meta?.changes so the caller can detect a no-op (WR-02)'
+    );
+  });
+
+  it('[id] suspend route returns 404 when no row was updated (WR-02)', () => {
+    assert.ok(
+      adminIdRouteSrc.includes('changed === 0') &&
+        adminIdRouteSrc.includes('404') &&
+        adminIdRouteSrc.includes('Agent not found'),
+      'PATCH /api/admin/agents/[id] must return 404 "Agent not found." when setAgentSuspended changed 0 rows (WR-02)'
     );
   });
 

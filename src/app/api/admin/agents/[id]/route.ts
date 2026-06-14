@@ -112,7 +112,16 @@ export async function PATCH(
     const { env } = await getCloudflareContext({ async: true });
     const db = env.DB as unknown as D1Database;
 
-    await setAgentSuspended(db, agentId, suspended);
+    const changed = await setAgentSuspended(db, agentId, suspended);
+
+    // WR-02: 0 rows changed means agentId matched no agent (deleted/stale/
+    // fabricated id). Report 404 instead of falsely claiming the toggle worked.
+    if (changed === 0) {
+      return NextResponse.json(
+        { success: false, message: 'Agent not found.' },
+        { status: 404 }
+      );
+    }
 
     const action = suspended ? 'suspended' : 'unsuspended';
     return NextResponse.json({
