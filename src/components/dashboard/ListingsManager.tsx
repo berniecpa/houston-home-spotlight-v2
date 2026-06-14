@@ -2,15 +2,18 @@
  * ListingsManager Component
  *
  * Client component that renders the agent's listings in a table with full
- * CRUD actions: Create, Edit, Delete (with confirm), and Pause/Activate.
+ * CRUD actions: Create, Edit, Delete (with confirm), Pause/Activate, and
+ * Generate Video (async trigger + status polling).
  *
- * Actions are wired to the 04-02 CRUD API:
- *   GET    /api/agent/listings        — refresh after any mutation
- *   DELETE /api/agent/listings/[id]   — delete with window.confirm guard
- *   PATCH  /api/agent/listings/[id]   — toggle status active ↔ paused
- *   POST/PUT via ListingForm          — create and edit delegated to form
+ * Actions are wired to the 04-02 CRUD API and 06-02 video API:
+ *   GET    /api/agent/listings                    — refresh after any mutation
+ *   DELETE /api/agent/listings/[id]               — delete with window.confirm guard
+ *   PATCH  /api/agent/listings/[id]               — toggle status active ↔ paused
+ *   POST/PUT via ListingForm                      — create and edit delegated to form
+ *   POST   /api/agent/listings/[id]/video         — trigger async video generation
+ *   GET    /api/agent/listings/[id]/video-status  — poll for video status
  *
- * Security (T-04-16 mitigation):
+ * Security (T-04-16 / T-06-09 mitigations):
  *   All mutations hit server routes which re-check ownership/publishability.
  *   The UI cannot bypass server-side auth gates.
  *
@@ -19,7 +22,7 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ListingForm } from '@/components/dashboard/ListingForm';
 
 /** A single listing row returned by GET /api/agent/listings */
@@ -42,12 +45,37 @@ export interface OwnListing {
   status: 'active' | 'paused';
   /** Unix timestamp (seconds) */
   created_at: number;
+  /** Video generation status — optional, supplied by W1 SELECT fix */
+  video_status?: 'none' | 'processing' | 'ready' | 'failed' | null;
+  /** Generated video URL — optional, supplied by W1 SELECT fix */
+  video_url?: string | null;
 }
 
 /** Props for the ListingsManager component */
 export interface ListingsManagerProps {
   /** The agent's own listings, loaded server-side and passed as initial state */
   initialListings: OwnListing[];
+}
+
+/** Per-listing video state tracked client-side during a polling session */
+interface VideoRowState {
+  /** Current video status for this listing */
+  status: 'none' | 'processing' | 'ready' | 'failed';
+  /** Video URL once ready */
+  videoUrl?: string | null;
+}
+
+/** Response shape from GET /api/agent/listings/[id]/video-status */
+interface VideoStatusResponse {
+  status: 'none' | 'processing' | 'ready' | 'failed';
+  videoUrl?: string | null;
+}
+
+/** Response shape from POST /api/agent/listings/[id]/video */
+interface VideoTriggerResponse {
+  jobId?: string;
+  status?: string;
+  message?: string;
 }
 
 /** Format a price number as USD currency string */
@@ -59,8 +87,14 @@ function formatPrice(price: number): string {
   }).format(price);
 }
 
+/** Polling interval in ms (4 000 ms — within the 3-5 s range) */
+const POLL_INTERVAL_MS = 4000;
+
+/** Hard cap: stop polling after 5 minutes to prevent unbounded loops (T-06-10) */
+const POLL_MAX_MS = 5 * 60 * 1000;
+
 /**
- * ListingsManager — dashboard listings table with create/edit/delete/pause actions.
+ * ListingsManager — dashboard listings table with create/edit/delete/pause/video actions.
  *
  * Fetches a fresh copy of listings after every mutation to keep the table
  * in sync with the server state.
@@ -80,6 +114,162 @@ export function ListingsManager({
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [editingListing, setEditingListing] = useState<OwnListing | null>(null);
 
+  // Per-listing video state: listingId -> VideoRowState
+  // Initialised from server-loaded video_status/video_url so persisted state
+  // shows on page load (W1 fix — status survives page refresh).
+  const [videoStates, setVideoStates] = useState<Record<string, VideoRowState>>(
+    () => {
+      const initial: Record<string, VideoRowState> = {};
+      for (const l of initialListings) {
+        if (l.video_status && l.video_status !== 'none') {
+          initial[l.id] = {
+            status: l.video_status,
+            videoUrl: l.video_url ?? null,
+          };
+        }
+      }
+      return initial;
+    }
+  );
+
+  // Active poll intervals keyed by listingId — cleared on terminal state or unmount
+  const pollIntervalsRef = useRef<Record<string, ReturnType<typeof setInterval>>>({});
+  // Poll start times to enforce POLL_MAX_MS cap
+  const pollStartRef = useRef<Record<string, number>>({});
+
+  /** Clear the polling interval for a given listing */
+  const clearPoll = useCallback((listingId: string) => {
+    const interval = pollIntervalsRef.current[listingId];
+    if (interval !== undefined) {
+      clearInterval(interval);
+      delete pollIntervalsRef.current[listingId];
+      delete pollStartRef.current[listingId];
+    }
+  }, []);
+
+  /** Start polling /video-status for a listing */
+  const startPolling = useCallback(
+    (listingId: string) => {
+      // Do not start a second interval if one is already active
+      if (pollIntervalsRef.current[listingId] !== undefined) return;
+
+      pollStartRef.current[listingId] = Date.now();
+
+      const interval = setInterval(() => {
+        // Enforce hard cap
+        const elapsed = Date.now() - (pollStartRef.current[listingId] ?? 0);
+        if (elapsed >= POLL_MAX_MS) {
+          clearPoll(listingId);
+          return;
+        }
+
+        void (async () => {
+          try {
+            const res = await fetch(
+              `/api/agent/listings/${listingId}/video-status`
+            );
+            if (!res.ok) return; // transient error — keep polling
+
+            const data = (await res.json()) as VideoStatusResponse;
+
+            if (data.status === 'ready' || data.status === 'failed') {
+              // Terminal state: update UI and stop polling
+              setVideoStates((prev) => ({
+                ...prev,
+                [listingId]: {
+                  status: data.status,
+                  videoUrl: data.videoUrl ?? null,
+                },
+              }));
+              clearPoll(listingId);
+            } else if (data.status === 'processing') {
+              // Still in progress — keep state as processing
+              setVideoStates((prev) => ({
+                ...prev,
+                [listingId]: {
+                  ...prev[listingId],
+                  status: 'processing',
+                },
+              }));
+            }
+          } catch {
+            // Network error — keep polling until cap
+          }
+        })();
+      }, POLL_INTERVAL_MS);
+
+      pollIntervalsRef.current[listingId] = interval;
+    },
+    [clearPoll]
+  );
+
+  // On mount: resume polling for any listings already in 'processing' state
+  // (covers page-refresh scenario where D1 has processing jobs)
+  useEffect(() => {
+    for (const [listingId, vs] of Object.entries(videoStates)) {
+      if (vs.status === 'processing') {
+        startPolling(listingId);
+      }
+    }
+    // Cleanup: clear all intervals on unmount (T-06-10)
+    return () => {
+      for (const listingId of Object.keys(pollIntervalsRef.current)) {
+        clearPoll(listingId);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // intentionally empty — run once on mount only
+
+  /**
+   * Trigger video generation for a listing (VIDEO-01).
+   * POSTs to /api/agent/listings/[id]/video; on 202 starts polling;
+   * on 409 (in-flight) adopts the existing job and starts polling.
+   * Never blocks longer than the fetch round-trip (<2s).
+   */
+  async function handleGenerateVideo(listing: OwnListing): Promise<void> {
+    setActionError('');
+
+    // Optimistic: mark as processing immediately so button disables
+    setVideoStates((prev) => ({
+      ...prev,
+      [listing.id]: { status: 'processing', videoUrl: null },
+    }));
+
+    try {
+      const res = await fetch(`/api/agent/listings/${listing.id}/video`, {
+        method: 'POST',
+      });
+
+      if (res.status === 202) {
+        // Accepted — start polling
+        startPolling(listing.id);
+        return;
+      }
+
+      if (res.status === 409) {
+        // Duplicate: an active job already exists — adopt it and poll
+        startPolling(listing.id);
+        return;
+      }
+
+      // Other error: show banner and revert optimistic state
+      const data = (await res.json()) as VideoTriggerResponse;
+      setActionError(data.message ?? 'Failed to start video generation. Please try again.');
+      setVideoStates((prev) => {
+        const next = { ...prev };
+        delete next[listing.id];
+        return next;
+      });
+    } catch {
+      setActionError('Network error. Please try again.');
+      setVideoStates((prev) => {
+        const next = { ...prev };
+        delete next[listing.id];
+        return next;
+      });
+    }
+  }
+
   /** Re-fetch the agent's own listings from the server */
   const refreshListings = useCallback(async () => {
     setIsLoading(true);
@@ -93,6 +283,23 @@ export function ListingsManager({
       }
       const data = (await res.json()) as { listings: OwnListing[] };
       setListings(data.listings);
+      // Merge fresh video_status/video_url into videoStates for any listings
+      // whose server state has updated since the last client session
+      setVideoStates((prev) => {
+        const next = { ...prev };
+        for (const l of data.listings) {
+          if (l.video_status && l.video_status !== 'none') {
+            // Only update if we have no active client-side polling state
+            if (!next[l.id]) {
+              next[l.id] = {
+                status: l.video_status,
+                videoUrl: l.video_url ?? null,
+              };
+            }
+          }
+        }
+        return next;
+      });
     } catch {
       setActionError('Network error. Please try again.');
     } finally {
@@ -293,6 +500,12 @@ export function ListingsManager({
                   </th>
                   <th
                     scope="col"
+                    className="px-4 py-3 text-center font-semibold text-gray-700"
+                  >
+                    Video
+                  </th>
+                  <th
+                    scope="col"
                     className="px-4 py-3 text-right font-semibold text-gray-700"
                   >
                     Actions
@@ -300,79 +513,136 @@ export function ListingsManager({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {listings.map((listing) => (
-                  <tr key={listing.id} className="hover:bg-gray-50 transition-colors">
-                    {/* Title + address */}
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900 leading-snug">
-                        {listing.title}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {listing.address}
-                      </p>
-                    </td>
+                {listings.map((listing) => {
+                  const vs = videoStates[listing.id];
+                  const isProcessing = vs?.status === 'processing';
+                  const isReady = vs?.status === 'ready';
+                  const isFailed = vs?.status === 'failed';
 
-                    {/* Price */}
-                    <td className="px-4 py-3 text-right text-gray-700 font-medium tabular-nums">
-                      {formatPrice(listing.price)}
-                    </td>
+                  return (
+                    <tr key={listing.id} className="hover:bg-gray-50 transition-colors">
+                      {/* Title + address */}
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-gray-900 leading-snug">
+                          {listing.title}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {listing.address}
+                        </p>
+                      </td>
 
-                    {/* Status badge */}
-                    <td className="px-4 py-3 text-center">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          listing.status === 'active'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-yellow-100 text-yellow-700'
-                        }`}
-                      >
-                        {listing.status === 'active' ? 'Active' : 'Paused'}
-                      </span>
-                    </td>
+                      {/* Price */}
+                      <td className="px-4 py-3 text-right text-gray-700 font-medium tabular-nums">
+                        {formatPrice(listing.price)}
+                      </td>
 
-                    {/* Actions */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
-                        {/* Edit */}
-                        <button
-                          type="button"
-                          onClick={() => handleEdit(listing)}
-                          disabled={isLoading}
-                          className="text-primary-600 hover:text-primary-800 font-medium text-xs transition-colors touch-target disabled:opacity-50"
-                          aria-label={`Edit ${listing.title}`}
-                        >
-                          Edit
-                        </button>
-
-                        {/* Pause / Activate */}
-                        <button
-                          type="button"
-                          onClick={() => void handleToggleStatus(listing)}
-                          disabled={isLoading}
-                          className="text-gray-500 hover:text-gray-700 font-medium text-xs transition-colors touch-target disabled:opacity-50"
-                          aria-label={
+                      {/* Status badge */}
+                      <td className="px-4 py-3 text-center">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             listing.status === 'active'
-                              ? `Pause ${listing.title}`
-                              : `Activate ${listing.title}`
-                          }
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-yellow-100 text-yellow-700'
+                          }`}
                         >
-                          {listing.status === 'active' ? 'Pause' : 'Activate'}
-                        </button>
+                          {listing.status === 'active' ? 'Active' : 'Paused'}
+                        </span>
+                      </td>
 
-                        {/* Delete */}
-                        <button
-                          type="button"
-                          onClick={() => void handleDelete(listing)}
-                          disabled={isLoading}
-                          className="text-red-500 hover:text-red-700 font-medium text-xs transition-colors touch-target disabled:opacity-50"
-                          aria-label={`Delete ${listing.title}`}
+                      {/* Video status cell (VIDEO-02, VIDEO-03) */}
+                      <td className="px-4 py-3 text-center">
+                        <div
+                          role="status"
+                          aria-live="polite"
+                          aria-label={`Video status for ${listing.title}`}
+                          className="flex flex-col items-center gap-1"
                         >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          {isProcessing && (
+                            <span className="text-xs text-blue-600 font-medium">
+                              Generating…
+                            </span>
+                          )}
+                          {isFailed && (
+                            <span className="text-xs text-red-600 font-medium">
+                              Generation failed — retrying
+                            </span>
+                          )}
+                          {isReady && vs?.videoUrl && (
+                            <a
+                              href={`/listings/${listing.slug}`}
+                              className="text-xs text-green-600 font-medium hover:text-green-800 transition-colors"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              View video
+                            </a>
+                          )}
+                          {isReady && !vs?.videoUrl && (
+                            <span className="text-xs text-green-600 font-medium">
+                              Ready
+                            </span>
+                          )}
+                          {!vs && (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-2">
+                          {/* Edit */}
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(listing)}
+                            disabled={isLoading}
+                            className="text-primary-600 hover:text-primary-800 font-medium text-xs transition-colors touch-target disabled:opacity-50"
+                            aria-label={`Edit ${listing.title}`}
+                          >
+                            Edit
+                          </button>
+
+                          {/* Pause / Activate */}
+                          <button
+                            type="button"
+                            onClick={() => void handleToggleStatus(listing)}
+                            disabled={isLoading}
+                            className="text-gray-500 hover:text-gray-700 font-medium text-xs transition-colors touch-target disabled:opacity-50"
+                            aria-label={
+                              listing.status === 'active'
+                                ? `Pause ${listing.title}`
+                                : `Activate ${listing.title}`
+                            }
+                          >
+                            {listing.status === 'active' ? 'Pause' : 'Activate'}
+                          </button>
+
+                          {/* Delete */}
+                          <button
+                            type="button"
+                            onClick={() => void handleDelete(listing)}
+                            disabled={isLoading}
+                            className="text-red-500 hover:text-red-700 font-medium text-xs transition-colors touch-target disabled:opacity-50"
+                            aria-label={`Delete ${listing.title}`}
+                          >
+                            Delete
+                          </button>
+
+                          {/* Generate Video (VIDEO-01) */}
+                          <button
+                            type="button"
+                            onClick={() => void handleGenerateVideo(listing)}
+                            disabled={isProcessing}
+                            className="text-accent-600 hover:text-accent-800 font-medium text-xs transition-colors touch-target disabled:opacity-50"
+                            aria-label={`Generate video for ${listing.title}`}
+                          >
+                            Generate Video
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

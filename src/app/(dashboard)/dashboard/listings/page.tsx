@@ -57,7 +57,8 @@ export default async function ListingsPage(): Promise<JSX.Element> {
     const { env } = await getCloudflareContext({ async: true });
 
     const result = await env.DB.prepare(
-      `SELECT id, title, slug, address, price, beds, baths, status, created_at
+      `SELECT id, title, slug, address, price, beds, baths, status, created_at,
+              video_status, video_url
        FROM listings
        WHERE agent_id = ?
        ORDER BY created_at DESC`
