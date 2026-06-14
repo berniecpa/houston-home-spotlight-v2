@@ -100,11 +100,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       });
       customerId = customer.id;
       // Persist the new customer ID back to D1 (T-03-SQLI: parameterized)
-      await env.DB.prepare(
+      const persistResult = await env.DB.prepare(
         'UPDATE agents SET stripe_customer_id = ?, updated_at = unixepoch() WHERE id = ?'
       )
         .bind(customerId, uid)
         .run();
+      // WR-04: If the UPDATE matched no row (agent deleted between SELECT and
+      // UPDATE) or failed silently, the Stripe customer we just created is now
+      // orphaned (not persisted). Log the customer ID so it can be reconciled;
+      // client_reference_id (set below) lets the webhook recover the mapping.
+      if (persistResult.meta.changes !== 1) {
+        console.error(
+          `Orphaned Stripe customer: created ${customerId} for agent ${uid} but persist UPDATE changed ${persistResult.meta.changes} rows`
+        );
+      }
     }
 
     // --- 5. Create Checkout session (subscription mode, $79/mo) ---
@@ -120,6 +129,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       success_url: `${baseUrl}/dashboard/billing?checkout=success`,
       cancel_url: `${baseUrl}/dashboard/billing?checkout=cancel`,
     });
+
+    // WR-05: session.url is typed `string | null`. Returning a null URL would
+    // make the client navigate to the string "null" (a 404) with no error,
+    // since res.ok is true. Guard explicitly.
+    if (!session.url) {
+      console.error(`Checkout session ${session.id} created with no URL for agent ${uid}`);
+      return NextResponse.json(
+        { success: false, message: 'Checkout session has no URL' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ success: true, url: session.url });
   } catch (err) {
