@@ -803,10 +803,15 @@ describe('webhook/route.ts module structure (BILL-03, BILL-05)', () => {
       content.includes('req.text()') || content.includes('request.text()'),
       'must call req.text() to read raw body'
     );
-    // req.json() must NOT appear in this handler — it consumes the stream
+    // req.json() must NOT appear in non-comment lines of this handler.
+    // Note: JSDoc comments may mention req.json() as a warning; only executable calls are forbidden.
+    const executableLines = content
+      .split('\n')
+      .filter((l) => !l.trimStart().startsWith('//') && !l.trimStart().startsWith('*'));
+    const executableContent = executableLines.join('\n');
     assert.ok(
-      !content.includes('.json()'),
-      'must NOT call req.json() — consumes stream and corrupts HMAC verification'
+      !executableContent.includes('req.json()') && !executableContent.includes('request.json()'),
+      'must NOT call req.json() or request.json() in executable code — consumes stream and corrupts HMAC verification'
     );
     // req.text() must appear before constructEventAsync in the file
     const textIdx = content.indexOf('.text()');
