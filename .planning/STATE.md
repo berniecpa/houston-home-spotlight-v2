@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
+status: Awaiting next milestone
 stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-06-14T23:25:42.604Z"
-last_activity: 2026-06-14
+last_updated: "2026-06-15T14:34:32.275Z"
+last_activity: 2026-06-15 — Milestone v1.0 completed and archived
 progress:
   total_phases: 6
   completed_phases: 6
@@ -25,12 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-10)
 
 ## Current Position
 
-Phase: 06
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-06-14
-
-Progress: [█████████▌] 95%
+Phase: Milestone v1.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-15 — Milestone v1.0 completed and archived
 
 ## Performance Metrics
 
@@ -141,3 +139,21 @@ Items acknowledged and carried forward from previous milestone close:
 Last session: 2026-06-14T22:55:21.689Z
 Stopped at: Completed 06-03-PLAN.md
 Resume file: None
+
+## Deferred Items (v1.0 close — 2026-06-15)
+
+Acknowledged at milestone close; accepted as tracked tech debt (autonomous-run deferred live validation). Full checklists in per-phase *-UAT.md.
+
+| Category | Item | Status |
+|----------|------|--------|
+| uat | Phase 02 — 11 live auth scenarios | pending |
+| uat | Phase 03 — 5 live Stripe scenarios | pending |
+| uat | Phase 04 — 10 live listings/leads scenarios | pending |
+| uat | Phase 05 — 9 live admin/profile scenarios | pending |
+| uat | Phase 06 — 9 live AI-video scenarios | pending |
+| verification | Phases 02-06 VERIFICATION status human_needed (code-verified; live deferred) | pending |
+| product | WR-05 lead gating on paused listings; WR-06 invoice.paid not resurrecting lapsed | confirm |
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone

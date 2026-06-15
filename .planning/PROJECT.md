@@ -100,6 +100,10 @@ The move to Firebase Auth + Cloudflare D1 means the site can no longer be fully 
 | Static export → dynamic (Cloudflare Workers) | Required for auth, D1 queries, and Stripe webhooks at runtime | — Pending |
 
 ## Evolution
+### v1.0 MVP — shipped 2026-06-15
+
+All 6 phases code-complete; 37/37 v1 requirements implemented and code-verified; cross-phase integration clean; 1282 automated tests passing. Live-service validation (Firebase Auth, Stripe billing, Resend email, Kie.ai/HiggsField video, live D1/cron) is DEFERRED and tracked as UAT in milestones/ + per-phase *-UAT.md. Next: provision external services, apply migrations 0002–0005, deploy, and run the UAT checklists to validate end-to-end before public launch.
+
 
 This document evolves at phase transitions and milestone boundaries.
 
@@ -117,4 +121,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-10 after initialization*
+*Last updated: 2026-06-15 after v1.0 milestone*

@@ -164,13 +164,15 @@ None — no new security surface beyond what the plan's threat model covers. All
 
 ## Self-Check
 
-- [ ] src/lib/admin.ts exists and exports requireAdmin/listAgentsPaginated/setAgentSuspended/getPlatformStats
-- [ ] src/app/api/admin/agents/route.ts exists (GET paginated agents)
-- [ ] src/app/api/admin/agents/[id]/route.ts exists (PATCH suspend)
-- [ ] src/app/api/admin/stats/route.ts exists (GET stats)
-- [ ] src/app/(admin)/admin/agents/page.tsx exists (force-dynamic, AgentRow, pagination)
-- [ ] src/app/(admin)/admin/stats/page.tsx exists (force-dynamic, 4 stat cards)
-- [ ] src/components/admin/AgentRow.tsx exists ('use client', toggle)
-- [ ] Commits: 2222e94, 2f21184, b7b6639
-- [ ] Suite: 1120 pass / 0 fail
-- [ ] Typecheck: clean
+- [x] src/lib/admin.ts exists and exports requireAdmin/listAgentsPaginated/setAgentSuspended/getPlatformStats
+- [x] src/app/api/admin/agents/route.ts exists (GET paginated agents)
+- [x] src/app/api/admin/agents/[id]/route.ts exists (PATCH suspend)
+- [x] src/app/api/admin/stats/route.ts exists (GET stats)
+- [x] src/app/(admin)/admin/agents/page.tsx exists (force-dynamic, AgentRow, pagination)
+- [x] src/app/(admin)/admin/stats/page.tsx exists (force-dynamic, 4 stat cards)
+- [x] src/components/admin/AgentRow.tsx exists ('use client', toggle)
+- [x] Commits: 2222e94, 2f21184, b7b6639
+- [x] Suite: 1120 pass / 0 fail
+- [x] Typecheck: clean
+
+## Self-Check: PASSED
