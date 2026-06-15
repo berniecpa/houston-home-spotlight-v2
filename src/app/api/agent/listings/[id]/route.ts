@@ -39,8 +39,8 @@ import {
   type ListingUpdateFields,
 } from '@/lib/listings-db';
 
-/** Runtime must be edge for Cloudflare Workers compatibility */
-export const runtime = 'edge';
+// No `runtime = 'edge'`: @opennextjs/cloudflare runs routes on the Node.js
+// runtime (workerd) and rejects edge-runtime functions during bundling.
 
 /**
  * Shared route context type: Next.js 15 async params.

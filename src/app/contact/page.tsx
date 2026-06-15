@@ -15,7 +15,7 @@
 
 import type { Metadata } from 'next';
 import { InquiryForm } from '@/components/InquiryForm';
-import { siteConfig } from '../layout';
+import { siteConfig } from '@/lib/site-config';
 
 export const metadata: Metadata = {
   title: 'Contact | Houston Home Spotlight',

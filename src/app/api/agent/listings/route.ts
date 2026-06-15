@@ -41,8 +41,8 @@ import {
   type ListingWriteFields,
 } from '@/lib/listings-db';
 
-/** Runtime must be edge for Cloudflare Workers compatibility */
-export const runtime = 'edge';
+// No `runtime = 'edge'`: @opennextjs/cloudflare runs routes on the Node.js
+// runtime (workerd) and rejects edge-runtime functions during bundling.
 
 /**
  * Derive a URL-safe slug from a title and address.
@@ -76,10 +76,9 @@ function slugify(title: string, address: string): string {
  * Returns id, title, slug, address, price, beds, baths, status, created_at
  * for the dashboard listings table.  Ordered newest-first.
  *
- * @param _request - Incoming GET request (no body needed)
  * @returns { success: boolean, listings: OwnListing[] }
  */
-export async function GET(_request: NextRequest): Promise<NextResponse> {
+export async function GET(): Promise<NextResponse> {
   try {
     // --- 1. Session authentication (T-04-08: uid from session, not body) ---
     const cookieStore = await cookies();

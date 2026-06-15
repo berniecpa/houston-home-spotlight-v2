@@ -3,6 +3,7 @@ import { Inter, Merriweather } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { siteConfig } from "@/lib/site-config";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -16,30 +17,6 @@ const merriweather = Merriweather({
   display: "swap",
   variable: "--font-merriweather",
 });
-
-/**
- * Site configuration
- */
-export const siteConfig = {
-  name: "Houston Home Spotlight",
-  description: "Discover beautiful homes for sale in Houston. Browse featured listings and connect with Bernard, your local real estate expert.",
-  url: "https://houstonhomespotlight.com",
-  ogImage: "https://houstonhomespotlight.com/og-image.jpg",
-  twitterHandle: "@nbeliterealty",
-  author: "NB Elite Realty",
-  keywords: [
-    "Houston real estate",
-    "Houston homes for sale",
-    "Houston realtor",
-    "Houston property listings",
-    "buy home Houston",
-    "sell home Houston",
-    "Houston luxury homes",
-    "Harris County real estate",
-    "Fort Bend County homes",
-    "Houston TX real estate agent",
-  ],
-};
 
 /**
  * Viewport configuration for mobile-first design

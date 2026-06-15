@@ -30,8 +30,8 @@ import { getTokens } from 'next-firebase-auth-edge';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { authEdgeConfig } from '@/lib/auth-edge';
 
-/** Runtime must be edge for Cloudflare Workers compatibility */
-export const runtime = 'edge';
+// No `runtime = 'edge'`: @opennextjs/cloudflare runs routes on the Node.js
+// runtime (workerd) and rejects edge-runtime functions during bundling.
 
 /**
  * Returns true only when `raw` parses as a URL with an http(s) scheme.
@@ -63,7 +63,7 @@ function isSafeHttpUrl(raw: string): boolean {
  * @param displayName - The agent's display_name field value
  * @returns A URL-safe base slug (without collision suffix)
  */
-export function slugifyName(displayName: string): string {
+function slugifyName(displayName: string): string {
   const base = displayName
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')

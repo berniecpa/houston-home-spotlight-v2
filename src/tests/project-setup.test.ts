@@ -39,11 +39,11 @@ describe('Project Setup', () => {
       assert.ok(existsSync(pagePath), 'src/app/page.tsx should exist');
     });
 
-    it('should have proper metadata in layout', () => {
-      const layoutPath = join(projectRoot, 'src', 'app', 'layout.tsx');
-      const layoutContent = readFileSync(layoutPath, 'utf-8');
-      assert.ok(layoutContent.includes('Houston Home Spotlight'), 'Layout should have Houston Home Spotlight title');
-      assert.ok(layoutContent.includes('NB Elite Realty'), 'Layout should mention NB Elite Realty');
+    it('should have proper site metadata', () => {
+      const siteConfigPath = join(projectRoot, 'src', 'lib', 'site-config.ts');
+      const siteConfigContent = readFileSync(siteConfigPath, 'utf-8');
+      assert.ok(siteConfigContent.includes('Houston Home Spotlight'), 'siteConfig should have Houston Home Spotlight title');
+      assert.ok(siteConfigContent.includes('NB Elite Realty'), 'siteConfig should mention NB Elite Realty');
     });
   });
 

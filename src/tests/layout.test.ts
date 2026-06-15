@@ -179,8 +179,10 @@ describe('Layout Components - US-006', () => {
     it('should preserve metadata configuration', () => {
       const content = fs.readFileSync(layoutPath, 'utf-8');
       assert.ok(content.includes('export const metadata'), 'Should export metadata');
-      assert.ok(content.includes('Houston Home Spotlight'), 'Should have site title');
-      assert.ok(content.includes('NB Elite Realty'), 'Should mention NB Elite Realty');
+      assert.ok(content.includes('siteConfig'), 'Metadata should be derived from siteConfig');
+      const siteConfigContent = fs.readFileSync(path.join(projectRoot, 'src/lib/site-config.ts'), 'utf-8');
+      assert.ok(siteConfigContent.includes('Houston Home Spotlight'), 'siteConfig should have site title');
+      assert.ok(siteConfigContent.includes('NB Elite Realty'), 'siteConfig should mention NB Elite Realty');
     });
 
     it('should preserve font configuration', () => {

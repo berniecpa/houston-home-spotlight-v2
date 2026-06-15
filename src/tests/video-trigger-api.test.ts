@@ -43,10 +43,10 @@ describe('video/route.ts — POST trigger', () => {
     );
   });
 
-  it("declares runtime = 'edge'", () => {
+  it("does NOT declare runtime = 'edge'", () => {
     assert.ok(
-      trigger.includes("export const runtime = 'edge'"),
-      "video/route.ts must declare export const runtime = 'edge'"
+      !trigger.includes("export const runtime = 'edge'"),
+      "video/route.ts must NOT declare runtime = 'edge' — @opennextjs/cloudflare uses the Node.js runtime"
     );
   });
 
@@ -237,10 +237,10 @@ describe('video-status/route.ts — GET status endpoint', () => {
     );
   });
 
-  it("declares runtime = 'edge'", () => {
+  it("does NOT declare runtime = 'edge'", () => {
     assert.ok(
-      statusRoute.includes("export const runtime = 'edge'"),
-      "video-status/route.ts must declare export const runtime = 'edge'"
+      !statusRoute.includes("export const runtime = 'edge'"),
+      "video-status/route.ts must NOT declare runtime = 'edge' — @opennextjs/cloudflare uses the Node.js runtime"
     );
   });
 

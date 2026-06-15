@@ -24,9 +24,11 @@ import type { ProfileFormValues } from '@/components/dashboard/ProfileForm';
 /**
  * Force per-request dynamic rendering on the Cloudflare Worker (CR-02) so the
  * cookie/D1 reads run in the worker binding context, not at static eval time.
+ *
+ * No `runtime = 'edge'`: @opennextjs/cloudflare runs pages on the Node.js
+ * runtime (workerd) and rejects edge-runtime pages.
  */
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 /** Page metadata */
 export const metadata: Metadata = {

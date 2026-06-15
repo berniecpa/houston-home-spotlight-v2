@@ -48,10 +48,10 @@ import {
 } from '@/lib/video/jobs';
 import { submitWithFallback } from '@/lib/video/provider';
 import type { VideoEnv } from '@/lib/video/provider';
-import { siteConfig } from '@/app/layout';
+import { siteConfig } from '@/lib/site-config';
 
-/** Runtime must be edge for Cloudflare Workers compatibility */
-export const runtime = 'edge';
+// No `runtime = 'edge'`: @opennextjs/cloudflare runs routes on the Node.js
+// runtime (workerd) and rejects edge-runtime functions during bundling.
 
 /**
  * Route context: Next.js 15 async params.

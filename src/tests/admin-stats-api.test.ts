@@ -73,25 +73,25 @@ describe('admin API routes — file existence', () => {
 // Edge runtime
 // ────────────────────────────────────────────────────────────────────────────
 
-describe('admin API routes — edge runtime', () => {
-  it("agents list route exports runtime = 'edge'", () => {
+describe('admin API routes — Node.js runtime (no edge)', () => {
+  it('agents list route does NOT export an edge runtime', () => {
     assert.ok(
-      agentsListSrc.includes("runtime = 'edge'") || agentsListSrc.includes('runtime="edge"'),
-      "src/app/api/admin/agents/route.ts must export runtime = 'edge' for Cloudflare Workers"
+      !agentsListSrc.includes('export const runtime'),
+      'src/app/api/admin/agents/route.ts must NOT export an edge runtime — @opennextjs/cloudflare runs routes on the Node.js runtime'
     );
   });
 
-  it("suspend route exports runtime = 'edge'", () => {
+  it('suspend route does NOT export an edge runtime', () => {
     assert.ok(
-      suspendSrc.includes("runtime = 'edge'") || suspendSrc.includes('runtime="edge"'),
-      "src/app/api/admin/agents/[id]/route.ts must export runtime = 'edge'"
+      !suspendSrc.includes('export const runtime'),
+      'src/app/api/admin/agents/[id]/route.ts must NOT export an edge runtime'
     );
   });
 
-  it("stats route exports runtime = 'edge'", () => {
+  it('stats route does NOT export an edge runtime', () => {
     assert.ok(
-      statsSrc.includes("runtime = 'edge'") || statsSrc.includes('runtime="edge"'),
-      "src/app/api/admin/stats/route.ts must export runtime = 'edge'"
+      !statsSrc.includes('export const runtime'),
+      'src/app/api/admin/stats/route.ts must NOT export an edge runtime'
     );
   });
 });

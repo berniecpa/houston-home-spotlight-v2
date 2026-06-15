@@ -130,10 +130,10 @@ describe('listings-db.ts — helpers and security', () => {
 // /api/agent/listings/route.ts (GET + POST)
 // ---------------------------------------------------------------------------
 describe('/api/agent/listings/route.ts — GET + POST', () => {
-  it('exports runtime = edge', () => {
+  it('does NOT export runtime = edge', () => {
     assert.ok(
-      route.includes("export const runtime = 'edge'"),
-      'route.ts must export runtime = edge'
+      !route.includes("export const runtime = 'edge'"),
+      'route.ts must NOT export runtime = edge — @opennextjs/cloudflare uses the Node.js runtime'
     );
   });
 
@@ -247,10 +247,10 @@ describe('/api/agent/listings/route.ts — GET + POST', () => {
 // /api/agent/listings/[id]/route.ts (PUT + DELETE + PATCH)
 // ---------------------------------------------------------------------------
 describe('/api/agent/listings/[id]/route.ts — PUT + DELETE + PATCH', () => {
-  it('exports runtime = edge', () => {
+  it('does NOT export runtime = edge', () => {
     assert.ok(
-      idRoute.includes("export const runtime = 'edge'"),
-      '[id]/route.ts must export runtime = edge'
+      !idRoute.includes("export const runtime = 'edge'"),
+      '[id]/route.ts must NOT export runtime = edge — @opennextjs/cloudflare uses the Node.js runtime'
     );
   });
 

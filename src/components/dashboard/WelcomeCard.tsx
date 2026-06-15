@@ -17,7 +17,7 @@
 
 import Link from 'next/link';
 import { ProfileCompletionBar } from '@/components/dashboard/ProfileCompletionBar';
-import { isProfileComplete, completionPercent } from '@/lib/profile';
+import { isProfileComplete } from '@/lib/profile';
 import type { AgentProfileFields } from '@/lib/profile';
 
 /** WelcomeCard component props */
@@ -46,7 +46,6 @@ function firstName(displayName: string | null | undefined): string {
  */
 export function WelcomeCard({ agent }: WelcomeCardProps): JSX.Element {
   const profileDone = isProfileComplete(agent);
-  const pct = completionPercent(agent);
 
   return (
     <div>

@@ -165,8 +165,9 @@ export function createHiggsAdapter(credentials: string): VideoProvider {
   return {
     name: 'higgsfield',
 
-    // callbackUrl accepted for interface compat; not used (poller-only, RESEARCH A3)
-    submit(imageUrl: string, _callbackUrl: string): Promise<string> {
+    // callbackUrl param omitted; HiggsField is poller-only (RESEARCH A3).
+    // Structurally still satisfies VideoProvider.submit(imageUrl, callbackUrl).
+    submit(imageUrl: string): Promise<string> {
       return higgsSubmit(imageUrl, credentials);
     },
 

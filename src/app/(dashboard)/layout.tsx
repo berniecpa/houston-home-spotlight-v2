@@ -38,11 +38,13 @@ import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 
 /**
  * Force per-request dynamic rendering on the Cloudflare Worker (CR-02).
- * Without these, this cookie- and D1-reading segment can be evaluated
+ * Without this, this cookie- and D1-reading segment can be evaluated
  * outside the worker binding context, making the fail-open path reachable.
+ *
+ * No `runtime = 'edge'`: @opennextjs/cloudflare runs pages on the Node.js
+ * runtime (workerd) and rejects edge-runtime pages.
  */
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 /** Agent profile fields read from D1 for the completeness gate and suspension check */
 interface AgentGateRow {

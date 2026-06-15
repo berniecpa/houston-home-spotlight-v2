@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { siteConfig } from "../layout";
+import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "All Listings | Houston Home Spotlight",

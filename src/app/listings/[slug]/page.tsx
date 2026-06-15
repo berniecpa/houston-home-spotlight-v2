@@ -17,7 +17,7 @@ import { PhotoGallery } from '@/components/PhotoGallery';
 import { InquiryForm } from '@/components/InquiryForm';
 import { getListingBySlug } from '@/lib/data';
 import { Listing } from '@/types';
-import { siteConfig } from '@/app/layout';
+import { siteConfig } from '@/lib/site-config';
 
 /**
  * Generate metadata for the listing detail page

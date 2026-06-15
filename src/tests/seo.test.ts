@@ -35,13 +35,15 @@ describe('SEO and Metadata Configuration - US-017', () => {
     });
 
     it('should have siteConfig export with required fields', () => {
-      assert.ok(layoutContent.includes('export const siteConfig'), 'Layout should export siteConfig');
-      assert.ok(layoutContent.includes('name:'), 'siteConfig should have name');
-      assert.ok(layoutContent.includes('description:'), 'siteConfig should have description');
-      assert.ok(layoutContent.includes('url:'), 'siteConfig should have url');
-      assert.ok(layoutContent.includes('ogImage:'), 'siteConfig should have ogImage');
-      assert.ok(layoutContent.includes('twitterHandle:'), 'siteConfig should have twitterHandle');
-      assert.ok(layoutContent.includes('keywords:'), 'siteConfig should have keywords array');
+      const siteConfigPath = path.join(projectRoot, 'src/lib/site-config.ts');
+      const siteConfigContent = fs.readFileSync(siteConfigPath, 'utf-8');
+      assert.ok(siteConfigContent.includes('export const siteConfig'), 'site-config.ts should export siteConfig');
+      assert.ok(siteConfigContent.includes('name:'), 'siteConfig should have name');
+      assert.ok(siteConfigContent.includes('description:'), 'siteConfig should have description');
+      assert.ok(siteConfigContent.includes('url:'), 'siteConfig should have url');
+      assert.ok(siteConfigContent.includes('ogImage:'), 'siteConfig should have ogImage');
+      assert.ok(siteConfigContent.includes('twitterHandle:'), 'siteConfig should have twitterHandle');
+      assert.ok(siteConfigContent.includes('keywords:'), 'siteConfig should have keywords array');
     });
 
     it('should have comprehensive metadata export', () => {
@@ -166,11 +168,11 @@ describe('SEO and Metadata Configuration - US-017', () => {
     const listingPagePath = path.join(projectRoot, 'src/app/listings/[slug]/page.tsx');
     const listingPageContent = fs.readFileSync(listingPagePath, 'utf-8');
 
-    it('should import siteConfig from layout', () => {
+    it('should import siteConfig from the site-config module', () => {
       assert.ok(
-        listingPageContent.includes("import { siteConfig } from '@/app/layout'") ||
-        listingPageContent.includes('import { siteConfig } from "@/app/layout"'),
-        'Listing page should import siteConfig'
+        listingPageContent.includes("import { siteConfig } from '@/lib/site-config'") ||
+        listingPageContent.includes('import { siteConfig } from "@/lib/site-config"'),
+        'Listing page should import siteConfig from @/lib/site-config'
       );
     });
 
@@ -260,8 +262,8 @@ describe('SEO and Metadata Configuration - US-017', () => {
   });
 
   describe('SEO Keywords Coverage', () => {
-    const layoutPath = path.join(projectRoot, 'src/app/layout.tsx');
-    const layoutContent = fs.readFileSync(layoutPath, 'utf-8');
+    const siteConfigPath = path.join(projectRoot, 'src/lib/site-config.ts');
+    const siteConfigContent = fs.readFileSync(siteConfigPath, 'utf-8');
 
     it('should have Houston real estate keywords', () => {
       const keywords = [
@@ -269,10 +271,10 @@ describe('SEO and Metadata Configuration - US-017', () => {
         'Houston homes for sale',
         'Houston realtor',
       ];
-      
+
       for (const keyword of keywords) {
         assert.ok(
-          layoutContent.toLowerCase().includes(keyword.toLowerCase()),
+          siteConfigContent.toLowerCase().includes(keyword.toLowerCase()),
           `Keywords should include "${keyword}"`
         );
       }
@@ -280,7 +282,7 @@ describe('SEO and Metadata Configuration - US-017', () => {
 
     it('should have location-specific keywords', () => {
       assert.ok(
-        layoutContent.includes('Harris County') || layoutContent.includes('Fort Bend'),
+        siteConfigContent.includes('Harris County') || siteConfigContent.includes('Fort Bend'),
         'Keywords should include service area locations'
       );
     });

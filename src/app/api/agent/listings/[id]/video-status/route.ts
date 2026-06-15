@@ -19,8 +19,8 @@ import { getTokens } from 'next-firebase-auth-edge';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { authEdgeConfig } from '@/lib/auth-edge';
 
-/** Runtime must be edge for Cloudflare Workers compatibility */
-export const runtime = 'edge';
+// No `runtime = 'edge'`: @opennextjs/cloudflare runs routes on the Node.js
+// runtime (workerd) and rejects edge-runtime functions during bundling.
 
 /**
  * Route context: Next.js 15 async params.

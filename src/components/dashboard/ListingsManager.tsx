@@ -211,9 +211,11 @@ export function ListingsManager({
         startPolling(listingId);
       }
     }
-    // Cleanup: clear all intervals on unmount (T-06-10)
+    // Cleanup: clear all intervals on unmount (T-06-10).
+    // Snapshot the ref so cleanup clears the same map instance (lint: ref-in-cleanup).
+    const intervals = pollIntervalsRef.current;
     return () => {
-      for (const listingId of Object.keys(pollIntervalsRef.current)) {
+      for (const listingId of Object.keys(intervals)) {
         clearPoll(listingId);
       }
     };

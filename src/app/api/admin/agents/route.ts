@@ -29,8 +29,8 @@ import {
   ADMIN_PAGE_SIZE,
 } from '@/lib/admin';
 
-/** Runtime must be edge for Cloudflare Workers compatibility */
-export const runtime = 'edge';
+// No `runtime = 'edge'`: @opennextjs/cloudflare runs routes on the Node.js
+// runtime (workerd) and rejects edge-runtime functions during bundling.
 
 /**
  * GET handler — paginated agent list for the admin panel.
