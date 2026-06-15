@@ -138,39 +138,44 @@ describe('data.ts — AGENT_VISIBLE_SQL applied to public listing reads (T-05-01
 // ---------------------------------------------------------------------------
 // leads/route.ts — AGENT_VISIBLE_SQL in listing-lookup gate
 // ---------------------------------------------------------------------------
-describe('leads/route.ts — AGENT_VISIBLE_SQL in listing-lookup gate (T-05-02)', () => {
-  it('imports AGENT_VISIBLE_SQL from @/lib/subscription', () => {
+describe('leads/route.ts — lead-capture path is intentionally NOT visibility-gated (WR-05 product decision)', () => {
+  // WR-05: a good-faith buyer inquiry is captured + the agent notified even
+  // when the listing is hidden from public browse (paused/lapsed/suspended).
+  // The buyer still cannot SEE the listing — data.ts keeps the AGENT_VISIBLE_SQL
+  // gate on the public read path (asserted above). The lead lookup resolves by
+  // slug only, so an inquiry from a stale/bookmarked page is never dropped.
+  it('does NOT gate the listing lookup on AGENT_VISIBLE_SQL', () => {
     assert.ok(
-      leadsRoute.includes("import { AGENT_VISIBLE_SQL } from '@/lib/subscription'"),
-      'leads/route.ts must import AGENT_VISIBLE_SQL for the listing-lookup gate'
+      !leadsRoute.includes('AGENT_VISIBLE_SQL'),
+      'leads/route.ts lead-capture lookup must NOT apply AGENT_VISIBLE_SQL (WR-05: capture leads on hidden listings)'
     );
   });
 
-  it('does NOT import bare AGENT_PUBLISHABLE_SQL', () => {
+  it('does NOT gate the listing lookup on subscription/publishable SQL', () => {
     assert.ok(
-      !leadsRoute.includes("import { AGENT_PUBLISHABLE_SQL }"),
-      'leads/route.ts must not import AGENT_PUBLISHABLE_SQL directly — use AGENT_VISIBLE_SQL'
+      !leadsRoute.includes('AGENT_PUBLISHABLE_SQL'),
+      'leads/route.ts must not apply the subscription gate to the lead-capture lookup'
     );
   });
 
-  it('uses AGENT_VISIBLE_SQL in the listing-lookup JOIN query', () => {
+  it('resolves the listing strictly by slug (T-04-11: never a body-supplied id)', () => {
     assert.ok(
-      leadsRoute.includes('AGENT_VISIBLE_SQL'),
-      'leads/route.ts must reference AGENT_VISIBLE_SQL in the slug-to-listing JOIN'
+      leadsRoute.includes('WHERE l.slug = ?'),
+      'leads/route.ts must resolve the listing by slug bind, not a body-supplied UUID'
     );
   });
 
-  it('still joins agents table in listing lookup', () => {
+  it('still joins agents table to obtain the notification email', () => {
     assert.ok(
       leadsRoute.includes('JOIN agents a ON l.agent_id = a.id'),
-      'leads/route.ts must JOIN agents in the listing lookup to enable AGENT_VISIBLE_SQL'
+      'leads/route.ts must JOIN agents to resolve agent_email for the Resend notification'
     );
   });
 
-  it('still returns Listing not found when slug has no visible listing', () => {
+  it('still returns Listing not found when the slug resolves to no listing at all', () => {
     assert.ok(
       leadsRoute.includes('Listing not found'),
-      'leads/route.ts must return "Listing not found." when the suspended/lapsed listing lookup returns null'
+      'leads/route.ts must return "Listing not found." when the slug matches no listing row'
     );
   });
 });

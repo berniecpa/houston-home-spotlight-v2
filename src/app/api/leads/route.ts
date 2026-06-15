@@ -23,7 +23,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import type { LeadFormData, LeadSubmissionResponse } from '@/types';
 import { sendLeadEmail, sendToPerfex } from '@/lib/leads';
-import { AGENT_VISIBLE_SQL } from '@/lib/subscription';
 
 /**
  * D1 row returned by the listing-lookup JOIN
@@ -78,20 +77,21 @@ export async function POST(
       // ── LISTING INQUIRY PATH ──────────────────────────────────────────────
 
       // Resolve listing_id + agent_id + agent_email + address from slug.
-      // NEVER trust a body-supplied UUID — T-04-11 spoofing mitigation.
-      // WR-05: apply the same status + visibility gate as the public read
-      // path (getListingBySlug) so a paused / lapsed / suspended listing
-      // returns "Listing not found." and records no lead — keeping the
-      // inquiry path consistent with what the buyer can actually see.
-      // AGENT_VISIBLE_SQL enforces both the subscription gate (Phase 3)
-      // and the suspension gate (Phase 5, T-05-02).
+      // NEVER trust a body-supplied UUID — T-04-11 spoofing mitigation (resolve
+      // strictly by slug, never a body-supplied id).
+      // WR-05 (product decision): a good-faith buyer inquiry is CAPTURED and the
+      // listing agent is NOTIFIED even when the listing is currently hidden from
+      // public browse (paused / lapsed / suspended) — e.g. a stale or bookmarked
+      // page. The buyer still cannot SEE the listing: the public read path
+      // (getListingBySlug in data.ts) keeps applying the subscription+suspension
+      // visibility gate and 404s the detail page. Visibility is therefore
+      // intentionally NOT gated here — any existing slug resolves so the lead is
+      // never silently dropped.
       const listingRow = await env.DB.prepare(
         `SELECT l.id, l.agent_id, a.email AS agent_email, l.address
          FROM listings l
          JOIN agents a ON l.agent_id = a.id
-         WHERE l.slug = ?
-           AND l.status = 'active'
-           AND ${AGENT_VISIBLE_SQL}`
+         WHERE l.slug = ?`
       )
         .bind(body.listingSlug.trim())
         .first<ListingLookupRow>();

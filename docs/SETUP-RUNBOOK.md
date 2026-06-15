@@ -67,8 +67,8 @@ First live Kie.ai job: set `VIDEO_CALLBACK_DEBUG=true` once to confirm the callb
 
 ## Step 5 — Product decisions (resolved in code; see commit log)
 
-- **WR-05** — paused/lapsed listing inquiries: {DECISION_WR05}
-- **WR-06** — `invoice.paid` reactivating a lapsed agent: {DECISION_WR06}
+- **WR-05** — paused/lapsed listing inquiries: **Capture, do not block.** A buyer inquiry on a hidden (paused/lapsed/suspended) listing is still saved to D1 and emails the agent; the buyer still cannot view the listing (detail page 404s). Lead lookup resolves by slug without the visibility gate.
+- **WR-06** — `invoice.paid` reactivating a lapsed agent: **Stay lapsed (unchanged).** A late `invoice.paid` does not reactivate a lapsed agent — reactivation requires a new subscription.
 
 ---
 
