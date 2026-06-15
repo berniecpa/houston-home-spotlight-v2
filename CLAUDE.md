@@ -14,7 +14,7 @@ A Houston-area real estate marketplace where licensed agents pay a monthly subsc
 - **Auth**: Firebase Auth — Bernard's preference; not Clerk/NextAuth/Supabase Auth
 - **Database**: Cloudflare D1 (SQLite) — must stay in Cloudflare ecosystem; not Postgres/Supabase/PlanetScale
 - **Billing**: Stripe — subscriptions, webhooks, customer portal
-- **Deployment**: Cloudflare Pages + Workers — existing; `@cloudflare/next-on-pages` adapter required for dynamic routes
+- **Deployment**: Cloudflare Workers via `@opennextjs/cloudflare` (OpenNext) — runs on the Node.js/workerd runtime; do NOT add `runtime = 'edge'` exports
 - **Photos v1**: URL paste only — no file upload, no R2; keeps complexity low
 - **Public UX**: Existing buyer-facing listing browse/detail experience must not regress
 - **Bernard's access**: Platform owner/admin — does not pay subscription; admin role via Firebase Auth custom claim
@@ -45,8 +45,8 @@ A Houston-area real estate marketplace where licensed agents pay a monthly subsc
 - React DOM ^18 - DOM bindings
 - `next dev` - Development server
 - `next build` - Production build
-- `@cloudflare/next-on-pages` ^1.13.12 - Cloudflare Pages adapter (used for `pages:build`)
-- `wrangler` (via npx) - Cloudflare Pages deployment
+- `@opennextjs/cloudflare` ^1.19.11 - OpenNext Cloudflare adapter (used for `cf:build`)
+- `wrangler` ^4.99.0 - Cloudflare Workers deployment (`cf:deploy`)
 
 ## Styling
 
@@ -107,9 +107,8 @@ A Houston-area real estate marketplace where licensed agents pay a monthly subsc
 
 - Node.js 20.11.0
 - npm (no Yarn/pnpm lockfile present)
-- Cloudflare Pages (static hosting)
-- No server-side runtime required for pages (static export)
-- API routes (`src/app/api/`) run as Cloudflare Workers via `@cloudflare/next-on-pages`
+- Cloudflare Workers (via `@opennextjs/cloudflare`)
+- Pages and API routes (`src/app/api/`) run on the Cloudflare Workers (Node.js/workerd) runtime; no `runtime = 'edge'` exports
 
 <!-- GSD:stack-end -->
 
@@ -317,7 +316,7 @@ A Houston-area real estate marketplace where licensed agents pay a monthly subsc
 
 ## Architectural Constraints
 
-- **Static export:** `output: 'export'` means no SSR at request time. The `/api/leads` route only functions when deployed to a platform with edge/serverless support (Cloudflare Pages via `@cloudflare/next-on-pages`). Raw static hosting cannot serve API routes.
+- **OpenNext Cloudflare adapter:** the app is built with `@opennextjs/cloudflare` (`cf:build`) and deployed to Cloudflare Workers (`cf:deploy`); pages and API routes (e.g. `/api/leads`) run on the Node.js/workerd runtime. Do NOT add `runtime = 'edge'` exports — OpenNext rejects edge-runtime functions during bundling.
 - **Image optimization disabled:** `images: { unoptimized: true }` in `next.config.mjs` — no Next.js image optimization pipeline.
 - **Global state:** Module-level `listingsCache` in `src/lib/data.ts` persists across requests in server/build context. Export `clearListingsCache()` is provided for test teardown.
 - **Circular imports:** None detected.
