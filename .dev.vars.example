@@ -1,0 +1,38 @@
+# .dev.vars.example — Cloudflare Workers LOCAL dev secrets
+# Copy to .dev.vars (gitignored) for `npm run cf:preview` / `wrangler dev`.
+# In PRODUCTION set each of these with: wrangler secret put <NAME>
+#
+# NOTE: NEXT_PUBLIC_FIREBASE_* are NOT here — they are build-time public values
+# inlined via wrangler.toml [vars] (see .env.local.example / wrangler.toml).
+# DB (D1) is a binding in wrangler.toml, not a secret.
+
+# ── Firebase Admin (server-side token verification) ──────────────────────────
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
+
+# ── Session cookie signing (openssl rand -base64 32) ─────────────────────────
+COOKIE_SECRET_CURRENT=
+COOKIE_SECRET_PREVIOUS=
+
+# ── Stripe (billing) ─────────────────────────────────────────────────────────
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...        # from `stripe listen` or Dashboard webhook
+STRIPE_PRICE_ID=price_...              # the $79/mo recurring Price
+
+# ── Resend (lead email) ──────────────────────────────────────────────────────
+RESEND_API_KEY=re_...
+LEAD_FROM_EMAIL=leads@yourdomain.com   # must be DNS-verified in Resend
+ADMIN_NOTIFY_EMAIL=bernardcpa@gmail.com
+
+# ── Perfex CRM (legacy lead dual-write — optional) ───────────────────────────
+PERFEX_RE_URL=https://your-perfex-instance.com
+PERFEX_RE_KEY=your-perfex-api-key
+
+# ── AI video (Phase 6) ───────────────────────────────────────────────────────
+KIE_API_KEY=                           # https://kie.ai/api-key
+KIE_WEBHOOK_SECRET=                    # https://kie.ai/settings webhookHmacKey (same value)
+HIGGSFIELD_API_KEY=KEY_ID:KEY_SECRET   # https://platform.higgsfield.ai console
+
+# ── Optional ─────────────────────────────────────────────────────────────────
+# VIDEO_CALLBACK_DEBUG=true            # logs raw Kie.ai callback body once (first live job)
