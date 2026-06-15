@@ -39,6 +39,15 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+            <Link
+              href="/login"
+              className="text-gray-600 hover:text-primary-900 font-medium transition-colors duration-200 py-2"
+            >
+              Agent Login
+            </Link>
+            <Link href="/register" className="btn-primary">
+              List Your Property
+            </Link>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -94,6 +103,24 @@ export default function Header() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link
+                  href="/login"
+                  className="block px-4 py-3 min-h-[44px] flex items-center text-gray-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Agent Login
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/register"
+                  className="block px-4 py-3 min-h-[44px] flex items-center text-primary-900 hover:bg-gray-50 rounded-lg font-semibold transition-colors duration-200"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  List Your Property
+                </Link>
+              </li>
             </ul>
           </nav>
         </div>
