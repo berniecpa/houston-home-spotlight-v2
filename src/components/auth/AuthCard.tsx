@@ -48,7 +48,7 @@ export function AuthCard({ title, subtitle, children }: AuthCardProps): JSX.Elem
         width={512}
         height={512}
         priority
-        className="h-16 w-auto mb-6"
+        className="h-11 w-auto mb-6"
       />
 
       {/* Page title */}

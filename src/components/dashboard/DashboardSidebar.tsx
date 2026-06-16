@@ -136,7 +136,7 @@ export function DashboardSidebar({
               alt="Houston Home Spotlight"
               width={512}
               height={512}
-              className="h-12 w-auto rounded-lg bg-white p-1.5"
+              className="h-8 w-auto rounded-lg bg-white p-1.5"
             />
           </Link>
 

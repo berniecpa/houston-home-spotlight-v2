@@ -32,7 +32,7 @@ export default function Footer() {
                 alt="Houston Home Spotlight"
                 width={512}
                 height={512}
-                className="h-20 w-auto rounded-lg bg-white p-2"
+                className="h-12 w-auto rounded-lg bg-white p-2"
               />
             </Link>
             <p className="text-gray-400 leading-relaxed max-w-sm">
