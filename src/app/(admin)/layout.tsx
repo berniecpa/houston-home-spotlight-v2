@@ -124,18 +124,25 @@ export default async function AdminLayout({
         </nav>
 
         {/* Sidebar footer */}
-        <div className="p-4 border-t border-red-700 space-y-3">
-          <LogoutButton className="w-full flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-medium text-red-100 bg-red-900/40 hover:bg-red-700 hover:text-white transition-colors touch-target disabled:opacity-60 disabled:cursor-not-allowed" />
+        <div className="p-4 border-t border-red-700">
           <p className="text-xs text-red-300 text-center">
             Platform Administration
           </p>
         </div>
       </aside>
 
-      {/* Main content area */}
-      <main className="flex-1 overflow-auto p-8">
-        {children}
-      </main>
+      {/* Main content area with top bar */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 h-14 flex-shrink-0">
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700">
+            ADMIN
+          </span>
+          <LogoutButton className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-red-700 hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" />
+        </header>
+        <main className="flex-1 overflow-auto p-8">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

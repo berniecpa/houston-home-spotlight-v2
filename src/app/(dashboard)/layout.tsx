@@ -35,6 +35,7 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { authEdgeConfig } from '@/lib/auth-edge';
 import { isProfileComplete } from '@/lib/profile';
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 
 /**
  * Force per-request dynamic rendering on the Cloudflare Worker (CR-02).
@@ -153,6 +154,9 @@ export default async function DashboardLayout({
             </span>
           </div>
         )}
+        <header className="flex items-center justify-end border-b border-gray-200 bg-white px-6 h-14 flex-shrink-0">
+          <LogoutButton className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-primary-700 hover:bg-primary-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" />
+        </header>
         <main className="flex-1 overflow-auto p-8">
           {children}
         </main>
