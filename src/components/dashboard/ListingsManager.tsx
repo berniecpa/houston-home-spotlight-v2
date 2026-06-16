@@ -25,6 +25,24 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { ListingForm } from '@/components/dashboard/ListingForm';
 
+/** A single row outcome from POST /api/agent/listings/import */
+interface ImportRowResult {
+  row: number;
+  success: boolean;
+  id?: string;
+  slug?: string;
+  reason?: string;
+}
+
+/** Response shape from POST /api/agent/listings/import */
+interface ImportResponse {
+  success: boolean;
+  imported?: number;
+  failed?: number;
+  results?: ImportRowResult[];
+  message?: string;
+}
+
 /** A single listing row returned by GET /api/agent/listings */
 export interface OwnListing {
   /** listings.id — UUID primary key */
@@ -113,6 +131,11 @@ export function ListingsManager({
   const [showForm, setShowForm] = useState(false);
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [editingListing, setEditingListing] = useState<OwnListing | null>(null);
+
+  // CSV import state
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResults, setImportResults] = useState<ImportRowResult[] | null>(null);
+  const importFileRef = useRef<HTMLInputElement>(null);
 
   // Per-listing video state: listingId -> VideoRowState
   // Initialised from server-loaded video_status/video_url so persisted state
@@ -402,6 +425,52 @@ export function ListingsManager({
     }
   }
 
+  /**
+   * Handle CSV file selection and upload to /api/agent/listings/import.
+   * Reads the chosen file, POSTs it as FormData, then shows per-row results
+   * and refreshes the listings table on partial or full success.
+   */
+  async function handleImportCsv(
+    e: React.ChangeEvent<HTMLInputElement>
+  ): Promise<void> {
+    const file = e.target.files?.[0];
+    // Reset file input so the same file can be re-selected after a run
+    if (importFileRef.current) importFileRef.current.value = '';
+    if (!file) return;
+
+    setIsImporting(true);
+    setImportResults(null);
+    setActionError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/agent/listings/import', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = (await res.json()) as ImportResponse;
+
+      if (!res.ok) {
+        setActionError(data.message ?? 'Import failed. Please try again.');
+        return;
+      }
+
+      setImportResults(data.results ?? []);
+
+      // Refresh table if at least one row was imported
+      if ((data.imported ?? 0) > 0) {
+        await refreshListings();
+      }
+    } catch {
+      setActionError('Network error during import. Please try again.');
+    } finally {
+      setIsImporting(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -414,14 +483,34 @@ export function ListingsManager({
             Manage your property listings
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleCreate}
-          disabled={isLoading}
-          className="btn-primary touch-target"
-        >
-          + Create listing
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Hidden file input for CSV import */}
+          <input
+            ref={importFileRef}
+            type="file"
+            accept=".csv"
+            className="sr-only"
+            aria-label="Choose CSV file to import"
+            onChange={(e) => void handleImportCsv(e)}
+          />
+          <button
+            type="button"
+            onClick={() => importFileRef.current?.click()}
+            disabled={isImporting || isLoading}
+            className="btn-accent touch-target"
+            aria-label="Import listings from CSV file"
+          >
+            {isImporting ? 'Importing…' : 'Import CSV'}
+          </button>
+          <button
+            type="button"
+            onClick={handleCreate}
+            disabled={isLoading}
+            className="btn-primary touch-target"
+          >
+            + Create listing
+          </button>
+        </div>
       </div>
 
       {/* Action error banner */}
@@ -432,6 +521,35 @@ export function ListingsManager({
           aria-live="assertive"
         >
           {actionError}
+        </div>
+      )}
+
+      {/* CSV import results panel */}
+      {importResults !== null && (
+        <div className="card p-4 space-y-2" role="region" aria-label="CSV import results">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-sm text-gray-900">Import Results</h3>
+            <button
+              type="button"
+              onClick={() => setImportResults(null)}
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors touch-target"
+              aria-label="Dismiss import results"
+            >
+              Dismiss
+            </button>
+          </div>
+          <ul className="text-sm space-y-1 max-h-48 overflow-y-auto">
+            {importResults.map((r) => (
+              <li
+                key={r.row}
+                className={r.success ? 'text-green-700' : 'text-red-600'}
+              >
+                {r.success
+                  ? `Row ${r.row}: imported (${r.slug ?? r.id})`
+                  : `Row ${r.row}: failed — ${r.reason}`}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
