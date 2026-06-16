@@ -35,10 +35,10 @@ PERFEX_RE_URL = ""
 
 # Firebase client-side config (NEXT_PUBLIC_ vars are statically inlined at cf:build time)
 # These are public values — safe to store in [vars]
-NEXT_PUBLIC_FIREBASE_API_KEY = ""
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = ""
-NEXT_PUBLIC_FIREBASE_PROJECT_ID = ""
-NEXT_PUBLIC_FIREBASE_APP_ID = ""
+NEXT_PUBLIC_FIREBASE_API_KEY = "AIzaSyDocfTlyIYEz3zpJvjjOoRhryFl1s7EybQ"
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = "houston-home-spotlight.firebaseapp.com"
+NEXT_PUBLIC_FIREBASE_PROJECT_ID = "houston-home-spotlight"
+NEXT_PUBLIC_FIREBASE_APP_ID = "1:571219982121:web:f9bea6db65f819302fe938"
 
 # Firebase server-side (service account) — set via wrangler secret put, NEVER in [vars]
 # wrangler secret put FIREBASE_PROJECT_ID
