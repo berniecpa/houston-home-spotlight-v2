@@ -225,6 +225,34 @@ export async function replaceImages(
 }
 
 /**
+ * Return a slug that is not already in the given `taken` set.
+ *
+ * If `base` is not taken, returns it unchanged. Otherwise appends a
+ * hyphenated numeric suffix (starting at 1) until the result is unique
+ * within the batch. Used by the CSV import route to deduplicate slugs
+ * within a single CSV batch before attempting the D1 insert; the
+ * listings.slug UNIQUE constraint is the authoritative DB backstop.
+ *
+ * Example:
+ *   taken = { 'my-house', 'my-house-1' }
+ *   makeUniqueSlug('my-house', taken) → 'my-house-2'
+ *
+ * @param base  URL-safe base slug (from slugify)
+ * @param taken Set of slugs already committed or reserved in this batch
+ * @returns     A slug not present in `taken`
+ */
+export function makeUniqueSlug(base: string, taken: Set<string>): string {
+  if (!taken.has(base)) return base;
+  let counter = 1;
+  let candidate = `${base}-${counter}`;
+  while (taken.has(candidate)) {
+    counter++;
+    candidate = `${base}-${counter}`;
+  }
+  return candidate;
+}
+
+/**
  * Delete a listing row from D1.
  *
  * Listing images are automatically removed via ON DELETE CASCADE on the
