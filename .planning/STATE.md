@@ -28,7 +28,13 @@ See: .planning/PROJECT.md (updated 2026-06-10)
 Phase: Milestone v1.0 complete
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-06-15 — Milestone v1.0 completed and archived
+Last activity: 2026-06-16 — Completed quick task 260616-okh: CSV listings import
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260616-okh | CSV listings import (agents + admin, comma-separated image URLs) | 2026-06-16 | f76461c | [260616-okh-add-csv-listings-import-agents-admin-com](./quick/260616-okh-add-csv-listings-import-agents-admin-com/) |
 
 ## Performance Metrics
 
