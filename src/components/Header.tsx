@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,15 +18,19 @@ export default function Header() {
       <div className="container-custom">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 group">
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary-900 to-primary-700 rounded-lg flex items-center justify-center">
-              <span className="text-white font-serif font-bold text-lg md:text-xl">NB</span>
-            </div>
-            <div className="hidden sm:block">
-              <span className="font-serif font-bold text-lg md:text-xl text-gray-900 group-hover:text-primary-900 transition-colors">
-                Houston Home Spotlight
-              </span>
-            </div>
+          <Link
+            href="/"
+            className="flex items-center"
+            aria-label="Houston Home Spotlight — home"
+          >
+            <Image
+              src="/logo.png"
+              alt="Houston Home Spotlight"
+              width={512}
+              height={512}
+              priority
+              className="h-12 w-auto md:h-16"
+            />
           </Link>
 
           {/* Desktop Navigation */}

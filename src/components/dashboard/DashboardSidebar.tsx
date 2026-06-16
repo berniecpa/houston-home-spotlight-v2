@@ -26,6 +26,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 /** DashboardSidebar component props */
@@ -129,9 +130,15 @@ export function DashboardSidebar({
       >
         {/* Sidebar header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-primary-700">
-          <span className="font-serif font-semibold text-lg leading-snug">
-            Houston Home Spotlight
-          </span>
+          <Link href="/" aria-label="Houston Home Spotlight — home">
+            <Image
+              src="/logo.png"
+              alt="Houston Home Spotlight"
+              width={512}
+              height={512}
+              className="h-12 w-auto rounded-lg bg-white p-1.5"
+            />
+          </Link>
 
           {/* Close button — mobile only */}
           <button

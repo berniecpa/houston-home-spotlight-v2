@@ -51,8 +51,8 @@ describe('Layout Components - US-006', () => {
 
     it('should have logo branding', () => {
       const content = fs.readFileSync(headerPath, 'utf-8');
-      assert.ok(content.includes('NB'), 'Should display NB logo text');
-      assert.ok(content.includes('Houston Home Spotlight'), 'Should display site name');
+      assert.ok(content.includes('/logo.png'), 'Should reference the logo image');
+      assert.ok(content.includes('Houston Home Spotlight'), 'Should label the logo with the site name');
     });
 
     it('should be responsive with mobile-first classes', () => {

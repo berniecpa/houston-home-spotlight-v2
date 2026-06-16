@@ -15,6 +15,7 @@
  */
 
 import React from 'react';
+import Image from 'next/image';
 
 /**
  * Props for the AuthCard component
@@ -41,9 +42,14 @@ export function AuthCard({ title, subtitle, children }: AuthCardProps): JSX.Elem
   return (
     <div className="card max-w-md w-full mx-4 p-8">
       {/* Site branding */}
-      <p className="text-primary-900 font-semibold text-sm mb-6">
-        Houston Home Spotlight
-      </p>
+      <Image
+        src="/logo.png"
+        alt="Houston Home Spotlight"
+        width={512}
+        height={512}
+        priority
+        className="h-16 w-auto mb-6"
+      />
 
       {/* Page title */}
       <h1 className="font-serif text-2xl font-semibold leading-snug text-gray-900 mb-2">

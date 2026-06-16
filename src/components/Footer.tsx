@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -21,13 +22,18 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
           {/* Brand Column */}
           <div className="space-y-4">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-                <span className="text-white font-serif font-bold text-xl">NB</span>
-              </div>
-              <span className="font-serif font-bold text-xl text-white">
-                Houston Home Spotlight
-              </span>
+            <Link
+              href="/"
+              className="inline-flex items-center"
+              aria-label="Houston Home Spotlight — home"
+            >
+              <Image
+                src="/logo.png"
+                alt="Houston Home Spotlight"
+                width={512}
+                height={512}
+                className="h-20 w-auto rounded-lg bg-white p-2"
+              />
             </Link>
             <p className="text-gray-400 leading-relaxed max-w-sm">
               Discover beautiful homes for sale in Houston. Your trusted partner in finding the perfect property.
