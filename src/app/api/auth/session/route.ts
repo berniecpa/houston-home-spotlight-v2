@@ -141,8 +141,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // --- Mint the HttpOnly __session cookie ---
-    // setAuthCookies(headers, options) -> NextResponse (confirmed v1.12.0 API)
-    const response = await setAuthCookies(request.headers, {
+    // setAuthCookies reads the ID token from the Authorization header (not the
+    // request body), so forward the already-verified token there. Without this
+    // it returns 400 "Missing token" for every login. (next-firebase-auth-edge
+    // v1.12.0: lib/next/cookies setAuthCookies -> headers.get('Authorization'))
+    const cookieHeaders = new Headers(request.headers);
+    cookieHeaders.set('Authorization', `Bearer ${idToken}`);
+    const response = await setAuthCookies(cookieHeaders, {
       ...authEdgeConfig,
     });
 
