@@ -161,15 +161,15 @@ describe('InquiryForm Component - US-012', () => {
       );
     });
 
-    it('should mark description as optional', () => {
+    it('should mark description optional by default, required via the requireMessage prop', () => {
       const content = readFileSync(COMPONENT_PATH, 'utf-8');
       assert.ok(
         content.includes('(optional)'),
-        'Description should be marked as optional'
+        'Description should show an (optional) label when not required'
       );
       assert.ok(
-        content.includes('aria-required="false"') && content.includes('id="description"'),
-        'Description should have aria-required="false"'
+        content.includes("requireMessage ? 'true' : 'false'") && content.includes('id="description"'),
+        'Description aria-required should be driven by the requireMessage prop'
       );
     });
   });

@@ -3,7 +3,7 @@ import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "All Listings | Houston Home Spotlight",
-  description: "Browse all available homes for sale in Houston. Filter by price, bedrooms, and more to find your perfect home.",
+  description: "Browse Houston area homes for sale. Filter by price, bedrooms, and neighborhood to find properties worth a closer look.",
   keywords: [
     "Houston homes for sale",
     "Houston real estate listings",

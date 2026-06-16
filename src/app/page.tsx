@@ -33,14 +33,13 @@ export default async function Home(): Promise<JSX.Element> {
             <div className="max-w-3xl mx-auto text-center">
               {/* Headline */}
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-                Find Your Dream Home in{" "}
-                <span className="text-accent-400">Houston</span>
+                Houston Homes in the{" "}
+                <span className="text-accent-400">Spotlight</span>
               </h1>
 
               {/* Subheadline */}
               <p className="text-lg sm:text-xl md:text-2xl text-primary-100 mb-8 leading-relaxed max-w-2xl mx-auto">
-                Discover beautiful homes for sale in Houston&apos;s most desirable neighborhoods. 
-                Let Bernard help you find the perfect property.
+                Featured properties across Houston&apos;s most sought-after neighborhoods.
               </p>
 
               {/* CTA Buttons */}
@@ -69,7 +68,7 @@ export default async function Home(): Promise<JSX.Element> {
                   href="/contact"
                   className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white border-2 border-white/30 rounded-lg hover:bg-white/10 transition-colors duration-200 w-full sm:w-auto"
                 >
-                  Contact Bernard
+                  Submit a Property
                 </Link>
               </div>
             </div>
@@ -102,7 +101,7 @@ export default async function Home(): Promise<JSX.Element> {
               Featured Listings
             </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-              Handpicked properties that stand out for their quality, location, and value.
+              Recently featured properties selected for quality, location, and value.
             </p>
           </div>
 
@@ -147,118 +146,75 @@ export default async function Home(): Promise<JSX.Element> {
         </div>
       </section>
 
-      {/* Why Work With Me Section */}
+      {/* Neighborhoods We Cover Section */}
       <section className="py-12 sm:py-16 md:py-20 bg-white">
         <div className="container-custom">
           <div className="text-center mb-10 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary-900 mb-4">
-              Why Work With Bernard?
+              Neighborhoods We Cover
             </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-              Your trusted partner in finding the perfect Houston home.
+              From inner-loop historic districts to master-planned suburban
+              communities — homes across the Houston metro.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {/* Feature 1 */}
-            <div className="text-center p-6">
-              <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-7 h-7 text-primary-700"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                  />
-                </svg>
+            {[
+              {
+                title: 'Inner Loop & Midtown',
+                areas: 'Montrose, Museum District, EaDo, Midtown, Heights.',
+                blurb: 'Walkable living close to downtown.',
+              },
+              {
+                title: 'Southwest Houston',
+                areas: 'Sugar Land, Missouri City, Stafford, Sharpstown.',
+                blurb: 'Established communities in Fort Bend and southwest Harris County.',
+              },
+              {
+                title: 'Northwest Houston',
+                areas: 'Cypress, Katy, Jersey Village, Copperfield.',
+                blurb: 'Top-rated schools and family-friendly neighborhoods.',
+              },
+              {
+                title: 'Southeast & Clear Lake',
+                areas: 'Pearland, League City, Clear Lake, Friendswood.',
+                blurb: 'Space-industry corridor with strong community amenities.',
+              },
+            ].map((n) => (
+              <div
+                key={n.title}
+                className="card p-6 h-full border border-gray-100"
+              >
+                <div className="w-11 h-11 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
+                  <svg
+                    className="w-6 h-6 text-primary-700"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  {n.title}
+                </h3>
+                <p className="text-sm text-gray-700 mb-2">{n.areas}</p>
+                <p className="text-sm text-gray-500">{n.blurb}</p>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Local Expertise
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Deep knowledge of Houston neighborhoods and market trends.
-              </p>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="text-center p-6">
-              <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-7 h-7 text-primary-700"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Responsive Service
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Quick responses and dedicated support throughout your journey.
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="text-center p-6">
-              <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-7 h-7 text-primary-700"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Trusted Advisor
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Honest guidance focused on your best interests.
-              </p>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="text-center p-6">
-              <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-7 h-7 text-primary-700"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Curated Selection
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Access to exclusive listings and off-market properties.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -268,17 +224,17 @@ export default async function Home(): Promise<JSX.Element> {
         <div className="container-custom">
           <div className="text-center max-w-3xl mx-auto">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
-              Ready to Find Your Perfect Home?
+              Have a Property Worth Showcasing?
             </h2>
             <p className="text-primary-100 text-base sm:text-lg mb-8">
-              Let&apos;s discuss what you&apos;re looking for. I&apos;ll help you navigate 
-              the Houston market and find a home that fits your lifestyle.
+              Houston Home Spotlight features standout listings from agents across
+              the metro. Submit a property for consideration.
             </p>
             <Link
               href="/contact"
               className="btn-accent inline-flex items-center text-lg px-8 py-4"
             >
-              Get in Touch
+              Submit a Listing
               <svg
                 className="ml-2 w-5 h-5"
                 fill="none"

@@ -19,13 +19,13 @@ import { siteConfig } from '@/lib/site-config';
 
 export const metadata: Metadata = {
   title: 'Contact | Houston Home Spotlight',
-  description: 'Get in touch with NB Elite Realty. Contact Bernard for all your Houston real estate needs.',
+  description: 'Have a question about a listing? Interested in featuring a property? Get in touch with Houston Home Spotlight.',
   keywords: [
-    'contact Houston realtor',
-    'Houston real estate agent',
-    'NB Elite Realty contact',
-    'buy home Houston contact',
-    'sell home Houston',
+    'contact Houston Home Spotlight',
+    'Houston real estate inquiry',
+    'feature a Houston listing',
+    'Houston property question',
+    'submit a listing Houston',
   ],
   alternates: {
     canonical: '/contact',
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     type: 'website',
     url: `${siteConfig.url}/contact`,
     title: 'Contact | Houston Home Spotlight',
-    description: 'Get in touch with NB Elite Realty. Contact Bernard for all your Houston real estate needs.',
+    description: 'Have a question about a listing? Interested in featuring a property? Get in touch with Houston Home Spotlight.',
     images: [
       {
         url: siteConfig.ogImage,
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     site: siteConfig.twitterHandle,
     creator: siteConfig.twitterHandle,
     title: 'Contact | Houston Home Spotlight',
-    description: 'Get in touch with NB Elite Realty.',
+    description: 'Questions about a featured property or interested in having a listing showcased? Get in touch.',
     images: [siteConfig.ogImage],
   },
 };
@@ -69,8 +69,8 @@ export default function ContactPage(): JSX.Element {
             Get In Touch
           </h1>
           <p className="text-primary-100 text-lg md:text-xl max-w-2xl mx-auto">
-            Ready to find your dream home? I&apos;m here to help you navigate 
-            the Houston real estate market.
+            Questions about a featured property or interested in having a listing
+            showcased? Reach out below.
           </p>
         </div>
       </section>
@@ -86,8 +86,9 @@ export default function ContactPage(): JSX.Element {
                   Contact Information
                 </h2>
                 <p className="text-gray-600 mb-8">
-                  Whether you&apos;re buying, selling, or just exploring the market, 
-                  I&apos;m here to provide expert guidance every step of the way.
+                  Houston Home Spotlight features curated residential listings across
+                  Harris and Fort Bend counties. For property inquiries or listing
+                  submissions, use the form below or reach out directly.
                 </p>
               </div>
 
@@ -204,9 +205,13 @@ export default function ContactPage(): JSX.Element {
                 Send a Message
               </h2>
               <p className="text-gray-600 mb-6">
-                Fill out the form below and I&apos;ll get back to you as soon as possible.
+                Send us a message and we&apos;ll respond within one business day.
               </p>
-              <InquiryForm />
+              <InquiryForm
+                requireMessage
+                showInquiryType
+                messagePlaceholder="Tell us about your inquiry — property question, listing submission, or general feedback."
+              />
             </div>
           </div>
         </div>

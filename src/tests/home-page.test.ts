@@ -80,15 +80,15 @@ describe("Home Page", () => {
       );
     });
 
-    it("should have a headline with 'Find Your Dream Home in Houston'", () => {
+    it("should have a headline with 'Houston Homes in the Spotlight'", () => {
       const content = readFileSync(pagePath, "utf-8");
       assert.ok(
-        content.includes("Find Your Dream Home in") || content.includes("Find Your Dream Home in Houston"),
+        content.includes("Houston Homes in the") && content.includes("Spotlight"),
         "Should have main headline"
       );
       assert.ok(
         content.includes("Houston") || content.includes("text-accent-400"),
-        "Should highlight Houston"
+        "Should highlight the accent word"
       );
     });
 
@@ -120,8 +120,8 @@ describe("Home Page", () => {
         "Should have link to /contact"
       );
       assert.ok(
-        content.includes("Contact Bernard"),
-        "Should have Contact Bernard CTA text"
+        content.includes("Submit a Property"),
+        "Should have Submit a Property CTA text"
       );
     });
   });
@@ -229,19 +229,19 @@ describe("Home Page", () => {
   });
 
   describe("Additional Sections", () => {
-    it("should have a 'Why Work With Me' section", () => {
+    it("should have a 'Neighborhoods We Cover' section", () => {
       const content = readFileSync(pagePath, "utf-8");
       assert.ok(
-        content.includes("Why Work With Bernard") || content.includes("Why Work With Me"),
-        "Should have Why Work With section"
+        content.includes("Neighborhoods We Cover"),
+        "Should have Neighborhoods We Cover section"
       );
     });
 
     it("should have a final CTA section", () => {
       const content = readFileSync(pagePath, "utf-8");
       assert.ok(
-        content.includes("Ready to Find Your Perfect Home") ||
-        content.includes("Get in Touch"),
+        content.includes("Have a Property Worth Showcasing") ||
+        content.includes("Submit a Listing"),
         "Should have final CTA section"
       );
     });

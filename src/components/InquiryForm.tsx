@@ -28,7 +28,16 @@ interface InquiryFormProps {
   listingSlug?: string;
   /** Optional callback called after successful submission */
   onSuccess?: () => void;
+  /** Require the message field (used by the general /contact form). Default false. */
+  requireMessage?: boolean;
+  /** Show the Inquiry Type dropdown (used by the general /contact form). Default false. */
+  showInquiryType?: boolean;
+  /** Placeholder text for the message textarea. */
+  messagePlaceholder?: string;
 }
+
+/** Inquiry-type options for the general contact form */
+const INQUIRY_TYPES = ['Property Question', 'Listing Submission', 'General'] as const;
 
 /**
  * Form submission status
@@ -80,11 +89,18 @@ function isValidPhone(phone: string): boolean {
  * @param {InquiryFormProps} props - Component props
  * @returns {JSX.Element} The inquiry form
  */
-export function InquiryForm({ listingSlug, onSuccess }: InquiryFormProps): JSX.Element {
+export function InquiryForm({
+  listingSlug,
+  onSuccess,
+  requireMessage = false,
+  showInquiryType = false,
+  messagePlaceholder = "Tell us more about what you're looking for...",
+}: InquiryFormProps): JSX.Element {
   const [formData, setFormData] = useState<LeadFormData>({
     ...initialFormState,
     listingSlug: listingSlug || ''
   });
+  const [inquiryType, setInquiryType] = useState<string>(INQUIRY_TYPES[0]);
   const [errors, setErrors] = useState<FormErrors>({});
   const [status, setStatus] = useState<SubmitStatus>('idle');
   const [statusMessage, setStatusMessage] = useState<string>('');
@@ -130,6 +146,10 @@ export function InquiryForm({ listingSlug, onSuccess }: InquiryFormProps): JSX.E
       newErrors.phonenumber = 'Please enter a valid phone number';
     }
 
+    if (requireMessage && !formData.description.trim()) {
+      newErrors.description = 'Message is required';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -153,12 +173,21 @@ export function InquiryForm({ listingSlug, onSuccess }: InquiryFormProps): JSX.E
     setStatus('loading');
 
     try {
+      // Fold the inquiry type into the message so the lead carries it without
+      // a schema/API change (the /api/leads route forwards `description` as-is).
+      const payload: LeadFormData = showInquiryType
+        ? {
+            ...formData,
+            description: `Inquiry Type: ${inquiryType}\n\n${formData.description}`.trim(),
+          }
+        : formData;
+
       const response = await fetch('/api/leads', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
 
       const result: LeadSubmissionResponse = await response.json();
@@ -172,6 +201,7 @@ export function InquiryForm({ listingSlug, onSuccess }: InquiryFormProps): JSX.E
           ...initialFormState,
           listingSlug: listingSlug || ''
         });
+        setInquiryType(INQUIRY_TYPES[0]);
 
         // Call success callback if provided
         if (onSuccess) {
@@ -432,13 +462,49 @@ export function InquiryForm({ listingSlug, onSuccess }: InquiryFormProps): JSX.E
           )}
         </div>
 
-        {/* Description */}
+        {/* Inquiry Type (general contact form only) */}
+        {showInquiryType && (
+          <div>
+            <label
+              htmlFor="inquiryType"
+              className="block text-sm font-medium text-gray-700 mb-1.5"
+            >
+              Inquiry Type
+            </label>
+            <select
+              id="inquiryType"
+              name="inquiryType"
+              value={inquiryType}
+              onChange={(e) => setInquiryType(e.target.value)}
+              disabled={status === 'loading'}
+              className="
+                w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white
+                focus:ring-2 focus:ring-primary-500 focus:border-primary-500
+                disabled:bg-gray-100 disabled:cursor-not-allowed
+                transition-colors duration-200
+              "
+            >
+              {INQUIRY_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Description / Message */}
         <div>
-          <label 
-            htmlFor="description" 
+          <label
+            htmlFor="description"
             className="block text-sm font-medium text-gray-700 mb-1.5"
           >
-            Message <span className="text-gray-400 font-normal">(optional)</span>
+            Message{' '}
+            {requireMessage ? (
+              <span className="text-red-500" aria-hidden="true">*</span>
+            ) : (
+              <span className="text-gray-400 font-normal">(optional)</span>
+            )}
           </label>
           <textarea
             id="description"
@@ -447,16 +513,27 @@ export function InquiryForm({ listingSlug, onSuccess }: InquiryFormProps): JSX.E
             onChange={handleChange}
             disabled={status === 'loading'}
             rows={4}
-            className="
-              w-full px-4 py-2.5 rounded-lg border border-gray-300
+            className={`
+              w-full px-4 py-2.5 rounded-lg border
               focus:ring-2 focus:ring-primary-500 focus:border-primary-500
               disabled:bg-gray-100 disabled:cursor-not-allowed
               transition-colors duration-200
               resize-none
-            "
-            placeholder="Tell us more about what you're looking for..."
-            aria-required="false"
+              ${errors.description
+                ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                : 'border-gray-300'
+              }
+            `}
+            placeholder={messagePlaceholder}
+            aria-required={requireMessage ? 'true' : 'false'}
+            aria-invalid={errors.description ? 'true' : 'false'}
+            aria-describedby={errors.description ? 'description-error' : undefined}
           />
+          {errors.description && (
+            <p id="description-error" className="mt-1.5 text-sm text-red-600">
+              {errors.description}
+            </p>
+          )}
         </div>
 
         {/* Required Fields Note */}

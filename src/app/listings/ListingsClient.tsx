@@ -115,7 +115,7 @@ export default function ListingsClient({ initialListings }: ListingsClientProps)
 
               {/* Page Title */}
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3">
-                Houston Area Homes for Sale
+                Houston Area Homes
               </h1>
 
               {/* Results Summary */}
@@ -161,9 +161,9 @@ export default function ListingsClient({ initialListings }: ListingsClientProps)
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No listings available</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No listings yet</h3>
               <p className="text-gray-600">
-                Check back soon for new properties in the Houston area.
+                New listings are added regularly. Check back soon or submit a property to be featured.
               </p>
             </div>
           )}

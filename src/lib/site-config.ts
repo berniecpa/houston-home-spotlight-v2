@@ -13,7 +13,7 @@
 /** Site-wide constants used for metadata, OpenGraph, Twitter cards, and JSON-LD. */
 export const siteConfig = {
   name: "Houston Home Spotlight",
-  description: "Discover beautiful homes for sale in Houston. Browse featured listings and connect with Bernard, your local real estate expert.",
+  description: "Houston's curated real estate showcase. Browse featured listings, explore neighborhoods, and find standout properties across Harris and Fort Bend counties.",
   url: "https://houstonhomespotlight.com",
   ogImage: "https://houstonhomespotlight.com/og-image.jpg",
   twitterHandle: "@nbeliterealty",

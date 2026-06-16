@@ -280,8 +280,8 @@ describe('Listings Page (RSC + ListingsClient)', () => {
     it('should have page title', () => {
       const content = readFileSync(CLIENT_FILE, 'utf-8');
       assert.ok(
-        content.includes('Houston Area Homes for Sale'),
-        "Should have page title 'Houston Area Homes for Sale'"
+        content.includes('Houston Area Homes'),
+        "Should have page title 'Houston Area Homes'"
       );
     });
 

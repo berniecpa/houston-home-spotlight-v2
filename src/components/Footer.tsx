@@ -36,7 +36,7 @@ export default function Footer() {
               />
             </Link>
             <p className="text-gray-400 leading-relaxed max-w-sm">
-              Discover beautiful homes for sale in Houston. Your trusted partner in finding the perfect property.
+              Houston&apos;s curated real estate showcase. Standout homes across Harris and Fort Bend counties.
             </p>
           </div>
 
