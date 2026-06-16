@@ -5,6 +5,12 @@ main = "./custom-worker.ts"
 compatibility_date = "2024-12-30"
 compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
 
+# NOTE: To serve houstonhomespotlight.com from this Worker, add it as a
+# Custom Domain in the Cloudflare dashboard (Workers & Pages → this worker →
+# Settings → Domains & Routes). The dashboard moves it off the old Pages
+# project and rewrites the apex DNS record automatically. Adding it here as a
+# `routes` custom_domain fails via CLI because the OAuth token lacks DNS edit.
+
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"
@@ -30,7 +36,7 @@ migrations_table = "d1_migrations"
 crons = ["*/5 * * * *"]
 
 [vars]
-PERFEX_RE_URL = ""
+PERFEX_RE_URL = "https://customerhub.affordablehousingfinders.com"
 # PERFEX_RE_KEY must be set via: wrangler secret put PERFEX_RE_KEY
 
 # Firebase client-side config (NEXT_PUBLIC_ vars are statically inlined at cf:build time)
