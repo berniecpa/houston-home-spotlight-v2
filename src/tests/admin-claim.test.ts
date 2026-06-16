@@ -186,7 +186,7 @@ describe('admin route shell files exist', () => {
     );
   });
 
-  it('src/app/(admin)/admin/page.tsx exists with correct placeholder copy', () => {
+  it('src/app/(admin)/admin/page.tsx renders the platform overview', () => {
     const pagePath = join(SRC_DIR, 'app', '(admin)', 'admin', 'page.tsx');
     let content: string;
     try {
@@ -204,8 +204,8 @@ describe('admin route shell files exist', () => {
     );
 
     assert.ok(
-      content.includes('Admin tools coming in Phase 5'),
-      'Admin page must include the Phase 5 placeholder copy per UI-SPEC Copywriting Contract'
+      content.includes('getPlatformStats') && content.includes('Manage Agents'),
+      'Admin landing must show the platform overview (getPlatformStats) and link to the admin tools'
     );
   });
 });

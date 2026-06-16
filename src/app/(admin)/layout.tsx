@@ -34,6 +34,7 @@
 
 import { notFound } from 'next/navigation';
 import { requireAdmin, isAdminRejection } from '@/lib/admin';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 
 /**
  * Force per-request dynamic rendering on the Cloudflare Worker so the
@@ -123,7 +124,8 @@ export default async function AdminLayout({
         </nav>
 
         {/* Sidebar footer */}
-        <div className="p-4 border-t border-red-700">
+        <div className="p-4 border-t border-red-700 space-y-3">
+          <LogoutButton className="w-full flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-medium text-red-100 bg-red-900/40 hover:bg-red-700 hover:text-white transition-colors touch-target disabled:opacity-60 disabled:cursor-not-allowed" />
           <p className="text-xs text-red-300 text-center">
             Platform Administration
           </p>

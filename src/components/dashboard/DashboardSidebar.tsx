@@ -28,6 +28,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 
 /** DashboardSidebar component props */
 export interface DashboardSidebarProps {
@@ -289,17 +290,18 @@ export function DashboardSidebar({
           </ul>
         </nav>
 
-        {/* Footer — profile completion indicator */}
-        {!isProfileComplete && (
-          <div className="px-4 py-4 border-t border-primary-800">
+        {/* Footer — profile completion indicator + sign out */}
+        <div className="px-4 py-4 border-t border-primary-800 space-y-3">
+          {!isProfileComplete && (
             <Link
               href="/dashboard/profile"
               className="block text-sm text-primary-300 hover:text-white transition-colors"
             >
               Complete your profile &rarr;
             </Link>
-          </div>
-        )}
+          )}
+          <LogoutButton className="w-full flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-medium text-white bg-primary-800 hover:bg-primary-700 transition-colors min-h-[44px] disabled:opacity-60 disabled:cursor-not-allowed" />
+        </div>
       </aside>
     </>
   );
