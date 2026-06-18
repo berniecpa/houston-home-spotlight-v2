@@ -493,6 +493,14 @@ export function ListingsManager({
             aria-label="Choose CSV file to import"
             onChange={(e) => void handleImportCsv(e)}
           />
+          <a
+            href="/listing-template.csv"
+            download="listing-template.csv"
+            className="text-primary-600 hover:text-primary-800 font-medium text-sm transition-colors touch-target flex items-center"
+            aria-label="Download CSV import template"
+          >
+            Download template
+          </a>
           <button
             type="button"
             onClick={() => importFileRef.current?.click()}

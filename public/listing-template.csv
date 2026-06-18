@@ -1,0 +1,3 @@
+title,address,price,beds,baths,sqft,city,state,zip,description,featured,images
+"Charming Heights Bungalow","123 Heights Blvd",450000,3,2,1800,Houston,TX,77008,"Beautifully restored historic bungalow in the Heights with original hardwood floors.",1,"https://example.com/photo1.jpg,https://example.com/photo2.jpg"
+"Modern Montrose Condo","456 Westheimer Rd",325000,2,2,1200,Houston,TX,77006,"Sleek condo walking distance to dining and nightlife.",0,"https://example.com/photo3.jpg"
