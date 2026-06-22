@@ -52,21 +52,28 @@ export default function Header({ isAuthenticated = false }: HeaderProps) {
               </Link>
             ))}
             {isAuthenticated ? (
-              <LogoutButton
-                label="Agent Logout"
-                className="text-gray-600 hover:text-primary-900 font-medium transition-colors duration-200 py-2 disabled:opacity-50"
-              />
+              <>
+                <LogoutButton
+                  label="Logout"
+                  className="text-gray-600 hover:text-primary-900 font-medium transition-colors duration-200 py-2 disabled:opacity-50"
+                />
+                <Link href="/dashboard" className="btn-primary">
+                  Dashboard
+                </Link>
+              </>
             ) : (
-              <Link
-                href="/login"
-                className="text-gray-600 hover:text-primary-900 font-medium transition-colors duration-200 py-2"
-              >
-                Agent Login
-              </Link>
+              <>
+                <Link
+                  href="/login"
+                  className="text-gray-600 hover:text-primary-900 font-medium transition-colors duration-200 py-2"
+                >
+                  Agent Login
+                </Link>
+                <Link href="/register" className="btn-primary">
+                  List Your Property
+                </Link>
+              </>
             )}
-            <Link href="/register" className="btn-primary">
-              List Your Property
-            </Link>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -122,31 +129,46 @@ export default function Header({ isAuthenticated = false }: HeaderProps) {
                   </Link>
                 </li>
               ))}
-              <li>
-                {isAuthenticated ? (
-                  <LogoutButton
-                    label="Agent Logout"
-                    className="w-full text-left px-4 py-3 min-h-[44px] flex items-center text-gray-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50"
-                  />
-                ) : (
-                  <Link
-                    href="/login"
-                    className="block px-4 py-3 min-h-[44px] flex items-center text-gray-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Agent Login
-                  </Link>
-                )}
-              </li>
-              <li>
-                <Link
-                  href="/register"
-                  className="block px-4 py-3 min-h-[44px] flex items-center text-primary-900 hover:bg-gray-50 rounded-lg font-semibold transition-colors duration-200"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  List Your Property
-                </Link>
-              </li>
+              {isAuthenticated ? (
+                <>
+                  <li>
+                    <Link
+                      href="/dashboard"
+                      className="block px-4 py-3 min-h-[44px] flex items-center text-gray-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                  </li>
+                  <li>
+                    <LogoutButton
+                      label="Logout"
+                      className="w-full text-left px-4 py-3 min-h-[44px] flex items-center text-gray-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50"
+                    />
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <Link
+                      href="/login"
+                      className="block px-4 py-3 min-h-[44px] flex items-center text-gray-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Agent Login
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/register"
+                      className="block px-4 py-3 min-h-[44px] flex items-center text-primary-900 hover:bg-gray-50 rounded-lg font-semibold transition-colors duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      List Your Property
+                    </Link>
+                  </li>
+                </>
+              )}
             </ul>
           </nav>
         </div>

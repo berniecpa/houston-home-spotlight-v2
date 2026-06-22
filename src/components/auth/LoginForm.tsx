@@ -168,6 +168,10 @@ export function LoginForm(): JSX.Element {
       // 3. Redirect to ?redirect or /dashboard (UI-SPEC Redirect Preservation)
       const redirectTo = searchParams.get('redirect') ?? '/dashboard';
       router.push(redirectTo);
+      // Re-fetch server components (incl. the root layout) so the header picks
+      // up the new session immediately and flips to Logout/Dashboard without a
+      // manual page refresh.
+      router.refresh();
     } catch (err: unknown) {
       const code =
         err && typeof err === 'object' && 'code' in err
