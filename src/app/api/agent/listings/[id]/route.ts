@@ -35,6 +35,7 @@ import {
   replaceImages,
   deleteListing,
   setListingStatus,
+  setListingFeatured,
   isSafeHttpUrl,
   type ListingUpdateFields,
 } from '@/lib/listings-db';
@@ -65,6 +66,8 @@ interface OwnershipResult {
   uid: string;
   listingId: string;
   db: D1Database;
+  /** True when the session token carries the admin custom claim. */
+  isAdmin: boolean;
 }
 
 /**
@@ -99,6 +102,8 @@ async function resolveOwnership(
   }
 
   const uid = tokens.decodedToken.uid;
+  const isAdmin =
+    (tokens.decodedToken as unknown as Record<string, unknown>).admin === true;
 
   // --- 2. D1 context ---
   const { env } = await getCloudflareContext({ async: true });
@@ -124,7 +129,7 @@ async function resolveOwnership(
     );
   }
 
-  return { uid, listingId, db: db as D1Database };
+  return { uid, listingId, db: db as D1Database, isAdmin };
 }
 
 /**
@@ -172,6 +177,7 @@ interface ListingDetailRow {
   sqft: number | null;
   description: string | null;
   status: 'active' | 'paused';
+  featured: number;
 }
 
 /**
@@ -201,7 +207,7 @@ export async function GET(
     const row = await db
       .prepare(
         `SELECT id, title, slug, address, city, state, zip,
-                price, beds, baths, sqft, description, status
+                price, beds, baths, sqft, description, status, featured
          FROM listings
          WHERE id = ?`
       )
@@ -257,7 +263,7 @@ export async function PUT(
     const ownerResult = await resolveOwnership(id);
 
     if (ownerResult instanceof NextResponse) return ownerResult;
-    const { uid, listingId, db } = ownerResult;
+    const { uid, listingId, db, isAdmin } = ownerResult;
 
     // Suspension gate (T-05-03): suspended agents may not edit listings.
     const suspended = await checkSuspended(db, uid);
@@ -293,6 +299,7 @@ export async function PUT(
       sqft,
       description,
       imageUrls,
+      featured,
     } = body as Record<string, unknown>;
 
     // Validate required string fields
@@ -368,6 +375,16 @@ export async function PUT(
 
     await updateListing(db, listingId, fields);
     await replaceImages(db, listingId, sanitizedUrls);
+
+    // Featured is admin-only and managed separately so a non-admin edit can
+    // never clear or set it. Only apply when an admin explicitly sends the field.
+    if (isAdmin && featured !== undefined) {
+      await setListingFeatured(
+        db,
+        listingId,
+        featured === 1 || featured === true ? 1 : 0
+      );
+    }
 
     return NextResponse.json({ success: true, message: 'Listing updated.' });
   } catch (error) {

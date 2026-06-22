@@ -49,6 +49,8 @@ export default async function ListingsPage(): Promise<JSX.Element> {
   }
 
   const uid = tokens.decodedToken.uid;
+  const isAdmin =
+    (tokens.decodedToken as unknown as Record<string, unknown>).admin === true;
 
   // --- 2. Load agent's own listings scoped by agent_id (LIST-08) ---
   let listings: OwnListing[] = [];
@@ -58,7 +60,7 @@ export default async function ListingsPage(): Promise<JSX.Element> {
 
     const result = await env.DB.prepare(
       `SELECT id, title, slug, address, price, beds, baths, status, created_at,
-              video_status, video_url
+              video_status, video_url, featured
        FROM listings
        WHERE agent_id = ?
        ORDER BY created_at DESC`
@@ -75,5 +77,5 @@ export default async function ListingsPage(): Promise<JSX.Element> {
   }
 
   // --- 3. Render client ListingsManager with server-loaded initial data ---
-  return <ListingsManager initialListings={listings} />;
+  return <ListingsManager initialListings={listings} isAdmin={isAdmin} />;
 }

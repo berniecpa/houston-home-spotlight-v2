@@ -63,6 +63,8 @@ export interface ListingWriteFields {
   sqft?: number | null;
   /** Property description (nullable) */
   description?: string | null;
+  /** Homepage featured flag (0/1). Admin-only; defaults to 0 when omitted. */
+  featured?: 0 | 1;
 }
 
 /**
@@ -93,9 +95,9 @@ export async function createListing(
     .prepare(
       `INSERT INTO listings (
         id, agent_id, title, slug, address, city, state, zip,
-        price, beds, baths, sqft, description, status,
+        price, beds, baths, sqft, description, featured, status,
         created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', unixepoch(), unixepoch())`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', unixepoch(), unixepoch())`
     )
     .bind(
       listingId,
@@ -110,7 +112,8 @@ export async function createListing(
       fields.beds,
       fields.baths,
       fields.sqft ?? null,
-      fields.description ?? null
+      fields.description ?? null,
+      fields.featured ?? 0
     )
     .run();
 
@@ -299,5 +302,31 @@ export async function setListingStatus(
        WHERE id = ? AND agent_id = ?`
     )
     .bind(status, listingId, agentId)
+    .run();
+}
+
+/**
+ * Set a listing's homepage featured flag (admin-only).
+ *
+ * The route layer enforces the admin custom-claim gate before calling this;
+ * featured controls homepage placement and is never settable by regular agents.
+ *
+ * @param db        D1Database binding
+ * @param listingId listings.id to update
+ * @param featured  0 (not featured) or 1 (featured)
+ */
+export async function setListingFeatured(
+  db: D1Database,
+  listingId: string,
+  featured: 0 | 1
+): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE listings
+       SET featured   = ?,
+           updated_at = unixepoch()
+       WHERE id = ?`
+    )
+    .bind(featured, listingId)
     .run();
 }

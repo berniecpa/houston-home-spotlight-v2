@@ -65,6 +65,8 @@ export interface ListingFormProps {
   onSuccess: () => void;
   /** Called when the user cancels without saving */
   onCancel: () => void;
+  /** When true, render the admin-only "Featured on homepage" toggle. */
+  isAdmin?: boolean;
 }
 
 /** Default empty form state */
@@ -106,6 +108,7 @@ interface ListingDetail {
   baths: number;
   sqft: number | null;
   description: string | null;
+  featured?: number;
 }
 
 /**
@@ -163,6 +166,7 @@ export function ListingForm({
   existingListing,
   onSuccess,
   onCancel,
+  isAdmin = false,
 }: ListingFormProps): JSX.Element {
   const [fields, setFields] = useState<ListingFormFields>(
     mode === 'edit' && existingListing
@@ -177,6 +181,8 @@ export function ListingForm({
   const [fieldErrors, setFieldErrors] = useState<ListingFormErrors>({});
   const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Admin-only: homepage featured flag. Seeded from the detail fetch in edit mode.
+  const [featured, setFeatured] = useState(false);
 
   // Edit mode: load the FULL listing record (all columns + image URLs) so the
   // form seeds from real values rather than hardcoded defaults (CR-02).
@@ -200,6 +206,7 @@ export function ListingForm({
         if (cancelled) return;
         if (res.ok && data.success && data.listing) {
           setFields(seedFromDetail(data.listing));
+          setFeatured(data.listing.featured === 1);
           const urls =
             data.imageUrls && data.imageUrls.length > 0 ? data.imageUrls : [''];
           setImageUrls(urls);
@@ -351,6 +358,8 @@ export function ListingForm({
       sqft: fields.sqft.trim() ? Number(fields.sqft) : undefined,
       description: fields.description.trim() || undefined,
       imageUrls: imageUrls.map((u) => u.trim()),
+      // Featured is admin-only; only send it when the toggle is available.
+      ...(isAdmin ? { featured: featured ? 1 : 0 } : {}),
     };
 
     const isEdit = mode === 'edit' && existingListing !== null && existingListing !== undefined;
@@ -704,6 +713,27 @@ export function ListingForm({
           placeholder="Describe the property, neighborhood, highlights..."
         />
       </div>
+
+      {/* Featured toggle — admin only (controls homepage placement) */}
+      {isAdmin && (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <input
+            type="checkbox"
+            id="listing-featured"
+            name="featured"
+            checked={featured}
+            onChange={(e) => setFeatured(e.target.checked)}
+            disabled={isDisabled}
+            className="mt-0.5 h-5 w-5 rounded border-gray-300 text-accent-600 focus:ring-accent-500"
+          />
+          <label htmlFor="listing-featured" className="text-sm text-gray-700">
+            <span className="font-semibold">Feature on homepage</span>
+            <span className="block text-xs text-gray-500">
+              Admin only — featured listings appear in the homepage spotlight grid.
+            </span>
+          </label>
+        </div>
+      )}
 
       {/* Photo URLs — dynamic list (LIST-01 multi-photo) */}
       <div>

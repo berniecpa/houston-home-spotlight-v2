@@ -67,12 +67,16 @@ export interface OwnListing {
   video_status?: 'none' | 'processing' | 'ready' | 'failed' | null;
   /** Generated video URL — optional, supplied by W1 SELECT fix */
   video_url?: string | null;
+  /** Homepage featured flag (0/1) — admin-controlled */
+  featured?: number;
 }
 
 /** Props for the ListingsManager component */
 export interface ListingsManagerProps {
   /** The agent's own listings, loaded server-side and passed as initial state */
   initialListings: OwnListing[];
+  /** When true, expose the admin-only Featured toggle in the listing form. */
+  isAdmin?: boolean;
 }
 
 /** Per-listing video state tracked client-side during a polling session */
@@ -122,6 +126,7 @@ const POLL_MAX_MS = 5 * 60 * 1000;
  */
 export function ListingsManager({
   initialListings,
+  isAdmin = false,
 }: ListingsManagerProps): JSX.Element {
   const [listings, setListings] = useState<OwnListing[]>(initialListings);
   const [isLoading, setIsLoading] = useState(false);
@@ -653,6 +658,11 @@ export function ListingsManager({
                       <td className="px-4 py-3">
                         <p className="font-medium text-gray-900 leading-snug">
                           {listing.title}
+                          {listing.featured === 1 && (
+                            <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 align-middle text-[10px] font-semibold text-amber-700">
+                              Featured
+                            </span>
+                          )}
                         </p>
                         <p className="text-xs text-gray-500 mt-0.5">
                           {listing.address}
@@ -821,6 +831,7 @@ export function ListingsManager({
               existingListing={editingListing}
               onSuccess={handleFormSuccess}
               onCancel={handleFormClose}
+              isAdmin={isAdmin}
             />
           </div>
         </div>

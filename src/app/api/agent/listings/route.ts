@@ -104,7 +104,7 @@ export async function GET(): Promise<NextResponse> {
     const { env } = await getCloudflareContext({ async: true });
 
     const result = await env.DB.prepare(
-      `SELECT id, title, slug, address, price, beds, baths, status, created_at
+      `SELECT id, title, slug, address, price, beds, baths, status, created_at, featured
        FROM listings
        WHERE agent_id = ?
        ORDER BY created_at DESC`
@@ -120,6 +120,7 @@ export async function GET(): Promise<NextResponse> {
         baths: number;
         status: string;
         created_at: number;
+        featured: number;
       }>();
 
     return NextResponse.json({
@@ -170,6 +171,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const uid = tokens.decodedToken.uid;
+    // Admin custom claim — only admins may set the homepage `featured` flag.
+    const isAdmin =
+      (tokens.decodedToken as unknown as Record<string, unknown>).admin === true;
 
     // --- 2. Parse request body ---
     let body: unknown;
@@ -201,6 +205,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       sqft,
       description,
       imageUrls,
+      featured,
     } = body as Record<string, unknown>;
 
     // Validate required string fields
@@ -325,6 +330,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         typeof description === 'string' && description.trim()
           ? description.trim()
           : null,
+      // Featured is admin-only: ignore the field entirely for non-admins.
+      featured: isAdmin && (featured === 1 || featured === true) ? 1 : 0,
     };
 
     const sanitizedImageUrls = (imageUrls as string[]).map((u) => u.trim());
