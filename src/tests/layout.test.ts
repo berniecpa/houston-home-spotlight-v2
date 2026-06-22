@@ -141,7 +141,7 @@ describe('Layout Components - US-006', () => {
 
     it('should render Header at the top', () => {
       const content = fs.readFileSync(layoutPath, 'utf-8');
-      const headerIndex = content.indexOf('<Header />');
+      const headerIndex = content.indexOf('<Header');
       const mainIndex = content.indexOf('<main');
       assert.ok(headerIndex > -1, 'Should render Header component');
       assert.ok(mainIndex > -1, 'Should have main element');

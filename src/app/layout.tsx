@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Merriweather } from "next/font/google";
+import { cookies } from "next/headers";
+import { getTokens } from "next-firebase-auth-edge";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { authEdgeConfig } from "@/lib/auth-edge";
 import { siteConfig } from "@/lib/site-config";
 
 const inter = Inter({
@@ -92,11 +95,22 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Determine auth state server-side so the header can show Agent Login vs
+  // Agent Logout. getTokens returns null (and never throws) for no/invalid
+  // session; guard defensively so a header read can never break the page.
+  let isAuthenticated = false;
+  try {
+    const tokens = await getTokens(await cookies(), authEdgeConfig);
+    isAuthenticated = tokens != null;
+  } catch {
+    isAuthenticated = false;
+  }
+
   return (
     <html lang="en">
       <head>
@@ -105,7 +119,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${merriweather.variable} font-sans antialiased min-h-screen flex flex-col`}
       >
-        <Header />
+        <Header isAuthenticated={isAuthenticated} />
         <main className="flex-grow">
           {children}
         </main>

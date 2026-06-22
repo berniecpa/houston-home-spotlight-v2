@@ -3,8 +3,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 
-export default function Header() {
+/** Props for the site Header. */
+interface HeaderProps {
+  /** True when a valid agent session exists — toggles Agent Login ↔ Agent Logout. */
+  isAuthenticated?: boolean;
+}
+
+export default function Header({ isAuthenticated = false }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navLinks = [
@@ -44,12 +51,19 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
-            <Link
-              href="/login"
-              className="text-gray-600 hover:text-primary-900 font-medium transition-colors duration-200 py-2"
-            >
-              Agent Login
-            </Link>
+            {isAuthenticated ? (
+              <LogoutButton
+                label="Agent Logout"
+                className="text-gray-600 hover:text-primary-900 font-medium transition-colors duration-200 py-2 disabled:opacity-50"
+              />
+            ) : (
+              <Link
+                href="/login"
+                className="text-gray-600 hover:text-primary-900 font-medium transition-colors duration-200 py-2"
+              >
+                Agent Login
+              </Link>
+            )}
             <Link href="/register" className="btn-primary">
               List Your Property
             </Link>
@@ -109,13 +123,20 @@ export default function Header() {
                 </li>
               ))}
               <li>
-                <Link
-                  href="/login"
-                  className="block px-4 py-3 min-h-[44px] flex items-center text-gray-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Agent Login
-                </Link>
+                {isAuthenticated ? (
+                  <LogoutButton
+                    label="Agent Logout"
+                    className="w-full text-left px-4 py-3 min-h-[44px] flex items-center text-gray-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50"
+                  />
+                ) : (
+                  <Link
+                    href="/login"
+                    className="block px-4 py-3 min-h-[44px] flex items-center text-gray-600 hover:text-primary-900 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Agent Login
+                  </Link>
+                )}
               </li>
               <li>
                 <Link

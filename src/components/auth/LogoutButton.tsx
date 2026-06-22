@@ -19,6 +19,8 @@ import { auth } from '@/lib/firebase-client';
 export interface LogoutButtonProps {
   /** Tailwind classes controlling the button's appearance for its sidebar theme. */
   className?: string;
+  /** Idle button label. Defaults to "Sign out". */
+  label?: string;
 }
 
 /**
@@ -31,7 +33,7 @@ export interface LogoutButtonProps {
  * @param {LogoutButtonProps} props - Component props
  * @returns {JSX.Element} A sign-out button
  */
-export function LogoutButton({ className }: LogoutButtonProps): JSX.Element {
+export function LogoutButton({ className, label = 'Sign out' }: LogoutButtonProps): JSX.Element {
   const router = useRouter();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -58,10 +60,10 @@ export function LogoutButton({ className }: LogoutButtonProps): JSX.Element {
       type="button"
       onClick={handleLogout}
       disabled={isSigningOut}
-      aria-label="Sign out"
+      aria-label={label}
       className={className}
     >
-      {isSigningOut ? 'Signing out…' : 'Sign out'}
+      {isSigningOut ? 'Signing out…' : label}
     </button>
   );
 }
