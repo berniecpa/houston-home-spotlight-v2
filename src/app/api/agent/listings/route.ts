@@ -40,6 +40,7 @@ import {
   isSafeHttpUrl,
   type ListingWriteFields,
 } from '@/lib/listings-db';
+import { limitsForTier } from '@/lib/pricing';
 
 // No `runtime = 'edge'`: @opennextjs/cloudflare runs routes on the Node.js
 // runtime (workerd) and rejects edge-runtime functions during bundling.
@@ -289,6 +290,29 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         },
         { status: 403 }
       );
+    }
+
+    // --- 3c. Tier listing cap (enforcement) ---
+    // Admin bypasses; an unknown tier (null) fails open (no cap) so a paying
+    // agent is never locked out. Counts the agent's currently-active listings.
+    if (agentState.is_admin !== 1) {
+      const limits = limitsForTier(agentState.subscription_tier);
+      if (limits && limits.maxListings !== null) {
+        const countRow = await env.DB.prepare(
+          "SELECT COUNT(*) AS n FROM listings WHERE agent_id = ? AND status = 'active'"
+        )
+          .bind(uid)
+          .first<{ n: number }>();
+        if ((countRow?.n ?? 0) >= limits.maxListings) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: `Your plan allows up to ${limits.maxListings} active listings. Upgrade your plan to add more.`,
+            },
+            { status: 403 }
+          );
+        }
+      }
     }
 
     // --- 4. Derive slug and check for UNIQUE collision ---

@@ -45,6 +45,8 @@ export interface AgentSubscriptionState {
   subscription_grace_until: number | null;
   /** 1 if Bernard's admin account; 0 otherwise */
   is_admin: number;
+  /** Current tier ('starter'|'pro'|'team') or null (none/legacy/admin) */
+  subscription_tier: string | null;
 }
 
 /**
@@ -148,7 +150,7 @@ export async function getAgentSubscriptionState(
 ): Promise<AgentSubscriptionState | null> {
   return db
     .prepare(
-      `SELECT subscription_status, subscription_grace_until, is_admin
+      `SELECT subscription_status, subscription_grace_until, is_admin, subscription_tier
        FROM agents WHERE id = ?`
     )
     .bind(uid)

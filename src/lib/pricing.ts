@@ -101,3 +101,43 @@ export function isValidPriceId(priceId: string): boolean {
 export const STARTING_MONTHLY_PRICE = Math.min(
   ...PRICING_TIERS.map((t) => t.monthly.amount)
 );
+
+/** Map a Stripe price id (monthly or annual) back to its tier, or null. */
+const PRICE_ID_TO_TIER: ReadonlyMap<string, TierId> = new Map(
+  PRICING_TIERS.flatMap((t) => [
+    [t.monthly.priceId, t.id] as const,
+    [t.annual.priceId, t.id] as const,
+  ])
+);
+
+/**
+ * Resolve a Stripe price id to its tier id, or null if unknown.
+ * Used by the webhook to persist `agents.subscription_tier`.
+ */
+export function tierForPriceId(priceId: string | null | undefined): TierId | null {
+  if (!priceId) return null;
+  return PRICE_ID_TO_TIER.get(priceId) ?? null;
+}
+
+/** Enforced per-tier limits. `maxListings: null` means unlimited. */
+export interface TierLimits {
+  /** Max simultaneously-active listings; null = unlimited */
+  maxListings: number | null;
+  /** AI property-tour videos allowed per calendar month */
+  aiVideosPerMonth: number;
+}
+
+/** Hard limits enforced server-side per tier. */
+export const TIER_LIMITS: Record<TierId, TierLimits> = {
+  starter: { maxListings: 3, aiVideosPerMonth: 3 },
+  pro: { maxListings: 15, aiVideosPerMonth: 10 },
+  team: { maxListings: null, aiVideosPerMonth: 30 },
+};
+
+/** Limits for a tier id (or null when tier is unknown). */
+export function limitsForTier(tier: string | null | undefined): TierLimits | null {
+  if (tier === 'starter' || tier === 'pro' || tier === 'team') {
+    return TIER_LIMITS[tier];
+  }
+  return null;
+}

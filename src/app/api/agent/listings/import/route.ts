@@ -38,6 +38,11 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { authEdgeConfig } from '@/lib/auth-edge';
 import { parseCsv, validateListingRow } from '@/lib/csv-import';
 import { createListing, makeUniqueSlug } from '@/lib/listings-db';
+import {
+  getAgentSubscriptionState,
+  isAgentPublishable,
+} from '@/lib/subscription';
+import { limitsForTier } from '@/lib/pricing';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -173,6 +178,43 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // --- 4. Get D1 binding ---
     const { env } = await getCloudflareContext({ async: true });
 
+    // --- 4b. Subscription + tier gates (enforcement) ---
+    const isAdmin =
+      (tokens.decodedToken as unknown as Record<string, unknown>).admin === true;
+    const agentState = await getAgentSubscriptionState(env.DB, uid);
+
+    if (!isAdmin) {
+      // Must be publishable (active/grace) to import — mirrors create-listing.
+      if (!agentState || !isAgentPublishable(agentState)) {
+        return NextResponse.json(
+          { success: false, message: 'Active subscription required to import listings.' },
+          { status: 403 }
+        );
+      }
+      // Suspended agents may not import.
+      const suspended = await env.DB
+        .prepare('SELECT is_suspended FROM agents WHERE id = ?')
+        .bind(uid)
+        .first<{ is_suspended: number }>();
+      if (suspended && suspended.is_suspended === 1) {
+        return NextResponse.json(
+          { success: false, message: 'Account suspended — contact the administrator.' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Tier listing cap: admin = unlimited; unknown tier (null) fails open.
+    const limits = isAdmin ? null : limitsForTier(agentState?.subscription_tier ?? null);
+    let activeCount = 0;
+    if (limits && limits.maxListings !== null) {
+      const countRow = await env.DB
+        .prepare("SELECT COUNT(*) AS n FROM listings WHERE agent_id = ? AND status = 'active'")
+        .bind(uid)
+        .first<{ n: number }>();
+      activeCount = countRow?.n ?? 0;
+    }
+
     // --- 5. Process rows independently ---
     // taken tracks slugs committed in this batch; DB UNIQUE is the backstop.
     const taken = new Set<string>();
@@ -205,6 +247,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         continue;
       }
 
+      // 5b-cap. Tier listing cap — stop importing once the active cap is hit.
+      if (limits && limits.maxListings !== null && activeCount >= limits.maxListings) {
+        results.push({
+          row: rowIndex,
+          success: false,
+          reason: `plan limit of ${limits.maxListings} active listings reached — upgrade to add more`,
+        });
+        failed++;
+        continue;
+      }
+
       // 5c. Derive and deduplicate slug within this batch
       const baseSlug = slugify(fields.title, fields.address);
       const slug = makeUniqueSlug(baseSlug, taken);
@@ -219,8 +272,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           imageUrls
         );
 
-        // 5e. Set featured flag if requested (parameterized UPDATE)
-        if (featured === 1) {
+        // 5e. Set featured flag if requested — admin only (featured = homepage
+        // placement; a regular agent can never self-feature via import).
+        if (isAdmin && featured === 1) {
           await env.DB.prepare(
             'UPDATE listings SET featured = ? WHERE id = ?'
           )
@@ -230,6 +284,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
         results.push({ row: rowIndex, success: true, id: newId, slug });
         imported++;
+        activeCount++;
       } catch (insertErr) {
         console.error(`POST /api/agent/listings/import row ${rowIndex} error:`, insertErr);
         results.push({

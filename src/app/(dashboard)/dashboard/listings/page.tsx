@@ -22,6 +22,8 @@ import { redirect } from 'next/navigation';
 import { getTokens } from 'next-firebase-auth-edge';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { authEdgeConfig } from '@/lib/auth-edge';
+import { getAgentSubscriptionState } from '@/lib/subscription';
+import { limitsForTier } from '@/lib/pricing';
 import { ListingsManager } from '@/components/dashboard/ListingsManager';
 import type { OwnListing } from '@/components/dashboard/ListingsManager';
 
@@ -54,6 +56,9 @@ export default async function ListingsPage(): Promise<JSX.Element> {
 
   // --- 2. Load agent's own listings scoped by agent_id (LIST-08) ---
   let listings: OwnListing[] = [];
+  // Active-listing cap for the agent's tier (null = unlimited / admin); shown
+  // as a usage indicator and enforced server-side on create/import.
+  let maxListings: number | null = null;
 
   try {
     const { env } = await getCloudflareContext({ async: true });
@@ -69,6 +74,11 @@ export default async function ListingsPage(): Promise<JSX.Element> {
       .all<OwnListing>();
 
     listings = result.results;
+
+    if (!isAdmin) {
+      const state = await getAgentSubscriptionState(env.DB, uid);
+      maxListings = limitsForTier(state?.subscription_tier ?? null)?.maxListings ?? null;
+    }
   } catch (err) {
     // D1 read failure: render the manager with empty state rather than
     // crashing the page. The client component can re-fetch on mount.
@@ -77,5 +87,11 @@ export default async function ListingsPage(): Promise<JSX.Element> {
   }
 
   // --- 3. Render client ListingsManager with server-loaded initial data ---
-  return <ListingsManager initialListings={listings} isAdmin={isAdmin} />;
+  return (
+    <ListingsManager
+      initialListings={listings}
+      isAdmin={isAdmin}
+      maxListings={maxListings}
+    />
+  );
 }

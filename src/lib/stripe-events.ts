@@ -58,6 +58,7 @@
 import type { Stripe } from 'stripe';
 import type { D1Database, D1Result } from '@cloudflare/workers-types';
 import { randomUUID } from 'node:crypto';
+import { tierForPriceId } from '@/lib/pricing';
 
 /**
  * WR-02: Detect "matched 0 agents" on a customer-keyed UPDATE.
@@ -137,16 +138,20 @@ export async function handleStripeEvent(
       const item = sub.items?.data?.[0];
       const periodEnd = item?.current_period_end ?? 0;
       const periodStart = item?.current_period_start ?? 0;
+      // Map the subscribed price → tier so per-tier limits can be enforced.
+      // null (unknown price) is COALESCE'd below so it never wipes an existing tier.
+      const tier = tierForPriceId(item?.price?.id);
 
       const subResults = await db.batch([
         idempotencyStmt,
         db.prepare(
           `UPDATE agents
            SET subscription_status = ?,
+               subscription_tier = COALESCE(?, subscription_tier),
                subscription_grace_until = NULL,
                updated_at = unixepoch()
            WHERE stripe_customer_id = ?`
-        ).bind(status, customerId),
+        ).bind(status, tier, customerId),
         // Upsert the subscriptions row using ON CONFLICT to handle updates.
         // Uses crypto.randomUUID() for the PK on INSERT per plan spec.
         db.prepare(

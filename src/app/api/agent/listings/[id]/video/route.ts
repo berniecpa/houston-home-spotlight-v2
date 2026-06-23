@@ -40,6 +40,7 @@ import {
   getAgentSubscriptionState,
   isAgentPublishable,
 } from '@/lib/subscription';
+import { limitsForTier } from '@/lib/pricing';
 import {
   findActiveJob,
   insertJob,
@@ -195,6 +196,30 @@ export async function POST(
         { success: false, message: 'Active subscription required to generate videos.' },
         { status: 403 }
       );
+    }
+
+    // --- Gate 3b: Monthly AI-video credit cap (enforcement) ---
+    // Admin bypasses; unknown tier (null) fails open. Counts this calendar
+    // month's video jobs for the agent (created_at in epoch seconds).
+    if (subscriptionState.is_admin !== 1) {
+      const limits = limitsForTier(subscriptionState.subscription_tier);
+      if (limits) {
+        const usedRow = await db
+          .prepare(
+            "SELECT COUNT(*) AS n FROM video_jobs WHERE agent_id = ? AND created_at >= CAST(strftime('%s','now','start of month') AS INTEGER)"
+          )
+          .bind(uid)
+          .first<{ n: number }>();
+        if ((usedRow?.n ?? 0) >= limits.aiVideosPerMonth) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: `You've used all ${limits.aiVideosPerMonth} AI videos included in your plan this month. Upgrade your plan for more.`,
+            },
+            { status: 403 }
+          );
+        }
+      }
     }
 
     // --- Gate 4: Photo gate (T-06-06 SSRF surface — require at least one image) ---

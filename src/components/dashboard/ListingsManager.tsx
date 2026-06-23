@@ -77,6 +77,8 @@ export interface ListingsManagerProps {
   initialListings: OwnListing[];
   /** When true, expose the admin-only Featured toggle in the listing form. */
   isAdmin?: boolean;
+  /** Active-listing cap for the agent's tier (null = unlimited / admin). */
+  maxListings?: number | null;
 }
 
 /** Per-listing video state tracked client-side during a polling session */
@@ -127,6 +129,7 @@ const POLL_MAX_MS = 5 * 60 * 1000;
 export function ListingsManager({
   initialListings,
   isAdmin = false,
+  maxListings = null,
 }: ListingsManagerProps): JSX.Element {
   const [listings, setListings] = useState<OwnListing[]>(initialListings);
   const [isLoading, setIsLoading] = useState(false);
@@ -486,6 +489,11 @@ export function ListingsManager({
           </h1>
           <p className="mt-1 text-sm text-gray-500">
             Manage your property listings
+            {maxListings !== null && (
+              <span className="ml-1 text-gray-400">
+                · {listings.filter((l) => l.status === 'active').length} of {maxListings} active
+              </span>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-3">
