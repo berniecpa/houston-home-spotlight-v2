@@ -145,10 +145,10 @@ export default function ContactPage(): JSX.Element {
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
                   <a 
-                    href="mailto:bernard@nbeliterealty.com" 
+                    href="mailto:bernard@houstonhomespotlight.com" 
                     className="text-primary-600 hover:text-primary-700 transition-colors"
                   >
-                    bernard@nbeliterealty.com
+                    bernard@houstonhomespotlight.com
                   </a>
                   <p className="text-sm text-gray-500 mt-1">
                     Response within 24 hours
@@ -183,7 +183,7 @@ export default function ContactPage(): JSX.Element {
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Office</h3>
                   <p className="text-gray-600">
-                    NB Elite Realty<br />
+                    Houston Home Spotlight<br />
                     123 Main Street, Suite 200<br />
                     Houston, TX 77002
                   </p>

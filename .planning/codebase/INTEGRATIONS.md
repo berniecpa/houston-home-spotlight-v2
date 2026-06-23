@@ -63,7 +63,7 @@
 **OpenGraph / Twitter Cards:**
 - Configured in `src/app/layout.tsx` via Next.js `Metadata` API
 - OG image URL hardcoded to `https://houstonhomespotlight.com/og-image.jpg`
-- Twitter handle hardcoded to `@nbeliterealty`
+- Twitter handle hardcoded to `@houstonhomespotlight`
 - Site URL hardcoded to `https://houstonhomespotlight.com`
 
 **Web App Manifest:**

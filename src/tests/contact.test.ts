@@ -186,11 +186,11 @@ describe('Contact Page', () => {
   });
 
   describe('Business Information', () => {
-    it('should mention NB Elite Realty', () => {
+    it('should mention Houston Home Spotlight', () => {
       const content = fs.readFileSync(CONTACT_PAGE_PATH, 'utf-8');
       assert.ok(
-        content.includes('NB Elite Realty'),
-        'Should mention NB Elite Realty'
+        content.includes('Houston Home Spotlight'),
+        'Should mention Houston Home Spotlight'
       );
     });
 

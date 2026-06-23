@@ -1,6 +1,6 @@
 # Progress Log
 Run: 27bd7639-cd69-41bf-b209-d1a4fbf5f5d9
-Task: Build Houston Home Spotlight — a mobile-first home showcase site for NB Elite Realty
+Task: Build Houston Home Spotlight — a mobile-first home showcase site for Houston Home Spotlight
 Started: 2025-03-17T09:08:00-05:00
 
 ## Codebase Patterns

@@ -9,7 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Custom brand colors for NB Elite Realty
+        // Custom brand colors for Houston Home Spotlight
         primary: {
           50: "#eff6ff",
           100: "#dbeafe",

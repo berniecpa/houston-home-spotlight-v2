@@ -16,8 +16,8 @@ export const siteConfig = {
   description: "Houston's curated real estate showcase. Browse featured listings, explore neighborhoods, and find standout properties across Harris and Fort Bend counties.",
   url: "https://houstonhomespotlight.com",
   ogImage: "https://houstonhomespotlight.com/og-image.jpg",
-  twitterHandle: "@nbeliterealty",
-  author: "NB Elite Realty",
+  twitterHandle: "@houstonhomespotlight",
+  author: "Houston Home Spotlight",
   keywords: [
     "Houston real estate",
     "Houston homes for sale",

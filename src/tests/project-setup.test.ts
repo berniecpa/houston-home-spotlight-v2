@@ -43,7 +43,7 @@ describe('Project Setup', () => {
       const siteConfigPath = join(projectRoot, 'src', 'lib', 'site-config.ts');
       const siteConfigContent = readFileSync(siteConfigPath, 'utf-8');
       assert.ok(siteConfigContent.includes('Houston Home Spotlight'), 'siteConfig should have Houston Home Spotlight title');
-      assert.ok(siteConfigContent.includes('NB Elite Realty'), 'siteConfig should mention NB Elite Realty');
+      assert.ok(siteConfigContent.includes('Houston Home Spotlight'), 'siteConfig should mention Houston Home Spotlight');
     });
   });
 

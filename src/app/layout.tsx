@@ -37,7 +37,7 @@ export const viewport: Viewport = {
  */
 export const metadata: Metadata = {
   title: {
-    default: `${siteConfig.name} | ${siteConfig.author}`,
+    default: siteConfig.name,
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: siteConfig.url,
     siteName: siteConfig.name,
-    title: `${siteConfig.name} | ${siteConfig.author}`,
+    title: siteConfig.name,
     description: siteConfig.description,
     images: [
       {
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: siteConfig.twitterHandle,
     creator: siteConfig.twitterHandle,
-    title: `${siteConfig.name} | ${siteConfig.author}`,
+    title: siteConfig.name,
     description: siteConfig.description,
     images: [siteConfig.ogImage],
   },
