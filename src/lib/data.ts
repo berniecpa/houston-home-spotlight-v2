@@ -45,6 +45,45 @@ interface ListingRow {
   created_at: number;
   /** 0 or 1 — added via migration 0002 */
   featured: number;
+  /** Owning agent's subscription tier ('starter'|'pro'|'team') or null. From the agents JOIN. */
+  subscription_tier: string | null;
+}
+
+/**
+ * True when an agent's subscription tier grants featured search placement.
+ *
+ * Pro and Team tiers get the "Featured" badge and rank above Starter/none in
+ * search results (see the tier-rank ORDER BY in getAllListings). Starter,
+ * 'none', null, and unknown values do not.
+ *
+ * @param tier - The agent's subscription_tier value (or null/undefined)
+ */
+export function tierGrantsFeaturedPlacement(
+  tier: string | null | undefined
+): boolean {
+  return tier === 'pro' || tier === 'team';
+}
+
+/**
+ * Select the homepage "Featured Listings" cards from a tier-ordered list.
+ *
+ * Admin-featured listings come first (preserving their incoming order), then
+ * the list is topped up with the remaining (non-featured) listings — which
+ * arrive already tier-ordered from getAllListings — until `cap` is reached.
+ * This delivers the homepage perk: higher tiers fill the open slots.
+ *
+ * Pure and order-stable within each group, so it is unit-testable without D1.
+ *
+ * @param listings - Listings already ordered featured → tier → newest
+ * @param cap       - Maximum cards to return (default 6)
+ */
+export function selectHomepageListings(
+  listings: Listing[],
+  cap = 6
+): Listing[] {
+  const featured = listings.filter((l) => l.featured);
+  const rest = listings.filter((l) => !l.featured);
+  return [...featured, ...rest].slice(0, cap);
 }
 
 /**
@@ -82,6 +121,7 @@ function rowToListing(row: ListingRow, images: string[]): Listing {
     videoUrl:
       row.video_url && isSafeHttpUrl(row.video_url) ? row.video_url : undefined,
     featured: row.featured === 1,
+    featuredPlacement: tierGrantsFeaturedPlacement(row.subscription_tier),
     createdAt: new Date(row.created_at * 1000).toISOString(),
   };
 }
@@ -106,12 +146,21 @@ export async function getAllListings(): Promise<Listing[]> {
       .prepare(
         `SELECT l.id, l.slug, l.address, l.city, l.state, l.zip,
                 l.price, l.beds, l.baths, l.sqft, l.description,
-                l.video_url, l.created_at, l.featured
+                l.video_url, l.created_at, l.featured,
+                a.subscription_tier
          FROM listings l
          JOIN agents a ON l.agent_id = a.id
          WHERE l.status = 'active'
            AND ${AGENT_VISIBLE_SQL}
-         ORDER BY l.created_at DESC`
+         ORDER BY l.featured DESC,
+                  CASE
+                    WHEN a.is_admin = 1               THEN 3
+                    WHEN a.subscription_tier = 'team' THEN 3
+                    WHEN a.subscription_tier = 'pro'  THEN 2
+                    WHEN a.subscription_tier = 'starter' THEN 1
+                    ELSE 0
+                  END DESC,
+                  l.created_at DESC`
       )
       .all<ListingRow>();
 
@@ -168,7 +217,8 @@ export async function getListingBySlug(slug: string): Promise<Listing | null> {
       .prepare(
         `SELECT l.id, l.slug, l.address, l.city, l.state, l.zip,
                 l.price, l.beds, l.baths, l.sqft, l.description,
-                l.video_url, l.created_at, l.featured
+                l.video_url, l.created_at, l.featured,
+                a.subscription_tier
          FROM listings l
          JOIN agents a ON l.agent_id = a.id
          WHERE l.slug = ?
@@ -197,16 +247,19 @@ export async function getListingBySlug(slug: string): Promise<Listing | null> {
 }
 
 /**
- * Get all featured listings.
+ * Get the homepage "Featured Listings" cards.
  *
- * Delegates to getAllListings (subscription gate already applied) and
- * filters for featured === true in-memory.
+ * Delegates to getAllListings (subscription gate + tier ordering already
+ * applied), then selects up to 6 cards via selectHomepageListings:
+ * admin-featured listings first, topped up with the highest-tier non-featured
+ * listings. This delivers the homepage tier perk — higher tiers fill open
+ * slots — instead of the old featured-only behavior.
  *
- * @returns Array of featured listings; empty array on D1 error.
+ * @returns Up to 6 homepage listings; empty array on D1 error.
  */
 export async function getFeaturedListings(): Promise<Listing[]> {
   const all = await getAllListings();
-  return all.filter((l) => l.featured);
+  return selectHomepageListings(all);
 }
 
 /**
@@ -325,7 +378,8 @@ export async function getAgentProfileBySlug(slug: string): Promise<AgentProfile 
       .prepare(
         `SELECT l.id, l.slug, l.address, l.city, l.state, l.zip,
                 l.price, l.beds, l.baths, l.sqft, l.description,
-                l.video_url, l.created_at, l.featured
+                l.video_url, l.created_at, l.featured,
+                a.subscription_tier
          FROM listings l
          JOIN agents a ON l.agent_id = a.id
          WHERE l.agent_id = ?

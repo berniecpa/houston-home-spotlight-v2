@@ -76,8 +76,8 @@ export function ListingCard({ listing }: ListingCardProps): JSX.Element {
             className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
             priority={listing.featured}
           />
-          {/* Featured Badge */}
-          {listing.featured && (
+          {/* Featured Badge — admin-curated (featured) OR paid tier placement (Pro/Team) */}
+          {(listing.featured || listing.featuredPlacement) && (
             <div className="absolute top-3 left-3">
               <span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold bg-accent-500 text-primary-900 rounded-full shadow-sm">
                 Featured

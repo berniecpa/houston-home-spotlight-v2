@@ -89,7 +89,7 @@ describe('Layout Components - US-006', () => {
       const content = fs.readFileSync(footerPath, 'utf-8');
       assert.ok(content.includes('All rights reserved'), 'Should have copyright text');
       assert.ok(content.includes('new Date().getFullYear()'), 'Should use dynamic year');
-      assert.ok(content.includes('NB Elite Realty'), 'Should mention NB Elite Realty');
+      assert.ok(content.includes('Houston Home Spotlight'), 'Should mention Houston Home Spotlight');
     });
 
     it('should have contact information', () => {
@@ -182,7 +182,7 @@ describe('Layout Components - US-006', () => {
       assert.ok(content.includes('siteConfig'), 'Metadata should be derived from siteConfig');
       const siteConfigContent = fs.readFileSync(path.join(projectRoot, 'src/lib/site-config.ts'), 'utf-8');
       assert.ok(siteConfigContent.includes('Houston Home Spotlight'), 'siteConfig should have site title');
-      assert.ok(siteConfigContent.includes('NB Elite Realty'), 'siteConfig should mention NB Elite Realty');
+      assert.ok(siteConfigContent.includes('Houston Home Spotlight'), 'siteConfig should mention Houston Home Spotlight');
     });
 
     it('should preserve font configuration', () => {

@@ -144,7 +144,7 @@ function generateListingStructuredData(listing: Listing): Record<string, unknown
       name: siteConfig.author,
       url: siteConfig.url,
       telephone: '+1-713-555-1234',
-      email: 'bernard@nbeliterealty.com',
+      email: 'bernard@houstonhomespotlight.com',
       address: {
         '@type': 'PostalAddress',
         streetAddress: '123 Main Street, Suite 200',

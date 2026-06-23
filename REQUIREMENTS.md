@@ -3,7 +3,7 @@
 ## 1. Project Overview
 
 ### 1.1 Project Goal
-To create a visually stunning, performant, and mobile-first marketing website for Bernard (NB Elite Realty) to showcase homes for sale in the Houston area. The primary objective is lead generation: potential buyers browse listings and use a contact form to connect with Bernard. This is a "brochure site with listings," not a complex SaaS application, an internal tool, or a multi-user platform.
+To create a visually stunning, performant, and mobile-first marketing website for Bernard (Houston Home Spotlight) to showcase homes for sale in the Houston area. The primary objective is lead generation: potential buyers browse listings and use a contact form to connect with Bernard. This is a "brochure site with listings," not a complex SaaS application, an internal tool, or a multi-user platform.
 
 ### 1.2 Business Context
 Bernard is a licensed Realtor in Harris and Fort Bend counties. This site serves as a digital storefront to highlight properties, attract prospective buyers, and facilitate direct inquiries.
