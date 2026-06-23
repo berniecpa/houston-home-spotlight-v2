@@ -38,6 +38,13 @@ export interface Listing {
   videoUrl?: string;
   /** Whether this listing should appear on the home page */
   featured: boolean;
+  /**
+   * True when the owning agent's subscription tier grants featured search
+   * placement (Pro/Team). Derived at read-time from the agent's tier; drives
+   * the "Featured" badge for paid placement. Optional: absent on fixtures and
+   * legacy callers, treated as false.
+   */
+  featuredPlacement?: boolean;
   /** ISO 8601 timestamp when listing was created */
   createdAt: string;
 }
