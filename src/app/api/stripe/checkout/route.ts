@@ -38,6 +38,7 @@ import { getTokens } from 'next-firebase-auth-edge';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { authEdgeConfig } from '@/lib/auth-edge';
 import { getStripe } from '@/lib/stripe';
+import { isValidPriceId } from '@/lib/pricing';
 
 /**
  * POST handler — creates a Stripe Checkout session for the agent subscription.
@@ -72,6 +73,26 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     const uid = tokens.decodedToken.uid;
+
+    // --- 2b. Validate the requested plan price (never trust an arbitrary price) ---
+    // The client sends a Stripe priceId; it MUST be one of our known tier prices.
+    let priceId: string;
+    try {
+      const body = (await req.json()) as { priceId?: unknown };
+      if (typeof body?.priceId !== 'string' || !isValidPriceId(body.priceId)) {
+        return NextResponse.json(
+          { success: false, message: 'Invalid or missing plan selection.' },
+          { status: 400 }
+        );
+      }
+      priceId = body.priceId;
+    } catch {
+      return NextResponse.json(
+        { success: false, message: 'Invalid request body.' },
+        { status: 400 }
+      );
+    }
+
     const { env } = await getCloudflareContext({ async: true });
 
     // --- 3. Fetch agent row from D1 (T-03-SQLI: parameterized) ---
@@ -122,7 +143,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
-      line_items: [{ price: env.STRIPE_PRICE_ID, quantity: 1 }],
+      line_items: [{ price: priceId, quantity: 1 }],
       // client_reference_id: belt-and-suspenders fallback for webhook → agent mapping.
       // Primary mapping is via agents.stripe_customer_id which is set above.
       client_reference_id: uid,

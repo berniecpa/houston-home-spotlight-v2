@@ -24,6 +24,7 @@
 
 import { useState } from 'react';
 import type { SubscriptionStatus } from '@/lib/subscription';
+import { PricingTable } from '@/components/PricingTable';
 
 /** Props for the BillingWidget component */
 export interface BillingWidgetProps {
@@ -63,35 +64,6 @@ export function BillingWidget({
 }: BillingWidgetProps): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  /** POST to /api/stripe/checkout and redirect to returned URL */
-  async function handleSubscribe(): Promise<void> {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({})) as { message?: string };
-        throw new Error(body.message ?? 'Unable to start checkout. Please try again.');
-      }
-
-      const { url } = await res.json() as { url?: string | null };
-      // WR-05: validate the URL is a non-empty string before navigating, so a
-      // missing/null URL surfaces as an error rather than navigating to "null".
-      if (typeof url !== 'string' || url.length === 0) {
-        throw new Error('Unable to start checkout. Please try again.');
-      }
-      window.location.href = url;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
-      setIsLoading(false);
-    }
-  }
 
   /** POST to /api/stripe/portal and redirect to returned URL */
   async function handleManage(): Promise<void> {
@@ -168,26 +140,15 @@ export function BillingWidget({
 
       {/* State: 'none' — agent has never subscribed */}
       {!isAdmin && status === 'none' && (
-        <div className="card p-6">
+        <div>
           <h2 className="font-serif text-xl font-semibold leading-relaxed text-gray-900 mb-2">
-            Start publishing listings
+            Choose a plan to start publishing
           </h2>
-          <p className="text-base text-gray-600 mb-1">
-            Subscribe to Houston Home Spotlight to publish your Houston property listings
-            and receive buyer inquiries directly.
+          <p className="text-base text-gray-600 mb-6">
+            Subscribe to publish your Houston property listings, receive buyer
+            inquiries, and generate AI property-tour videos. Cancel anytime.
           </p>
-          <p className="text-base font-semibold text-gray-900 mb-6">
-            $79/mo — cancel anytime
-          </p>
-          <button
-            type="button"
-            onClick={handleSubscribe}
-            disabled={isLoading}
-            aria-label="Subscribe to Houston Home Spotlight for $79 per month"
-            className="btn-accent touch-target w-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? 'Please wait...' : 'Subscribe — $79/mo'}
-          </button>
+          <PricingTable ctaLabel="Subscribe" />
         </div>
       )}
 
@@ -263,27 +224,16 @@ export function BillingWidget({
 
       {/* State: 'lapsed' — subscription ended or grace period expired */}
       {!isAdmin && status === 'lapsed' && (
-        <div className="card p-6">
+        <div>
           <h2 className="font-serif text-xl font-semibold leading-relaxed text-gray-900 mb-2">
             Subscription ended
           </h2>
-          <p className="text-base text-gray-600 mb-1">
-            Your subscription has lapsed. Reactivate to publish listings and receive buyer
-            inquiries. Your existing listings are retained and will be restored automatically
-            when you resubscribe.
+          <p className="text-base text-gray-600 mb-6">
+            Your subscription has lapsed. Reactivate to publish listings and receive
+            buyer inquiries. Your existing listings are retained and restored
+            automatically when you resubscribe.
           </p>
-          <p className="text-base font-semibold text-gray-900 mb-6">
-            $79/mo — cancel anytime
-          </p>
-          <button
-            type="button"
-            onClick={handleSubscribe}
-            disabled={isLoading}
-            aria-label="Reactivate your Houston Home Spotlight subscription for $79 per month"
-            className="btn-accent touch-target w-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? 'Please wait...' : 'Reactivate — $79/mo'}
-          </button>
+          <PricingTable ctaLabel="Reactivate" />
         </div>
       )}
     </div>

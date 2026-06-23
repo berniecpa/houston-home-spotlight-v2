@@ -562,15 +562,15 @@ describe('checkout/route.ts module structure (BILL-01)', () => {
     );
   });
 
-  it('creates subscription-mode checkout session with STRIPE_PRICE_ID', () => {
+  it('creates subscription-mode checkout session with a validated price', () => {
     const content = readSource('app/api/stripe/checkout/route.ts');
     assert.ok(
       content.includes("mode: 'subscription'") || content.includes('mode: "subscription"'),
       'checkout session must use subscription mode'
     );
     assert.ok(
-      content.includes('STRIPE_PRICE_ID'),
-      'must use env.STRIPE_PRICE_ID for line item price'
+      content.includes('isValidPriceId') && content.includes('priceId'),
+      'must validate the client-supplied priceId against the pricing allowlist'
     );
   });
 

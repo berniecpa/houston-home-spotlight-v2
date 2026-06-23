@@ -111,11 +111,11 @@ describe("BillingWidget 'none' state", () => {
     );
   });
 
-  it('includes $79/mo pricing copy', () => {
+  it('delegates plan selection to PricingTable', () => {
     const content = readSource(filePath);
     assert.ok(
-      content.includes('79') && (content.includes('/mo') || content.includes('month')),
-      'BillingWidget must show $79/mo pricing copy'
+      content.includes('PricingTable'),
+      'BillingWidget must render <PricingTable> for tiered plan selection'
     );
   });
 
@@ -237,11 +237,11 @@ describe("BillingWidget 'lapsed' state", () => {
     );
   });
 
-  it('has Subscribe/reactivate CTA for lapsed (same as none)', () => {
+  it('has reactivate CTA (PricingTable) for lapsed (same as none)', () => {
     const content = readSource(filePath);
     assert.ok(
-      content.includes('handleSubscribe'),
-      "BillingWidget must use handleSubscribe for 'lapsed' state"
+      content.includes('PricingTable'),
+      "BillingWidget must render PricingTable for the 'lapsed' state"
     );
   });
 });
@@ -278,11 +278,11 @@ describe('BillingWidget admin notice', () => {
 describe('BillingWidget CTA wiring', () => {
   const filePath = 'components/dashboard/BillingWidget.tsx';
 
-  it('POSTs to /api/stripe/checkout for Subscribe CTA', () => {
+  it('delegates checkout to PricingTable for Subscribe CTA', () => {
     const content = readSource(filePath);
     assert.ok(
-      content.includes('/api/stripe/checkout'),
-      'BillingWidget must fetch /api/stripe/checkout for Subscribe CTA'
+      content.includes('PricingTable'),
+      'BillingWidget must render PricingTable (which handles Stripe checkout)'
     );
   });
 
@@ -294,11 +294,11 @@ describe('BillingWidget CTA wiring', () => {
     );
   });
 
-  it('has handleSubscribe function that uses fetch', () => {
+  it('has handleManage function that uses fetch', () => {
     const content = readSource(filePath);
     assert.ok(
-      content.includes('handleSubscribe'),
-      'BillingWidget must define a handleSubscribe handler'
+      content.includes('handleManage'),
+      'BillingWidget must define a handleManage handler'
     );
     assert.ok(
       content.includes('fetch('),
