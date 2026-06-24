@@ -36,6 +36,12 @@ export interface Listing {
   images: string[];
   /** Optional video tour URL */
   videoUrl?: string;
+  /** Builder name for new-construction homes (e.g. "Meritage Homes"); omitted for resale */
+  homebuilder?: string;
+  /** Free-text incentives/promotions (e.g. "$10k toward closing"); omitted if none */
+  incentives?: string;
+  /** Authority link to the original MLS/Zillow/builder listing; omitted if none */
+  sourceUrl?: string;
   /** Whether this listing should appear on the home page */
   featured: boolean;
   /**

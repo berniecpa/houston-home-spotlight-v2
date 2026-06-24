@@ -45,6 +45,12 @@ interface ListingRow {
   created_at: number;
   /** 0 or 1 — added via migration 0002 */
   featured: number;
+  /** Builder name (migration 0007); null for resale homes */
+  homebuilder: string | null;
+  /** Incentives free-text (migration 0007); null if none */
+  incentives: string | null;
+  /** Authority/source listing URL (migration 0007); null if none */
+  source_url: string | null;
   /** Owning agent's subscription tier ('starter'|'pro'|'team') or null. From the agents JOIN. */
   subscription_tier: string | null;
 }
@@ -120,6 +126,10 @@ function rowToListing(row: ListingRow, images: string[]): Listing {
     images,
     videoUrl:
       row.video_url && isSafeHttpUrl(row.video_url) ? row.video_url : undefined,
+    homebuilder: row.homebuilder ?? undefined,
+    incentives: row.incentives ?? undefined,
+    sourceUrl:
+      row.source_url && isSafeHttpUrl(row.source_url) ? row.source_url : undefined,
     featured: row.featured === 1,
     featuredPlacement: tierGrantsFeaturedPlacement(row.subscription_tier),
     createdAt: new Date(row.created_at * 1000).toISOString(),
@@ -147,11 +157,13 @@ export async function getAllListings(): Promise<Listing[]> {
         `SELECT l.id, l.slug, l.address, l.city, l.state, l.zip,
                 l.price, l.beds, l.baths, l.sqft, l.description,
                 l.video_url, l.created_at, l.featured,
+                l.homebuilder, l.incentives, l.source_url,
                 a.subscription_tier
          FROM listings l
          JOIN agents a ON l.agent_id = a.id
          WHERE l.status = 'active'
            AND ${AGENT_VISIBLE_SQL}
+           AND (l.expires_at IS NULL OR l.expires_at > unixepoch())
          ORDER BY l.featured DESC,
                   CASE
                     WHEN a.is_admin = 1               THEN 3
@@ -218,12 +230,14 @@ export async function getListingBySlug(slug: string): Promise<Listing | null> {
         `SELECT l.id, l.slug, l.address, l.city, l.state, l.zip,
                 l.price, l.beds, l.baths, l.sqft, l.description,
                 l.video_url, l.created_at, l.featured,
+                l.homebuilder, l.incentives, l.source_url,
                 a.subscription_tier
          FROM listings l
          JOIN agents a ON l.agent_id = a.id
          WHERE l.slug = ?
            AND l.status = 'active'
-           AND ${AGENT_VISIBLE_SQL}`
+           AND ${AGENT_VISIBLE_SQL}
+           AND (l.expires_at IS NULL OR l.expires_at > unixepoch())`
       )
       .bind(slug)
       .first<ListingRow>();
@@ -379,12 +393,14 @@ export async function getAgentProfileBySlug(slug: string): Promise<AgentProfile 
         `SELECT l.id, l.slug, l.address, l.city, l.state, l.zip,
                 l.price, l.beds, l.baths, l.sqft, l.description,
                 l.video_url, l.created_at, l.featured,
+                l.homebuilder, l.incentives, l.source_url,
                 a.subscription_tier
          FROM listings l
          JOIN agents a ON l.agent_id = a.id
          WHERE l.agent_id = ?
            AND l.status = 'active'
            AND ${AGENT_VISIBLE_SQL}
+           AND (l.expires_at IS NULL OR l.expires_at > unixepoch())
          ORDER BY l.created_at DESC`
       )
       .bind(agentRow.id)
