@@ -120,8 +120,8 @@ describe("Home Page", () => {
         "Should have link to /contact"
       );
       assert.ok(
-        content.includes("Submit a Property"),
-        "Should have Submit a Property CTA text"
+        content.includes("Submit a Listing"),
+        "Should have Submit a Listing CTA text"
       );
     });
   });

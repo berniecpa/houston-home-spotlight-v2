@@ -64,12 +64,6 @@ export default async function Home(): Promise<JSX.Element> {
                     />
                   </svg>
                 </Link>
-                <Link
-                  href="/contact"
-                  className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white border-2 border-white/30 rounded-lg hover:bg-white/10 transition-colors duration-200 w-full sm:w-auto"
-                >
-                  Submit a Property
-                </Link>
               </div>
             </div>
           </div>

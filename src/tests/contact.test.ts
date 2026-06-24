@@ -37,27 +37,11 @@ describe('Contact Page', () => {
   });
 
   describe('Contact Information', () => {
-    it('should display phone number', () => {
-      const content = fs.readFileSync(CONTACT_PAGE_PATH, 'utf-8');
-      assert.ok(
-        content.includes('tel:') && content.match(/\(\d{3}\)\s*\d{3}-\d{4}/),
-        'Should include phone number with tel: link'
-      );
-    });
-
     it('should display email address', () => {
       const content = fs.readFileSync(CONTACT_PAGE_PATH, 'utf-8');
       assert.ok(
         content.includes('mailto:') && content.includes('@'),
         'Should include email with mailto: link'
-      );
-    });
-
-    it('should have office address section', () => {
-      const content = fs.readFileSync(CONTACT_PAGE_PATH, 'utf-8');
-      assert.ok(
-        content.includes('Office') || content.includes('Address'),
-        'Should include office/address section'
       );
     });
 

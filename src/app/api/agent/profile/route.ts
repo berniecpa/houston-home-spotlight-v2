@@ -146,35 +146,25 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       license_number,
     } = body as Record<string, unknown>;
 
-    // Validate each required field (CLAUDE.md: validate at system boundaries)
-    const requiredFields: [string, unknown][] = [
-      ['Full name', display_name],
-      ['Photo URL', photo_url],
-      ['Phone', phone],
-      ['Brokerage', brokerage],
-      ['License number', license_number],
-    ];
+    // Profile fields are optional (agents may save a partial profile).
+    // Coerce any missing/non-string value to '' so the D1 write is always safe.
+    const asStr = (v: unknown): string => (typeof v === 'string' ? v : '');
+    const validated: ProfilePatchBody = {
+      display_name: asStr(display_name),
+      photo_url: asStr(photo_url),
+      phone: asStr(phone),
+      brokerage: asStr(brokerage),
+      license_number: asStr(license_number),
+    };
 
-    for (const [label, value] of requiredFields) {
-      if (typeof value !== 'string' || !value.trim()) {
-        return NextResponse.json(
-          { success: false, message: `${label} is required.` },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Enforce an http(s) scheme allow-list on photo_url before persisting (CR-01).
+    // Enforce an http(s) scheme allow-list on photo_url WHEN provided (CR-01).
     // React does not sanitize `src`, so reject javascript:/data: URLs here.
-    if (!isSafeHttpUrl((photo_url as string).trim())) {
+    if (validated.photo_url.trim() && !isSafeHttpUrl(validated.photo_url.trim())) {
       return NextResponse.json(
         { success: false, message: 'Photo URL must be a valid http(s) URL.' },
         { status: 400 }
       );
     }
-
-    // Type assertion is safe: all fields passed validation above
-    const validated = body as ProfilePatchBody;
 
     // --- 3. Generate/refresh agent slug from display_name (ADMIN-04, T-05-04) ---
     // Slug is always derived server-side from the session uid's display_name.

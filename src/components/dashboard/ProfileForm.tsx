@@ -83,19 +83,13 @@ export function ProfileForm({ initialValues }: ProfileFormProps): JSX.Element {
     }
   }
 
-  /** Validate a single field. Returns error string or empty string. */
+  /**
+   * Validate a single field. Returns error string or empty string.
+   * All profile fields are optional — only the photo URL, when provided,
+   * must be a safe http(s) URL.
+   */
   function validateField(name: keyof ProfileFormValues, value: string): string {
-    if (!value.trim()) {
-      const labels: Record<keyof ProfileFormValues, string> = {
-        display_name: 'Full name',
-        photo_url: 'Photo URL',
-        phone: 'Phone',
-        brokerage: 'Brokerage',
-        license_number: 'License number',
-      };
-      return `${labels[name]} is required.`;
-    }
-    if (name === 'photo_url' && !isSafeHttpUrl(value.trim())) {
+    if (name === 'photo_url' && value.trim() && !isSafeHttpUrl(value.trim())) {
       return 'Photo URL must be a valid http(s) URL.';
     }
     return '';
@@ -190,7 +184,7 @@ export function ProfileForm({ initialValues }: ProfileFormProps): JSX.Element {
           htmlFor="profile-display-name"
           className="block text-sm font-semibold text-gray-700 mb-1.5"
         >
-          Full name <span className="text-red-600" aria-hidden="true">*</span>
+          Full name
         </label>
         <input
           type="text"
@@ -204,7 +198,7 @@ export function ProfileForm({ initialValues }: ProfileFormProps): JSX.Element {
             focus:ring-2 focus:ring-primary-500 focus:border-primary-500
             disabled:bg-gray-100 disabled:cursor-not-allowed
             ${errors.display_name ? 'border-red-500' : 'border-gray-300'}`}
-          aria-required="true"
+          aria-required="false"
           aria-invalid={errors.display_name ? 'true' : 'false'}
           aria-describedby={errors.display_name ? 'err-display-name' : undefined}
           placeholder="Jane Smith"
@@ -222,7 +216,7 @@ export function ProfileForm({ initialValues }: ProfileFormProps): JSX.Element {
           htmlFor="profile-photo-url"
           className="block text-sm font-semibold text-gray-700 mb-1.5"
         >
-          Photo URL <span className="text-red-600" aria-hidden="true">*</span>
+          Photo URL
         </label>
         <div className="flex items-start gap-4">
           {/* 64x64 rounded-full preview — gray circle placeholder on empty/invalid */}
@@ -273,7 +267,7 @@ export function ProfileForm({ initialValues }: ProfileFormProps): JSX.Element {
                 focus:ring-2 focus:ring-primary-500 focus:border-primary-500
                 disabled:bg-gray-100 disabled:cursor-not-allowed
                 ${errors.photo_url ? 'border-red-500' : 'border-gray-300'}`}
-              aria-required="true"
+              aria-required="false"
               aria-invalid={errors.photo_url ? 'true' : 'false'}
               aria-describedby={errors.photo_url ? 'err-photo-url' : undefined}
               placeholder="https://example.com/photo.jpg"
@@ -293,7 +287,7 @@ export function ProfileForm({ initialValues }: ProfileFormProps): JSX.Element {
           htmlFor="profile-phone"
           className="block text-sm font-semibold text-gray-700 mb-1.5"
         >
-          Phone <span className="text-red-600" aria-hidden="true">*</span>
+          Phone
         </label>
         <input
           type="tel"
@@ -307,7 +301,7 @@ export function ProfileForm({ initialValues }: ProfileFormProps): JSX.Element {
             focus:ring-2 focus:ring-primary-500 focus:border-primary-500
             disabled:bg-gray-100 disabled:cursor-not-allowed
             ${errors.phone ? 'border-red-500' : 'border-gray-300'}`}
-          aria-required="true"
+          aria-required="false"
           aria-invalid={errors.phone ? 'true' : 'false'}
           aria-describedby={errors.phone ? 'err-phone' : undefined}
           placeholder="713-555-0100"
@@ -325,7 +319,7 @@ export function ProfileForm({ initialValues }: ProfileFormProps): JSX.Element {
           htmlFor="profile-brokerage"
           className="block text-sm font-semibold text-gray-700 mb-1.5"
         >
-          Brokerage <span className="text-red-600" aria-hidden="true">*</span>
+          Brokerage
         </label>
         <input
           type="text"
@@ -338,7 +332,7 @@ export function ProfileForm({ initialValues }: ProfileFormProps): JSX.Element {
             focus:ring-2 focus:ring-primary-500 focus:border-primary-500
             disabled:bg-gray-100 disabled:cursor-not-allowed
             ${errors.brokerage ? 'border-red-500' : 'border-gray-300'}`}
-          aria-required="true"
+          aria-required="false"
           aria-invalid={errors.brokerage ? 'true' : 'false'}
           aria-describedby={errors.brokerage ? 'err-brokerage' : undefined}
           placeholder="Houston Realty Group"
@@ -356,7 +350,7 @@ export function ProfileForm({ initialValues }: ProfileFormProps): JSX.Element {
           htmlFor="profile-license-number"
           className="block text-sm font-semibold text-gray-700 mb-1.5"
         >
-          License number <span className="text-red-600" aria-hidden="true">*</span>
+          License number
         </label>
         <input
           type="text"
@@ -369,7 +363,7 @@ export function ProfileForm({ initialValues }: ProfileFormProps): JSX.Element {
             focus:ring-2 focus:ring-primary-500 focus:border-primary-500
             disabled:bg-gray-100 disabled:cursor-not-allowed
             ${errors.license_number ? 'border-red-500' : 'border-gray-300'}`}
-          aria-required="true"
+          aria-required="false"
           aria-invalid={errors.license_number ? 'true' : 'false'}
           aria-describedby={errors.license_number ? 'err-license' : undefined}
           placeholder="TX-12345"

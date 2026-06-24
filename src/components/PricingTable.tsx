@@ -107,11 +107,11 @@ export function PricingTable({ ctaLabel = 'Choose plan' }: PricingTableProps): J
           aria-checked={cadence === 'annual'}
           aria-label="Toggle annual billing"
           onClick={() => setCadence((c) => (c === 'monthly' ? 'annual' : 'monthly'))}
-          className="relative inline-flex h-6 w-11 items-center rounded-full bg-primary-600 transition-colors touch-target"
+          className="relative inline-flex h-7 w-14 items-center rounded-full bg-primary-600 transition-colors touch-target"
         >
           <span
-            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-              cadence === 'annual' ? 'translate-x-5' : 'translate-x-0.5'
+            className={`inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform ${
+              cadence === 'annual' ? 'translate-x-7' : 'translate-x-1'
             }`}
           />
         </button>
@@ -124,7 +124,7 @@ export function PricingTable({ ctaLabel = 'Choose plan' }: PricingTableProps): J
       </div>
 
       {/* Tier cards */}
-      <div className="grid gap-6 md:grid-cols-3 items-start">
+      <div className="grid gap-6 md:grid-cols-3 items-start pt-3">
         {PRICING_TIERS.map((tier) => {
           const price = cadence === 'monthly' ? tier.monthly : tier.annual;
           const suffix = cadence === 'monthly' ? '/mo' : '/yr';
@@ -132,7 +132,7 @@ export function PricingTable({ ctaLabel = 'Choose plan' }: PricingTableProps): J
             <div
               key={tier.id}
               className={`card p-6 flex flex-col ${
-                tier.highlighted ? 'ring-2 ring-primary-600 relative' : ''
+                tier.highlighted ? 'ring-2 ring-primary-600 relative overflow-visible' : ''
               }`}
             >
               {tier.highlighted && (
