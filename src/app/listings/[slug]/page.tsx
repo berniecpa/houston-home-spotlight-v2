@@ -143,16 +143,7 @@ function generateListingStructuredData(listing: Listing): Record<string, unknown
       '@type': 'RealEstateAgent',
       name: siteConfig.author,
       url: siteConfig.url,
-      telephone: '+1-713-555-1234',
       email: 'info@houstonhomespotlight.com',
-      address: {
-        '@type': 'PostalAddress',
-        streetAddress: '123 Main Street, Suite 200',
-        addressLocality: 'Houston',
-        addressRegion: 'TX',
-        postalCode: '77002',
-        addressCountry: 'US',
-      },
     },
     availableChannel: {
       '@type': 'ServiceChannel',
@@ -333,6 +324,18 @@ export default async function ListingDetailPage({
               </p>
             </section>
 
+            {/* Builder Incentives — when provided */}
+            {listing.incentives && (
+              <section className="bg-accent-50 rounded-xl shadow-sm border border-accent-200 p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-bold text-accent-900 mb-2">
+                  Builder Incentives
+                </h2>
+                <p className="text-gray-800 leading-relaxed whitespace-pre-line">
+                  {listing.incentives}
+                </p>
+              </section>
+            )}
+
             {/* Property Details Grid */}
             <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
@@ -375,7 +378,37 @@ export default async function ListingDetailPage({
                       : 'N/A'}
                   </span>
                 </div>
+                {listing.homebuilder && (
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Builder</span>
+                    <span className="font-medium text-gray-900">{listing.homebuilder}</span>
+                  </div>
+                )}
               </div>
+              {listing.sourceUrl && (
+                <a
+                  href={listing.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-800"
+                >
+                  View original listing
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
+                  </svg>
+                </a>
+              )}
             </section>
 
             {/* Video Tour - if available */}

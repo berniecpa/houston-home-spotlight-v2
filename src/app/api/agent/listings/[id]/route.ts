@@ -176,6 +176,9 @@ interface ListingDetailRow {
   baths: number;
   sqft: number | null;
   description: string | null;
+  homebuilder: string | null;
+  incentives: string | null;
+  source_url: string | null;
   status: 'active' | 'paused';
   featured: number;
 }
@@ -207,7 +210,8 @@ export async function GET(
     const row = await db
       .prepare(
         `SELECT id, title, slug, address, city, state, zip,
-                price, beds, baths, sqft, description, status, featured
+                price, beds, baths, sqft, description,
+                homebuilder, incentives, source_url, status, featured
          FROM listings
          WHERE id = ?`
       )
@@ -298,6 +302,9 @@ export async function PUT(
       baths,
       sqft,
       description,
+      homebuilder,
+      incentives,
+      sourceUrl,
       imageUrls,
       featured,
     } = body as Record<string, unknown>;
@@ -352,6 +359,18 @@ export async function PUT(
       }
     }
 
+    // Optional source/authority URL must be http(s) when provided.
+    if (
+      typeof sourceUrl === 'string' &&
+      sourceUrl.trim() &&
+      !isSafeHttpUrl(sourceUrl.trim())
+    ) {
+      return NextResponse.json(
+        { success: false, message: 'Source URL must be a valid http(s) URL.' },
+        { status: 400 }
+      );
+    }
+
     // CR-02: do NOT regenerate the slug on edit — the original slug is
     // preserved so the public /listings/[slug] URL never breaks. The slug
     // column is therefore omitted from updateListing entirely.
@@ -369,6 +388,12 @@ export async function PUT(
         typeof description === 'string' && description.trim()
           ? description.trim()
           : null,
+      homebuilder:
+        typeof homebuilder === 'string' && homebuilder.trim() ? homebuilder.trim() : null,
+      incentives:
+        typeof incentives === 'string' && incentives.trim() ? incentives.trim() : null,
+      sourceUrl:
+        typeof sourceUrl === 'string' && sourceUrl.trim() ? sourceUrl.trim() : null,
     };
 
     const sanitizedUrls = (imageUrls as string[]).map((u) => u.trim());

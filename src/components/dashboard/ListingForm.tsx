@@ -39,6 +39,9 @@ interface ListingFormFields {
   baths: string;
   sqft: string;
   description: string;
+  homebuilder: string;
+  incentives: string;
+  sourceUrl: string;
 }
 
 /** Per-field validation errors */
@@ -53,6 +56,9 @@ interface ListingFormErrors {
   baths?: string;
   sqft?: string;
   description?: string;
+  homebuilder?: string;
+  incentives?: string;
+  sourceUrl?: string;
 }
 
 /** Props for the ListingForm component */
@@ -81,6 +87,9 @@ const DEFAULT_FIELDS: ListingFormFields = {
   baths: '',
   sqft: '',
   description: '',
+  homebuilder: '',
+  incentives: '',
+  sourceUrl: '',
 };
 
 /**
@@ -108,6 +117,9 @@ interface ListingDetail {
   baths: number;
   sqft: number | null;
   description: string | null;
+  homebuilder?: string | null;
+  incentives?: string | null;
+  source_url?: string | null;
   featured?: number;
 }
 
@@ -131,6 +143,9 @@ function seedFromDetail(detail: ListingDetail): ListingFormFields {
     baths: String(detail.baths),
     sqft: detail.sqft != null ? String(detail.sqft) : '',
     description: detail.description ?? '',
+    homebuilder: detail.homebuilder ?? '',
+    incentives: detail.incentives ?? '',
+    sourceUrl: detail.source_url ?? '',
   };
 }
 
@@ -258,6 +273,9 @@ export function ListingForm({
         baths: 'Baths',
         sqft: 'Sqft',
         description: 'Description',
+        homebuilder: 'Homebuilder',
+        incentives: 'Incentives',
+        sourceUrl: 'Source URL',
       };
       return `${labels[name]} is required.`;
     }
@@ -357,6 +375,9 @@ export function ListingForm({
       baths: Number(fields.baths),
       sqft: fields.sqft.trim() ? Number(fields.sqft) : undefined,
       description: fields.description.trim() || undefined,
+      homebuilder: fields.homebuilder.trim() || undefined,
+      incentives: fields.incentives.trim() || undefined,
+      sourceUrl: fields.sourceUrl.trim() || undefined,
       imageUrls: imageUrls.map((u) => u.trim()),
       // Featured is admin-only; only send it when the toggle is available.
       ...(isAdmin ? { featured: featured ? 1 : 0 } : {}),
@@ -711,6 +732,69 @@ export function ListingForm({
           ].join(' ')}
           rows={4}
           placeholder="Describe the property, neighborhood, highlights..."
+        />
+      </div>
+
+      {/* Homebuilder / Incentives — optional, for new-construction uploads */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label
+            htmlFor="listing-homebuilder"
+            className="block text-sm font-semibold text-gray-700 mb-1.5"
+          >
+            Homebuilder
+          </label>
+          <input
+            type="text"
+            id="listing-homebuilder"
+            name="homebuilder"
+            value={fields.homebuilder}
+            onChange={handleFieldChange}
+            disabled={isDisabled}
+            className={inputClass(false)}
+            placeholder="Meritage Homes"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="listing-incentives"
+            className="block text-sm font-semibold text-gray-700 mb-1.5"
+          >
+            Incentives
+          </label>
+          <input
+            type="text"
+            id="listing-incentives"
+            name="incentives"
+            value={fields.incentives}
+            onChange={handleFieldChange}
+            disabled={isDisabled}
+            className={inputClass(false)}
+            placeholder="$10k toward closing costs"
+          />
+        </div>
+      </div>
+
+      {/* Source / authority URL — optional */}
+      <div>
+        <label
+          htmlFor="listing-source-url"
+          className="block text-sm font-semibold text-gray-700 mb-1.5"
+        >
+          Source / listing URL
+          <span className="ml-1 text-xs font-normal text-gray-400">
+            (MLS, Zillow, or builder — optional)
+          </span>
+        </label>
+        <input
+          type="url"
+          id="listing-source-url"
+          name="sourceUrl"
+          value={fields.sourceUrl}
+          onChange={handleFieldChange}
+          disabled={isDisabled}
+          className={inputClass(false)}
+          placeholder="https://www.zillow.com/homedetails/..."
         />
       </div>
 

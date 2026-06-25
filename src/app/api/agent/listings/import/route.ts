@@ -218,6 +218,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // --- 5. Process rows independently ---
     // taken tracks slugs committed in this batch; DB UNIQUE is the backstop.
     const taken = new Set<string>();
+    // Tracks normalized address|zip seen earlier in THIS file to reject in-file dupes.
+    const seenAddr = new Set<string>();
     const results: RowResult[] = [];
     let imported = 0;
     let failed = 0;
@@ -257,6 +259,32 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         failed++;
         continue;
       }
+
+      // 5b-dupe. Reject duplicate addresses (normalized address + ZIP) — both
+      // within this file and against existing ACTIVE listings in D1.
+      const normAddr = fields.address.trim().toLowerCase();
+      const normZip = (fields.zip ?? '').trim();
+      const addrKey = `${normAddr}|${normZip.toLowerCase()}`;
+      if (seenAddr.has(addrKey)) {
+        results.push({ row: rowIndex, success: false, reason: 'duplicate address in this file' });
+        failed++;
+        continue;
+      }
+      const dbDupe = await env.DB.prepare(
+        "SELECT id FROM listings WHERE lower(trim(address)) = ? AND coalesce(trim(zip),'') = ? AND status = 'active'"
+      )
+        .bind(normAddr, normZip)
+        .first<{ id: string }>();
+      if (dbDupe) {
+        results.push({
+          row: rowIndex,
+          success: false,
+          reason: 'an active listing already exists at this address',
+        });
+        failed++;
+        continue;
+      }
+      seenAddr.add(addrKey);
 
       // 5c. Derive and deduplicate slug within this batch
       const baseSlug = slugify(fields.title, fields.address);
