@@ -254,6 +254,102 @@ export interface PlatformStats {
   totalLeads: number;
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// Admin listings — platform-wide listing list + remove
+// ────────────────────────────────────────────────────────────────────────────
+
+/**
+ * A listings row (joined with its owning agent) for the admin listings table.
+ */
+export interface AdminListingRow {
+  /** listings.id */
+  id: string;
+  /** URL slug for the public detail page */
+  slug: string;
+  /** Listing title */
+  title: string;
+  /** Street address */
+  address: string;
+  /** City */
+  city: string;
+  /** Price in USD */
+  price: number;
+  /** 'active' | 'paused' */
+  status: string;
+  /** Epoch seconds */
+  created_at: number;
+  /** Owning agent's display name (null if not set) */
+  agent_name: string | null;
+  /** Owning agent's email */
+  agent_email: string;
+}
+
+/** Result type for listAllListingsPaginated. */
+export interface PaginatedListings {
+  listings: AdminListingRow[];
+  total: number;
+}
+
+/**
+ * Return a page of ALL listings (every agent), newest-first, with the total.
+ *
+ * Unlike the public read path, this is NOT subscription/expiry-gated — the admin
+ * must see every listing (active, paused, expired, lapsed-agent) to manage them.
+ * Joined with agents for the owning agent's name/email. Parameterized LIMIT/OFFSET.
+ *
+ * @param db     - D1Database binding
+ * @param limit  - Rows per page (ADMIN_PAGE_SIZE)
+ * @param offset - Rows to skip (page * limit)
+ */
+export async function listAllListingsPaginated(
+  db: D1Database,
+  limit: number,
+  offset: number
+): Promise<PaginatedListings> {
+  const rowsResult = await db
+    .prepare(
+      `SELECT l.id, l.slug, l.title, l.address, l.city, l.price, l.status, l.created_at,
+              a.display_name AS agent_name, a.email AS agent_email
+       FROM listings l
+       JOIN agents a ON l.agent_id = a.id
+       ORDER BY l.created_at DESC
+       LIMIT ? OFFSET ?`
+    )
+    .bind(limit, offset)
+    .all<AdminListingRow>();
+
+  const countResult = await db
+    .prepare('SELECT COUNT(*) AS total FROM listings')
+    .first<{ total: number }>();
+
+  return {
+    listings: rowsResult.results ?? [],
+    total: countResult?.total ?? 0,
+  };
+}
+
+/**
+ * Delete any listing as admin (listing_images cascade via FK ON DELETE CASCADE).
+ *
+ * The listingId comes from the API route segment, never the request body. All
+ * values bound via prepare().bind(). Returns the number of rows changed so the
+ * caller can return 404 when the id matched no listing.
+ *
+ * @param db        - D1Database binding
+ * @param listingId - listings.id to remove (from the URL route segment)
+ * @returns Number of listing rows deleted (0 when no row matched)
+ */
+export async function deleteListingAsAdmin(
+  db: D1Database,
+  listingId: string
+): Promise<number> {
+  const result = await db
+    .prepare('DELETE FROM listings WHERE id = ?')
+    .bind(listingId)
+    .run();
+  return result.meta?.changes ?? 0;
+}
+
 /**
  * Fetch platform-wide count statistics for the admin stats page.
  *

@@ -113,6 +113,15 @@ export default async function AdminLayout({
             </li>
             <li>
               <a
+                href="/admin/listings"
+                className="flex items-center px-4 py-3 rounded-lg text-red-100 hover:bg-red-700 hover:text-white transition-colors touch-target"
+                aria-label="Manage listings"
+              >
+                Listings
+              </a>
+            </li>
+            <li>
+              <a
                 href="/admin/stats"
                 className="flex items-center px-4 py-3 rounded-lg text-red-100 hover:bg-red-700 hover:text-white transition-colors touch-target"
                 aria-label="Platform stats"
