@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import Link from "next/link";
 import { ListingCard } from "@/components/ListingCard";
 import { getFeaturedListings } from "@/lib/data";
+import { NEIGHBORHOOD_AREAS } from "@/lib/neighborhoods";
 
 /**
  * Home Page Component
@@ -153,32 +154,12 @@ export default async function Home(): Promise<JSX.Element> {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {[
-              {
-                title: 'Inner Loop & Midtown',
-                areas: 'Montrose, Museum District, EaDo, Midtown, Heights.',
-                blurb: 'Walkable living close to downtown.',
-              },
-              {
-                title: 'Southwest Houston',
-                areas: 'Sugar Land, Missouri City, Stafford, Sharpstown.',
-                blurb: 'Established communities in Fort Bend and southwest Harris County.',
-              },
-              {
-                title: 'Northwest Houston',
-                areas: 'Cypress, Katy, Jersey Village, Copperfield.',
-                blurb: 'Top-rated schools and family-friendly neighborhoods.',
-              },
-              {
-                title: 'Southeast & Clear Lake',
-                areas: 'Pearland, League City, Clear Lake, Friendswood.',
-                blurb: 'Space-industry corridor with strong community amenities.',
-              },
-            ].map((n) => (
-              <div
-                key={n.title}
-                className="card p-6 h-full border border-gray-100"
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {NEIGHBORHOOD_AREAS.map((area) => (
+              <Link
+                key={area.slug}
+                href={`/neighborhoods/${area.slug}`}
+                className="card p-6 h-full border border-gray-100 hover:shadow-lg transition-shadow"
               >
                 <div className="w-11 h-11 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
                   <svg
@@ -203,11 +184,11 @@ export default async function Home(): Promise<JSX.Element> {
                   </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {n.title}
+                  {area.name}
                 </h3>
-                <p className="text-sm text-gray-700 mb-2">{n.areas}</p>
-                <p className="text-sm text-gray-500">{n.blurb}</p>
-              </div>
+                <p className="text-sm text-gray-700 mb-2">{area.cities.join(', ')}</p>
+                <p className="text-sm text-gray-500">{area.blurb}</p>
+              </Link>
             ))}
           </div>
         </div>

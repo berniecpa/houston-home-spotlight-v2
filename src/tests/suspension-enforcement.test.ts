@@ -189,10 +189,15 @@ describe('dashboard/layout.tsx — suspension banner (ADMIN-02, T-05-03)', () =>
     );
   });
 
-  it('existing profile gate is preserved', () => {
+  it('profile completeness no longer force-redirects (gate removed)', () => {
+    // Product change: agents may use the dashboard with a partial profile.
     assert.ok(
-      dashboard.includes('isProfileComplete') && dashboard.includes("redirect('/dashboard/profile"),
-      'Profile gate must still redirect to /dashboard/profile when profile is incomplete'
+      !dashboard.includes("redirect('/dashboard/profile"),
+      'Incomplete profile must NOT redirect — the profile gate was removed'
+    );
+    assert.ok(
+      dashboard.includes('isProfileComplete'),
+      'isProfileComplete is still computed to drive the sidebar progress indicator'
     );
   });
 

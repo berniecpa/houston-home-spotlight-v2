@@ -434,6 +434,31 @@ export function ListingsManager({
   }
 
   /**
+   * Refresh a listing's 90-day expiry so it stays visible in public browse.
+   * Calls PATCH /api/agent/listings/[id] { refresh: true }; ownership enforced server-side.
+   */
+  async function handleRefresh(listing: OwnListing): Promise<void> {
+    setIsLoading(true);
+    setActionError('');
+    try {
+      const res = await fetch(`/api/agent/listings/${listing.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh: true }),
+      });
+      if (!res.ok) {
+        const data = (await res.json()) as { message?: string };
+        setActionError(data.message ?? 'Refresh failed. Please try again.');
+        return;
+      }
+    } catch {
+      setActionError('Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  /**
    * Handle CSV file selection and upload to /api/agent/listings/import.
    * Reads the chosen file, POSTs it as FormData, then shows per-row results
    * and refreshes the listings table on partial or full success.
@@ -761,6 +786,17 @@ export function ListingsManager({
                             }
                           >
                             {listing.status === 'active' ? 'Pause' : 'Activate'}
+                          </button>
+
+                          {/* Refresh 90-day expiry */}
+                          <button
+                            type="button"
+                            onClick={() => void handleRefresh(listing)}
+                            disabled={isLoading}
+                            className="text-gray-500 hover:text-gray-700 font-medium text-xs transition-colors touch-target disabled:opacity-50"
+                            aria-label={`Refresh ${listing.title} for another 90 days`}
+                          >
+                            Refresh
                           </button>
 
                           {/* Delete */}

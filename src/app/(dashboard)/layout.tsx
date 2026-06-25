@@ -28,7 +28,7 @@
  * @module app/(dashboard)/layout
  */
 
-import { cookies, headers } from 'next/headers';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getTokens } from 'next-firebase-auth-edge';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
@@ -113,28 +113,10 @@ export default async function DashboardLayout({
   // blocking the agent further (is_suspended defaults to 0 on fail-read).
   const isSuspended = !readFailed && agent ? agent.is_suspended === 1 : false;
 
-  // --- 3. Profile gate (AUTH-05) — prevent redirect loop on /dashboard/profile ---
-  // Determine current pathname from request headers.
-  // x-matched-path is set by Next.js App Router for every RSC render.
-  // Falls back to next-url (set by middleware) as secondary option.
-  // Pitfall 4: always skip the redirect when already on the profile route.
-  const headersList = await headers();
-  const matchedPath =
-    headersList.get('x-matched-path') ??
-    headersList.get('next-url') ??
-    headersList.get('x-invoke-path') ??
-    null;
-
-  // WR-01: these headers are adapter-dependent and may be absent. When the
-  // current path is undeterminable, fail TOWARD showing the profile form
-  // (onProfilePage = true) so an incomplete agent is never redirect-looped to
-  // /dashboard/profile. A known non-profile path still triggers the gate.
-  const onProfilePage =
-    matchedPath === null || matchedPath.startsWith('/dashboard/profile');
-
-  if (!profileComplete && !onProfilePage) {
-    redirect('/dashboard/profile');
-  }
+  // --- 3. Profile gate REMOVED (product change: "remove required to save profile") ---
+  // Agents are no longer force-redirected to /dashboard/profile when their
+  // profile is incomplete. `profileComplete` still drives the sidebar progress
+  // indicator so agents are nudged (not blocked) to finish their profile.
 
   // --- 4. Render dashboard shell ---
   return (

@@ -36,6 +36,7 @@ import {
   deleteListing,
   setListingStatus,
   setListingFeatured,
+  refreshListingExpiry,
   isSafeHttpUrl,
   type ListingUpdateFields,
 } from '@/lib/listings-db';
@@ -498,7 +499,17 @@ export async function PATCH(
       );
     }
 
-    const { status } = body as Record<string, unknown>;
+    const { status, refresh } = body as Record<string, unknown>;
+
+    // Refresh action: reset the 90-day expiry clock so the listing re-appears
+    // in public browse. Owner-only (ownership already resolved above).
+    if (refresh === true) {
+      await refreshListingExpiry(db, listingId, uid);
+      return NextResponse.json({
+        success: true,
+        message: 'Listing refreshed for another 90 days.',
+      });
+    }
 
     // Validate status enum — only 'active' or 'paused' accepted (LIST-05)
     if (status !== 'active' && status !== 'paused') {

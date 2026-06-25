@@ -346,3 +346,31 @@ export async function setListingFeatured(
     .bind(featured, listingId)
     .run();
 }
+
+/**
+ * Reset a listing's 90-day expiry window (LIST expiry refresh).
+ *
+ * Sets expires_at to 90 days (7776000s) from now so the listing re-appears in
+ * public browse. The WHERE clause includes agent_id so a caller can never
+ * refresh a listing they do not own even if an ownership check is skipped; the
+ * route layer still performs the ownership SELECT before calling here.
+ *
+ * @param db        D1Database binding
+ * @param listingId listings.id to refresh
+ * @param agentId   Session uid — must match listings.agent_id
+ */
+export async function refreshListingExpiry(
+  db: D1Database,
+  listingId: string,
+  agentId: string
+): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE listings
+       SET expires_at = unixepoch() + 7776000,
+           updated_at = unixepoch()
+       WHERE id = ? AND agent_id = ?`
+    )
+    .bind(listingId, agentId)
+    .run();
+}
