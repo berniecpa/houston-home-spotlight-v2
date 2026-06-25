@@ -205,6 +205,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       baths,
       sqft,
       description,
+      homebuilder,
+      incentives,
+      sourceUrl,
       imageUrls,
       featured,
     } = body as Record<string, unknown>;
@@ -315,6 +318,34 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     }
 
+    // --- 3d. Optional source/authority URL must be http(s) when provided. ---
+    if (
+      typeof sourceUrl === 'string' &&
+      sourceUrl.trim() &&
+      !isSafeHttpUrl(sourceUrl.trim())
+    ) {
+      return NextResponse.json(
+        { success: false, message: 'Source URL must be a valid http(s) URL.' },
+        { status: 400 }
+      );
+    }
+
+    // --- 3e. Duplicate guard: reject a second ACTIVE listing at the same
+    // normalized address + ZIP so the same home is not posted twice. ---
+    const normAddress = (address as string).trim().toLowerCase();
+    const normZip = typeof zip === 'string' ? zip.trim() : '';
+    const dupe = await env.DB.prepare(
+      "SELECT id FROM listings WHERE lower(trim(address)) = ? AND coalesce(trim(zip),'') = ? AND status = 'active'"
+    )
+      .bind(normAddress, normZip)
+      .first<{ id: string }>();
+    if (dupe) {
+      return NextResponse.json(
+        { success: false, message: 'An active listing already exists at this address.' },
+        { status: 409 }
+      );
+    }
+
     // --- 4. Derive slug and check for UNIQUE collision ---
     const derivedSlug = slugify(
       (title as string).trim(),
@@ -354,6 +385,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         typeof description === 'string' && description.trim()
           ? description.trim()
           : null,
+      homebuilder:
+        typeof homebuilder === 'string' && homebuilder.trim() ? homebuilder.trim() : null,
+      incentives:
+        typeof incentives === 'string' && incentives.trim() ? incentives.trim() : null,
+      sourceUrl:
+        typeof sourceUrl === 'string' && sourceUrl.trim() ? sourceUrl.trim() : null,
       // Featured is admin-only: ignore the field entirely for non-admins.
       featured: isAdmin && (featured === 1 || featured === true) ? 1 : 0,
     };

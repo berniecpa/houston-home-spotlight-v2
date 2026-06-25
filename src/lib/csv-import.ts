@@ -232,6 +232,15 @@ export function validateListingRow(record: Record<string, string>): CsvRowResult
   const zip = (record['zip'] ?? '').trim() || null;
   const description = (record['description'] ?? '').trim() || null;
 
+  // --- Optional uploaded-home metadata (migration 0007) ---
+  const homebuilder = (record['homebuilder'] ?? '').trim() || null;
+  const incentives = (record['incentives'] ?? '').trim() || null;
+  const sourceUrl =
+    (record['source_url'] ?? record['sourceurl'] ?? '').trim() || null;
+  if (sourceUrl && !isSafeHttpUrl(sourceUrl)) {
+    return { ok: false, reason: `source_url is not a valid http(s) URL: "${sourceUrl}"` };
+  }
+
   // --- Featured: boolean-ish field ---
   let featured: 0 | 1 = 0;
   const featuredRaw = (record['featured'] ?? '').trim();
@@ -277,6 +286,9 @@ export function validateListingRow(record: Record<string, string>): CsvRowResult
     baths,
     sqft,
     description,
+    homebuilder,
+    incentives,
+    sourceUrl,
   };
 
   return { ok: true, fields, imageUrls, featured };

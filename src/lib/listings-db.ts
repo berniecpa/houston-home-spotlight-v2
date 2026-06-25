@@ -65,6 +65,12 @@ export interface ListingWriteFields {
   description?: string | null;
   /** Homepage featured flag (0/1). Admin-only; defaults to 0 when omitted. */
   featured?: 0 | 1;
+  /** Builder name for new-construction homes (migration 0007); null/omitted for resale. */
+  homebuilder?: string | null;
+  /** Free-text incentives/promotions (migration 0007); null/omitted if none. */
+  incentives?: string | null;
+  /** Authority link to the original MLS/Zillow/builder listing (migration 0007). */
+  sourceUrl?: string | null;
 }
 
 /**
@@ -95,9 +101,10 @@ export async function createListing(
     .prepare(
       `INSERT INTO listings (
         id, agent_id, title, slug, address, city, state, zip,
-        price, beds, baths, sqft, description, featured, status,
-        created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', unixepoch(), unixepoch())`
+        price, beds, baths, sqft, description,
+        homebuilder, incentives, source_url,
+        featured, status, created_at, updated_at, expires_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', unixepoch(), unixepoch(), unixepoch() + 7776000)`
     )
     .bind(
       listingId,
@@ -113,6 +120,9 @@ export async function createListing(
       fields.baths,
       fields.sqft ?? null,
       fields.description ?? null,
+      fields.homebuilder ?? null,
+      fields.incentives ?? null,
+      fields.sourceUrl ?? null,
       fields.featured ?? 0
     )
     .run();
@@ -169,6 +179,9 @@ export async function updateListing(
            baths       = ?,
            sqft        = ?,
            description = ?,
+           homebuilder = ?,
+           incentives  = ?,
+           source_url  = ?,
            updated_at  = unixepoch()
        WHERE id = ?`
     )
@@ -183,6 +196,9 @@ export async function updateListing(
       fields.baths,
       fields.sqft ?? null,
       fields.description ?? null,
+      fields.homebuilder ?? null,
+      fields.incentives ?? null,
+      fields.sourceUrl ?? null,
       listingId
     )
     .run();
